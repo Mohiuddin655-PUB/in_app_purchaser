@@ -1,0 +1,19 @@
+name: in_app_purchaser_revenue_cat_delegate
+description: "Provides a streamlined way to handle purchases, subscriptions, and user entitlements with RevenueCat, simplifying cross-platform purchase management."
+version: 1.0.0
+repository: https://github.com/Mohiuddin655-PUB/in_app_purchaser.git
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  in_app_purchaser: ^1.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0

@@ -37,6 +37,8 @@ abstract class PurchaseDelegate<T> {
 
   Future<void> logout();
 
+  Future<void> logShow(String id);
+
   Iterable<PurchasableProduct<T>> parseProducts(Iterable<T> products);
 
   Future<Object?> purchase(T product);
