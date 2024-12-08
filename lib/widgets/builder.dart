@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:in_app_purchaser/in_app_purchaser.dart';
-import 'package:in_app_purchaser_delegate/in_app_purchaser_delegate.dart';
 
 typedef OnPurchaserCallback<T> = void Function(BuildContext context, T value);
-typedef OnPurchaserBuilder<T> = Widget Function(
+typedef OnPurchaserBuilder = Widget Function(
   BuildContext context,
   List<PurchasableProduct> data,
 );
 
 enum PurchaserProductType { initial, oto }
 
-class PurchaseBuilder<T> extends StatelessWidget {
+class PurchaseBuilder extends StatefulWidget {
   final PurchaserProductType productType;
   final OnPurchaserCallback<PurchaseErrorType>? onError;
   final OnPurchaserCallback<bool>? onLoading;
   final OnPurchaserCallback<bool>? onChanged;
-  final OnPurchaserBuilder<T> builder;
+  final OnPurchaserBuilder builder;
 
   const PurchaseBuilder({
     super.key,
@@ -27,46 +26,12 @@ class PurchaseBuilder<T> extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    try {
-      return _Child<T>(
-        purchaser: context.findPurchaser<T>(),
-        builder: builder,
-      );
-    } catch (_) {
-      throw UnimplementedError(
-        "You should apply like $PurchaseBuilder<$T>()",
-      );
-    }
-  }
+  State<PurchaseBuilder> createState() => _PurchaseBuilderState();
 }
 
-class _Child<T> extends StatefulWidget {
-  final PurchaserProductType productType;
-  final Purchaser<T> purchaser;
-  final OnPurchaserCallback<PurchaseErrorType>? onError;
-  final OnPurchaserCallback<bool>? onLoading;
-  final OnPurchaserCallback<bool>? onChanged;
-  final OnPurchaserBuilder<T> builder;
-
-  const _Child({
-    this.productType = PurchaserProductType.initial,
-    required this.purchaser,
-    this.onError,
-    this.onLoading,
-    this.onChanged,
-    required this.builder,
-  });
-
-  @override
-  State<_Child<T>> createState() => _ChildState<T>();
-}
-
-class _ChildState<T> extends State<_Child<T>> {
-  List<PurchasableProduct<T>> products = [];
-
+class _PurchaseBuilderState extends State<PurchaseBuilder> {
   void _listener() {
-    final status = widget.purchaser.status;
+    final status = Purchaser.i.status;
     if (widget.onLoading != null) {
       widget.onLoading!(context, status.isLoading);
     }
@@ -75,46 +40,34 @@ class _ChildState<T> extends State<_Child<T>> {
       return;
     }
     if (widget.onChanged != null) {
-      widget.onChanged!(context, widget.purchaser.isActive);
+      widget.onChanged!(context, Purchaser.i.isActive);
     }
   }
 
-  ValueNotifier<List<PurchasableProduct<T>>> get productsNotifier {
+  List<PurchasableProduct> get products {
     return widget.productType == PurchaserProductType.initial
-        ? widget.purchaser.products
-        : widget.purchaser.otoProducts;
-  }
-
-  void _productListener() => setState(() => products = productsNotifier.value);
-
-  void _addListeners() {
-    productsNotifier.addListener(_productListener);
-    widget.purchaser.addListener(_listener);
-  }
-
-  void _removeListeners() {
-    productsNotifier.removeListener(_productListener);
-    widget.purchaser.removeListener(_listener);
+        ? Purchaser.i.products
+        : Purchaser.i.otoProducts;
   }
 
   @override
   void initState() {
-    _addListeners();
+    Purchaser.i.addListener(_listener);
     super.initState();
   }
 
   @override
-  void didUpdateWidget(_Child<T> oldWidget) {
+  void didUpdateWidget(PurchaseBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.purchaser != widget.purchaser) {
-      _removeListeners();
-      _addListeners();
+    if (oldWidget.productType != widget.productType) {
+      Purchaser.i.removeListener(_listener);
+      Purchaser.i.addListener(_listener);
     }
   }
 
   @override
   void dispose() {
-    _removeListeners();
+    Purchaser.i.removeListener(_listener);
     super.dispose();
   }
 

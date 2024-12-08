@@ -33,6 +33,10 @@ dependencies:
 
   in_app_purchaser:
     path: ../
+#  in_app_purchaser_adapty_delegate: ^1.0.0
+  in_app_purchaser_qonversion_delegate: ^1.0.0
+  in_app_purchaser_revenue_cat_delegate: ^1.0.0
+  in_app_purchaser_delegate: ^1.0.0
 
 
   # The following adds the Cupertino Icons font to your application.

@@ -1,59 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:in_app_purchaser/in_app_purchaser.dart';
 
-import '../src/purchaser.dart';
-
-class PurchaseProvider<T> extends InheritedWidget {
+class PurchaseProvider extends InheritedWidget {
   final bool initialCheck;
   final Duration initialCheckDuration;
-  final Purchaser<T> purchaser;
 
   PurchaseProvider({
     super.key,
     this.initialCheck = false,
     this.initialCheckDuration = const Duration(seconds: 5),
-    required this.purchaser,
+    required PurchaseDelegate delegate,
     required Widget child,
   }) : super(
-          child: _Support<T>(
-            purchaser: purchaser,
+          child: _Support(
             initialCheck: initialCheck,
+            initialCheckDuration: initialCheckDuration,
+            purchaser: Purchaser.init(delegate),
             child: child,
           ),
         );
 
-  static PurchaseProvider<T> of<T>(BuildContext context) {
-    final x = context.dependOnInheritedWidgetOfExactType<PurchaseProvider<T>>();
-    if (x != null) {
-      return x;
-    } else {
-      throw UnimplementedError(
-        "You should call like $PurchaseProvider.of<$T>();",
-      );
-    }
-  }
-
-  static Purchaser<T> purchaserOf<T>(BuildContext context) {
-    try {
-      return of<T>(context).purchaser;
-    } catch (_) {
-      throw UnimplementedError(
-        "You should call like $PurchaseProvider.purchaserOf<$T>();",
-      );
-    }
-  }
-
   @override
-  bool updateShouldNotify(covariant PurchaseProvider<T> oldWidget) {
-    return purchaser != oldWidget.purchaser;
-  }
-
-  void notify(Purchaser value) => purchaser.notify();
+  bool updateShouldNotify(covariant PurchaseProvider oldWidget) => false;
 }
 
-class _Support<T> extends StatefulWidget {
+class _Support extends StatefulWidget {
   final bool initialCheck;
   final Duration initialCheckDuration;
-  final Purchaser<T> purchaser;
+  final Purchaser purchaser;
   final Widget child;
 
   const _Support({
@@ -64,12 +38,12 @@ class _Support<T> extends StatefulWidget {
   });
 
   @override
-  State<_Support<T>> createState() => _SupportState<T>();
+  State<_Support> createState() => _SupportState();
 }
 
-class _SupportState<T> extends State<_Support<T>> {
+class _SupportState extends State<_Support> {
   void _init() async {
-    await widget.purchaser.init();
+    await widget.purchaser.configure();
     Future.delayed(widget.initialCheckDuration, () async {
       if (widget.initialCheck) {
         await widget.purchaser.restore(true);

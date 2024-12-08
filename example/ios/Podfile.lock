@@ -1,0 +1,88 @@
+PODS:
+  - Adjust (5.0.1):
+    - Adjust/Adjust (= 5.0.1)
+  - Adjust/Adjust (5.0.1):
+    - AdjustSignature (~> 3.18)
+  - adjust_sdk (5.0.3):
+    - Adjust (= 5.0.1)
+    - Flutter
+  - AdjustSignature (3.35.1)
+  - facebook_app_events (0.0.1):
+    - FBAudienceNetwork (= 6.16)
+    - FBSDKCoreKit (~> 17.0)
+    - Flutter
+  - FBAEMKit (17.4.0):
+    - FBSDKCoreKit_Basics (= 17.4.0)
+  - FBAudienceNetwork (6.16.0)
+  - FBSDKCoreKit (17.4.0):
+    - FBAEMKit (= 17.4.0)
+    - FBSDKCoreKit_Basics (= 17.4.0)
+  - FBSDKCoreKit_Basics (17.4.0)
+  - Flutter (1.0.0)
+  - purchases_flutter (6.30.2):
+    - Flutter
+    - PurchasesHybridCommon (= 11.1.0)
+  - PurchasesHybridCommon (11.1.0):
+    - RevenueCat (= 4.43.2)
+  - Qonversion (5.13.0):
+    - Qonversion/Main (= 5.13.0)
+  - Qonversion/Main (5.13.0)
+  - qonversion_flutter (5.0.0):
+    - Flutter
+    - QonversionSandwich (= 5.2.0)
+  - QonversionSandwich (5.2.0):
+    - Qonversion (= 5.13.0)
+  - RevenueCat (4.43.2)
+
+DEPENDENCIES:
+  - adjust_sdk (from `.symlinks/plugins/adjust_sdk/ios`)
+  - facebook_app_events (from `.symlinks/plugins/facebook_app_events/ios`)
+  - Flutter (from `Flutter`)
+  - purchases_flutter (from `.symlinks/plugins/purchases_flutter/ios`)
+  - qonversion_flutter (from `.symlinks/plugins/qonversion_flutter/ios`)
+
+SPEC REPOS:
+  trunk:
+    - Adjust
+    - AdjustSignature
+    - FBAEMKit
+    - FBAudienceNetwork
+    - FBSDKCoreKit
+    - FBSDKCoreKit_Basics
+    - PurchasesHybridCommon
+    - Qonversion
+    - QonversionSandwich
+    - RevenueCat
+
+EXTERNAL SOURCES:
+  adjust_sdk:
+    :path: ".symlinks/plugins/adjust_sdk/ios"
+  facebook_app_events:
+    :path: ".symlinks/plugins/facebook_app_events/ios"
+  Flutter:
+    :path: Flutter
+  purchases_flutter:
+    :path: ".symlinks/plugins/purchases_flutter/ios"
+  qonversion_flutter:
+    :path: ".symlinks/plugins/qonversion_flutter/ios"
+
+SPEC CHECKSUMS:
+  Adjust: f27daaa40d0df5550b89dd428cd8545d812e1f6d
+  adjust_sdk: 2141d5419ea56e7883ba7ce530419dbb4c9a0470
+  AdjustSignature: 3d91f56861c28ae12b0377a8dcf3cc94ab239166
+  facebook_app_events: d791f99d78f74cde976edd378678566cb7bb4ab0
+  FBAEMKit: 58cb5f302cdd715a56d4c1d0dfdd2e423ac1421a
+  FBAudienceNetwork: d1670939884e3a2e0ad98dca98d7e0c841417228
+  FBSDKCoreKit: 94d7461d0cecf441b1ba7c41acfff41daa8ccd41
+  FBSDKCoreKit_Basics: 151b43db8b834d3f0e02f95d36a44ffd36265e45
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  purchases_flutter: 42d5544e7730ea89a88cc2f008b7c700fd147052
+  PurchasesHybridCommon: 4022d5944cb30ec44ba5159e42aa161fe0e30175
+  Qonversion: 37addeba74c5b328de9e1173b580c971b6d764ec
+  qonversion_flutter: 85b910b2d763c5c0b9b3f49cae730d1f224acbc7
+  QonversionSandwich: 3ffa118b7214ebd2dcd3f3a1a0a33a39f9c48c8e
+  RevenueCat: 3d934653b7e8b09af88fd47e9e84cfaf5d0a89ba
+
+PODFILE CHECKSUM: 819463e6a0290f5a72f145ba7cde16e8b6ef0796
+
+COCOAPODS: 1.15.2

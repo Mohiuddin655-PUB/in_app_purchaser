@@ -1,125 +1,308 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:in_app_purchaser/in_app_purchaser.dart';
+import 'package:in_app_purchaser_revenue_cat_delegate/in_app_purchaser_revenue_cat_delegate.dart';
+
+const kQonversionApiKey = "";
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    PurchaseProvider(
+      delegate: const RevenueCatDelegate(
+        apiKey: kQonversionApiKey,
+      ),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'In App Purchaser',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const PurchasePaywall(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+class PurchasePaywall extends StatelessWidget {
+  const PurchasePaywall({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+      backgroundColor: Colors.grey.shade100,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Stack(
+            children: [
+              ListenableBuilder(
+                listenable: Purchaser.i,
+                builder: (context, child) {
+                  return const PurchaseButton();
+                },
+              ),
+            ],
+          ),
+        ),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+    );
+  }
+}
+
+class PurchaseButton extends StatefulWidget {
+  const PurchaseButton({
+    super.key,
+  });
+
+  @override
+  State<PurchaseButton> createState() => _PurchaseButtonState();
+}
+
+class _PurchaseButtonState extends State<PurchaseButton> {
+  int selected = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 15, right: 15, bottom: 5),
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
+          mainAxisSize: MainAxisSize.min,
+          children: [
             const Text(
-              'You have pushed the button this many times:',
+              'Get Unlimited Access',
+              style: TextStyle(
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            const SizedBox(height: 20),
+            Column(
+              children: List.generate(Purchaser.i.products.length, (index) {
+                final product = Purchaser.i.products.elementAtOrNull(index);
+                final priceString = product?.priceString ?? '0 BDT';
+                final monthlyPrice = (product?.price ?? 0) / 12;
+                return MonthlyPlan(
+                  leftSideString: priceString,
+                  selected: selected == index,
+                  rightSideString: monthlyPrice.toString(),
+                  discount: "25%",
+                  onTap: () => setState(() => selected = index),
+                );
+              }),
             ),
+            const SizedBox(height: 5),
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              onPressed: () => Purchaser.i.purchaseAt(selected),
+              child: Container(
+                height: 65,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(1000),
+                  color: Colors.black,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                ),
+                alignment: Alignment.center,
+                child: Builder(builder: (context) {
+                  if (Purchaser.i.products.isEmpty) {
+                    return const SizedBox.square(
+                      dimension: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 3,
+                      ),
+                    );
+                  }
+                  return const FittedBox(
+                    child: Text(
+                      'Continue',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 10, bottom: 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  GestureDetector(
+                    child: const Text(
+                      'Terms ',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                        decorationColor: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: Purchaser.i.restore,
+                    child: const Text(
+                      'Restore ',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                        decorationColor: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    child: const Text(
+                      'Privacy ',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                        decorationColor: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    child: const Text(
+                      'User ID ',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                        decorationColor: Colors.grey,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}
+
+class MonthlyPlan extends StatelessWidget {
+  final String leftSideString;
+  final bool selected;
+  final String rightSideString;
+  final String? discount;
+  final VoidCallback onTap;
+
+  const MonthlyPlan({
+    super.key,
+    required this.leftSideString,
+    required this.selected,
+    required this.rightSideString,
+    required this.onTap,
+    this.discount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      onPressed: onTap,
+      child: Container(
+        height: 76,
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? Colors.black : Colors.transparent,
+            width: 3,
+          ),
+        ),
+        padding: const EdgeInsets.only(
+          right: 20,
+          left: 15,
+        ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.centerLeft,
+          children: [
+            Text(
+              leftSideString,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black,
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text.rich(
+                textScaler: TextScaler.noScaling,
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: rightSideString, //inchToReadableFt(heightHive),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.black,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    // TextSpan(
+                    //   text: extension,
+                    //   style: const TextStyle(
+                    //     fontFamily: defaultFont,
+                    //     fontSize: Sizex.h6 + 1,
+                    //     fontWeight: Weightx.heavy,
+                    //     color: Colorx.black,
+                    //   ),
+                    // ),
+                  ],
+                ),
+              ),
+            ),
+            if ((discount ?? '').isNotEmpty) ...[
+              Positioned(
+                top: -15,
+                right: -0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(105),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  child: Text(
+                    discount!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

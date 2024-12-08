@@ -14,10 +14,19 @@ const _kLogger = "IN_APP_PURCHASER";
 typedef AdjustSdkCallback = Future<void> Function(Map<String, String> data);
 typedef FbSdkCallback = Future<void> Function(String id);
 
-class Purchaser<T> extends ChangeNotifier {
-  final PurchaseDelegate<T> _delegate;
+class Purchaser extends ChangeNotifier {
+  final PurchaseDelegate _delegate;
 
-  Purchaser(PurchaseDelegate<T> delegate) : _delegate = delegate;
+  Purchaser._(PurchaseDelegate delegate) : _delegate = delegate;
+
+  static Purchaser? _i;
+
+  static Purchaser get i => _i!;
+
+  static Purchaser init(PurchaseDelegate delegate) {
+    _i = Purchaser._(delegate);
+    return i;
+  }
 
   /// --------------------------------------------------------------------------
   /// EMITTER START
@@ -45,7 +54,7 @@ class Purchaser<T> extends ChangeNotifier {
 
   PurchaseStatus status = PurchaseStatus.none;
 
-  Future<void> init() async {
+  Future<void> configure() async {
     try {
       await _delegate.init();
       _delegate.profileChanges.listen(_listen);
@@ -143,10 +152,10 @@ class Purchaser<T> extends ChangeNotifier {
 
   void _listen(Object? data) => notify(() async => await _check(data));
 
-  Future<void> login() async {
+  Future<void> login([String? id]) async {
     try {
-      if (_delegate.uid == null || _delegate.uid!.isEmpty) return;
-      final data = await _delegate.identify(_delegate.uid!);
+      if ((id ?? _delegate.uid ?? '').isEmpty) return;
+      final data = await _delegate.identify(id ?? _delegate.uid!);
       if (data == null) return;
       _emitters["_login"] = 10;
       _log("user identified!");
@@ -157,7 +166,7 @@ class Purchaser<T> extends ChangeNotifier {
 
   Future<void> logShow([String? id]) async {
     try {
-      await _delegate.logShow(id ?? offering.value.id);
+      await _delegate.logShow(id ?? offering.id);
       _log("log shown!");
     } catch (e) {
       _log(e, "LOG_SHOWN");
@@ -198,24 +207,21 @@ class Purchaser<T> extends ChangeNotifier {
   /// FETCH PRODUCTS START
   /// --------------------------------------------------------------------------
 
-  ValueNotifier<List<PurchasableProduct<T>>> products = ValueNotifier([]);
-  ValueNotifier<List<PurchasableProduct<T>>> otoProducts = ValueNotifier([]);
-  ValueNotifier<PurchasableOffering<T>> offering = ValueNotifier(
-    PurchasableOffering.empty(),
-  );
-  ValueNotifier<PurchasableOffering<T>> otoOffering = ValueNotifier(
-    PurchasableOffering.empty(),
-  );
+  List<PurchasableProduct> products = [];
+  List<PurchasableProduct> otoProducts = [];
+  PurchasableOffering offering = PurchasableOffering.empty();
+  PurchasableOffering otoOffering = PurchasableOffering.empty();
 
   Future<void> _fetchProducts() async {
     try {
       final result = await _delegate.fetchProducts();
       if (result.isEmpty) return;
       _emitters["_fetchProducts"] = 10;
-      offering.value = result;
+      offering = result;
       abTestingIds = _delegate.filterAbTestingIds(result).toList();
-      products.value = _delegate.parseProducts(result.products).toList();
-      _log(products.value, "FETCH_PRODUCTS");
+      products = _delegate.parseProducts(result.products).toList();
+      _log(products, "FETCH_PRODUCTS");
+      notify();
     } catch (e) {
       _log(e, "FETCH_PRODUCTS");
     }
@@ -226,9 +232,10 @@ class Purchaser<T> extends ChangeNotifier {
       final result = await _delegate.fetchOtoProducts();
       if (result.isEmpty) return;
       _emitters["_fetchOtoProducts"] = 10;
-      otoOffering.value = result;
-      otoProducts.value = _delegate.parseProducts(result.products).toList();
-      _log(otoProducts.value, "FETCH_OTO_PRODUCTS");
+      otoOffering = result;
+      otoProducts = _delegate.parseProducts(result.products).toList();
+      _log(otoProducts, "FETCH_OTO_PRODUCTS");
+      notify();
     } catch (e) {
       _log(e, "FETCH_OTO_PRODUCTS");
     }
@@ -242,7 +249,7 @@ class Purchaser<T> extends ChangeNotifier {
   /// PURCHASE AND RESTORE START
   /// --------------------------------------------------------------------------
 
-  Future<Object?> purchase(T product) async {
+  Future<Object?> purchase(Object product) async {
     try {
       notify(() => status = PurchaseStatus.purchasing);
       final data = await _delegate.purchase(product);
@@ -266,7 +273,7 @@ class Purchaser<T> extends ChangeNotifier {
 
   Future<Object?> purchaseAt(int index) async {
     final list = index != 3 ? products : otoProducts;
-    final product = list.value.elementAtOrNull(index != 3 ? index : 0)?.product;
+    final product = list.elementAtOrNull(index != 3 ? index : 0)?.product;
     if (product == null) return PurchaseStatus.purchasingFailed;
     return _delegate.purchase(product);
   }
@@ -302,15 +309,6 @@ class Purchaser<T> extends ChangeNotifier {
   void notify([VoidCallback? callback]) {
     if (callback != null) callback();
     notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    products.dispose();
-    otoProducts.dispose();
-    offering.dispose();
-    otoOffering.dispose();
-    super.dispose();
   }
 
   void _log(Object? msg, [String? method]) {

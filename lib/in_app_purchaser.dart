@@ -1,6 +1,7 @@
 library in_app_purchaser;
 
-export 'src/extensions.dart';
+export 'package:in_app_purchaser_delegate/in_app_purchaser_delegate.dart';
+
 export 'src/purchaser.dart';
 export 'src/status.dart';
 export 'widgets/builder.dart';

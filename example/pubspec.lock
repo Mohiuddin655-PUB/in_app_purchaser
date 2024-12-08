@@ -91,6 +91,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  freezed_annotation:
+    dependency: transitive
+    description:
+      name: freezed_annotation
+      sha256: c2e2d632dd9b8a2b7751117abcfc2b4888ecfe181bd9fca7170d9ef02e595fe2
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.4"
   in_app_purchaser:
     dependency: "direct main"
     description:
@@ -99,13 +107,37 @@ packages:
     source: path
     version: "1.0.0"
   in_app_purchaser_delegate:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: in_app_purchaser_delegate
       sha256: b5289651236d3ca7585ee9180f5ba0febe44def7cfe4b1687dde774057babd82
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  in_app_purchaser_qonversion_delegate:
+    dependency: "direct main"
+    description:
+      name: in_app_purchaser_qonversion_delegate
+      sha256: "0f77f17cc8e2487468040476aa9ef2221511b3b28a896a6d63298cfda84aa53f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
+  in_app_purchaser_revenue_cat_delegate:
+    dependency: "direct main"
+    description:
+      name: in_app_purchaser_revenue_cat_delegate
+      sha256: c4fbeb2e00288809da40c17a9e97469040569756fb7c558b62d9e592ec620266
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
+  json_annotation:
+    dependency: transitive
+    description:
+      name: json_annotation
+      sha256: "1ce844379ca14835a50d2f019a3099f419082cfdd231cd86a142af94dd5c6bb1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.9.0"
   leak_tracker:
     dependency: transitive
     description:
@@ -170,6 +202,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.9.0"
+  purchases_flutter:
+    dependency: transitive
+    description:
+      name: purchases_flutter
+      sha256: "83f58c4ef331c06af0548b009632ec2c45b119b87bf02a74f8f77a40e0f64bad"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.30.2"
+  qonversion_flutter:
+    dependency: transitive
+    description:
+      name: qonversion_flutter
+      sha256: "7e7b91f4e8249843eb9bdc774f6cbe2fc0e148f50e056bf848116ce231e522c4"
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.2.0"
   sky_engine:
     dependency: transitive
     description: flutter
