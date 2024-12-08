@@ -1,3 +1,4 @@
+import 'offering.dart';
 import 'product.dart';
 
 abstract class PurchaseDelegate<T> {

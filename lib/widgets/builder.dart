@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:in_app_purchaser/in_app_purchaser.dart';
+import 'package:in_app_purchaser_delegate/in_app_purchaser_delegate.dart';
 
 typedef OnPurchaserCallback<T> = void Function(BuildContext context, T value);
 typedef OnPurchaserBuilder<T> = Widget Function(

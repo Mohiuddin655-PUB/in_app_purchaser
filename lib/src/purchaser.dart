@@ -5,9 +5,8 @@ import 'dart:io';
 import 'package:adjust_sdk/adjust.dart';
 import 'package:facebook_app_events/facebook_app_events.dart';
 import 'package:flutter/foundation.dart';
+import 'package:in_app_purchaser_delegate/in_app_purchaser_delegate.dart';
 
-import 'delegate.dart';
-import 'product.dart';
 import 'status.dart';
 
 const _kLogger = "IN_APP_PURCHASER";

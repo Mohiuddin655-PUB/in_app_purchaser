@@ -1,8 +1,5 @@
 enum PurchaseStatus {
   none,
-  initializing,
-  initialized,
-  initializingFailed,
   purchasing,
   purchased,
   purchasingFailed,

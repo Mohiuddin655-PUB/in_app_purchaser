@@ -10,7 +10,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  in_app_purchaser: ^1.0.0
+
+  in_app_purchaser_delegate: ^1.0.0
+  purchases_flutter: ^6.30.2
 
 dev_dependencies:
   flutter_test:
