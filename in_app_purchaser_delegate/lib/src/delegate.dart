@@ -1,38 +1,36 @@
 import 'offering.dart';
-import 'product.dart';
+import 'package.dart';
 
 abstract class PurchaseDelegate<T> {
-  final String apiKey;
-  final String? uid;
-  final String? offerId;
-  final String? otoOfferId;
+  const PurchaseDelegate();
 
-  const PurchaseDelegate({
-    required this.apiKey,
-    this.uid,
-    this.offerId,
-    this.otoOfferId,
-  });
+  String get apiKey;
+
+  String get uid;
+
+  String? get offerId => null;
+
+  String? get otoOfferId => null;
 
   bool get isCustomOffering => offerId != null && offerId!.isNotEmpty;
 
   bool get isCustomOtoOffering => otoOfferId != null && otoOfferId!.isNotEmpty;
 
-  Stream<Object?> get profileChanges;
+  Stream<Object?> get stream;
 
   Future<void> init();
 
-  Future<void> initAdjustSdk(String id, Map<String, String> attribution);
+  Future<void> initAdjustSdk();
 
-  Future<void> initFacebookSdk(String id);
+  Future<void> initFacebookSdk();
 
   Future<bool> checkStatus(Object data);
 
-  Future<PurchasableOffering<T>> fetchProducts();
+  Future<InAppOffering<T>> fetchPackages();
 
-  Future<PurchasableOffering<T>> fetchOtoProducts();
+  Future<InAppOffering<T>> fetchOtoPackages();
 
-  Iterable<String> filterAbTestingIds(PurchasableOffering<T> offering);
+  Iterable<String> filterAbTestingIds(InAppOffering<T> offering);
 
   Future<Object?> identify(String uid);
 
@@ -40,9 +38,9 @@ abstract class PurchaseDelegate<T> {
 
   Future<void> logShow(String id);
 
-  Iterable<PurchasableProduct<T>> parseProducts(Iterable<T> products);
+  Iterable<InAppPackage> parsePackages(Iterable<T> packages);
 
-  Future<Object?> purchase(T product);
+  Future<Object?> purchase(T raw);
 
   Future<Object?> restore();
 

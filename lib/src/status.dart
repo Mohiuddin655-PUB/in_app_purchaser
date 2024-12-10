@@ -1,29 +1,12 @@
-enum PurchaseStatus {
+enum InAppPurchaseState {
   none,
-  purchasing,
-  purchased,
-  purchasingFailed,
-  restoring,
-  restored,
-  restoringFailed;
+  running,
+  done,
+  failed;
 
-  bool get isCompleted {
-    return this == purchased || this == restored;
-  }
+  bool get isRunning => this == running;
 
-  bool get isLoading {
-    return this == purchasing || this == restoring;
-  }
+  bool get isDone => this == done;
 
-  bool get isFailed {
-    return this == purchasingFailed || this == restoringFailed;
-  }
-
-  PurchaseErrorType get errorType {
-    return this == purchasingFailed
-        ? PurchaseErrorType.purchasing
-        : PurchaseErrorType.restoring;
-  }
+  bool get isFailed => this == failed;
 }
-
-enum PurchaseErrorType { purchasing, restoring }

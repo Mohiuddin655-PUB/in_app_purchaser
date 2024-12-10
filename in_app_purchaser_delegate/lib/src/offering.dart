@@ -1,14 +1,14 @@
-class PurchasableOffering<T> {
+class InAppOffering<T> {
   final String id;
   final List<T> products;
 
   bool get isEmpty => products.isEmpty;
 
-  const PurchasableOffering.empty()
+  const InAppOffering.empty()
       : id = '',
         products = const [];
 
-  const PurchasableOffering({
+  const InAppOffering({
     required this.id,
     required this.products,
   });
@@ -18,13 +18,13 @@ class PurchasableOffering<T> {
 
   @override
   bool operator ==(Object other) {
-    return other is PurchasableOffering<T> &&
+    return other is InAppOffering<T> &&
         other.id == id &&
         other.products == products;
   }
 
   @override
   String toString() {
-    return "$PurchasableOffering#$hashCode(id: $id, products: $products)";
+    return "$InAppOffering#$hashCode(id: $id, products: $products)";
   }
 }

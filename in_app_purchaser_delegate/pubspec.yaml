@@ -1,6 +1,6 @@
 name: in_app_purchaser_delegate
 description: "Manages subscription lifecycle events, purchase validation, and user entitlements for All InAppPurchase services, ensuring accurate revenue tracking and analytics."
-version: 1.0.0
+version: 1.0.1
 repository: https://github.com/Mohiuddin655-PUB/in_app_purchaser.git
 
 environment:
