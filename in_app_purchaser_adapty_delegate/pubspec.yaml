@@ -1,6 +1,6 @@
 name: in_app_purchaser_adapty_delegate
 description: "Handles in-app purchase events, subscription updates, and user entitlement changes for Adapty, offering seamless integration and real-time purchase insights."
-version: 1.0.0
+version: 1.0.1
 repository: https://github.com/Mohiuddin655-PUB/in_app_purchaser.git
 
 environment:
@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  in_app_purchaser_delegate: ^1.0.0
+  in_app_purchaser_delegate: ^1.0.1
   adapty_flutter: ^2.10.3
 
 dev_dependencies:

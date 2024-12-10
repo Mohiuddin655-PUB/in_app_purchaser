@@ -3,28 +3,13 @@ import 'dart:async';
 import 'package:in_app_purchaser_delegate/in_app_purchaser_delegate.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
-class RevenueCatDelegate extends PurchaseDelegate<Package> {
-  const RevenueCatDelegate({
-    required super.apiKey,
-    super.uid,
-    super.offerId,
-    super.otoOfferId,
-  });
+abstract class RevenueCatDelegate extends PurchaseDelegate<Package> {
+  const RevenueCatDelegate();
 
   @override
   Future<void> init() async {
     await Purchases.configure(PurchasesConfiguration(apiKey)..appUserID = uid);
     await Purchases.collectDeviceIdentifiers();
-  }
-
-  @override
-  Future<void> initAdjustSdk(String id, Map<String, String> attribution) {
-    return Purchases.setAdjustID(id);
-  }
-
-  @override
-  Future<void> initFacebookSdk(String id) {
-    return Purchases.setFBAnonymousID(id);
   }
 
   @override
@@ -38,41 +23,41 @@ class RevenueCatDelegate extends PurchaseDelegate<Package> {
   }
 
   @override
-  Stream<Object?> get profileChanges {
+  Stream<Object?> get stream {
     final controller = StreamController();
     Purchases.addCustomerInfoUpdateListener(controller.add);
     return controller.stream;
   }
 
   @override
-  Future<PurchasableOffering<Package>> fetchOtoProducts() async {
-    if (!isCustomOtoOffering) return const PurchasableOffering.empty();
+  Future<InAppOffering<Package>> fetchOtoPackages() async {
+    if (!isCustomOtoOffering) return const InAppOffering.empty();
     final offerings = await Purchases.getOfferings();
     final offering = offerings.getOffering(otoOfferId!);
-    if (offering == null) return const PurchasableOffering.empty();
-    return PurchasableOffering(
+    if (offering == null) return const InAppOffering.empty();
+    return InAppOffering(
       id: offering.identifier,
       products: offering.availablePackages,
     );
   }
 
   @override
-  Future<PurchasableOffering<Package>> fetchProducts() async {
+  Future<InAppOffering<Package>> fetchPackages() async {
     final offerings = await Purchases.getOfferings();
     Offering? offering;
     if (isCustomOffering) {
       offering = offerings.getOffering(offerId!);
     }
     offering ??= offerings.current;
-    if (offering == null) return const PurchasableOffering.empty();
-    return PurchasableOffering(
+    if (offering == null) return const InAppOffering.empty();
+    return InAppOffering(
       id: offering.identifier,
       products: offering.availablePackages,
     );
   }
 
   @override
-  Iterable<String> filterAbTestingIds(PurchasableOffering<Package> offering) {
+  Iterable<String> filterAbTestingIds(InAppOffering<Package> offering) {
     return [offering.id];
   }
 
@@ -86,45 +71,35 @@ class RevenueCatDelegate extends PurchaseDelegate<Package> {
   Future<void> logShow(String id) async {}
 
   @override
-  Iterable<PurchasableProduct<Package>> parseProducts(
-    Iterable<Package> products,
+  Iterable<InAppPackage> parsePackages(
+    Iterable<Package> packages,
   ) {
-    return products.map((e) {
+    return packages.map((e) {
       final id = e.storeProduct.identifier;
       final description = e.storeProduct.description;
       final title = e.storeProduct.title;
       final price = e.storeProduct.price;
       final currency = e.storeProduct.currencyCode;
-      return PurchasableProduct(
+      return InAppPackage(
         id: id,
-        title: title,
-        description: description,
+        plan: title,
+        details: description,
         currency: currency,
         price: price,
-        product: e,
+        raw: e,
         priceString: e.storeProduct.priceString,
       );
     });
   }
 
   @override
-  Future<Object?> purchase(Package product) {
-    return Purchases.purchasePackage(product);
+  Future<Object?> purchase(Package raw) {
+    return Purchases.purchasePackage(raw);
   }
 
   @override
   Future<Object?> restore() async {
     final value = await Purchases.restorePurchases();
     return value;
-  }
-
-  @override
-  Future<void> update() async {
-    const email = "example@gmail.com";
-    final data = <String, String>{};
-    await Purchases.enableAdServicesAttributionTokenCollection();
-    if (data.isNotEmpty) await Purchases.setAttributes(data);
-    if (email.isNotEmpty) await Purchases.setEmail(email);
-    await Purchases.syncAttributesAndOfferingsIfNeeded();
   }
 }
