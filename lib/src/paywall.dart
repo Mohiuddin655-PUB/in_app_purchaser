@@ -357,19 +357,20 @@ class InAppPurchasePaywall {
   factory InAppPurchasePaywall.fromOffering(InAppPurchaseOffering offering) {
     final parser = InAppPurchaser.parseConfig;
     final configs = offering.configs;
+    final paywall = configs["paywall"];
 
-    final hasSkip = parser(configs, "skippable", false);
-    final designType = parser(configs, "designType", "v1");
-    final headerText = parser<String?>(configs, "headerText", null);
-    final bodyText = parser<String?>(configs, "bodyText", null);
-    final titleText = parser<String?>(configs, "titleText", null);
-    final description = parser<String?>(configs, "descriptionText", null);
-    final features = parser(configs, "features", []);
+    final hasSkip = parser(paywall, "skippable", false);
+    final designType = parser(paywall, "designType", "v1");
+    final headerText = parser<String?>(paywall, "headerText", null);
+    final bodyText = parser<String?>(paywall, "bodyText", null);
+    final titleText = parser<String?>(paywall, "titleText", null);
+    final description = parser<String?>(paywall, "descriptionText", null);
+    final features = parser(paywall, "features", []);
 
     final products = List.generate(offering.products.length, (index) {
       return InAppPurchasePaywallProduct.fromConfigs(
         product: offering.products[index],
-        configs: configs,
+        configs: paywall["product"],
         index: index,
       );
     });
@@ -380,15 +381,15 @@ class InAppPurchasePaywall {
       designType: designType,
       skipMode: hasSkip,
       headerText: headerText,
-      headerStyle: InAppPurchasePaywallStyle.parse(configs["headerStyle"]),
+      headerStyle: InAppPurchasePaywallStyle.parse(paywall["headerStyle"]),
       bodyText: bodyText,
-      bodyStyle: InAppPurchasePaywallStyle.parse(configs["bodyStyle"]),
+      bodyStyle: InAppPurchasePaywallStyle.parse(paywall["bodyStyle"]),
       titleText: titleText,
-      titleStyle: InAppPurchasePaywallStyle.parse(configs["bodyStyle"]),
+      titleStyle: InAppPurchasePaywallStyle.parse(paywall["bodyStyle"]),
       description: description,
-      descriptionStyle: InAppPurchasePaywallStyle.parse(configs["bodyStyle"]),
+      descriptionStyle: InAppPurchasePaywallStyle.parse(paywall["bodyStyle"]),
       features: features,
-      featureStyle: InAppPurchasePaywallStyle.parse(configs["featureStyle"]),
+      featureStyle: InAppPurchasePaywallStyle.parse(paywall["featureStyle"]),
     );
   }
 }
