@@ -358,6 +358,7 @@ class InAppPurchasePaywall {
     final parser = InAppPurchaser.parseConfig;
     final configs = offering.configs;
     final paywall = configs["paywall"];
+    final product = configs["product"];
 
     final hasSkip = parser(paywall, "skippable", false);
     final designType = parser(paywall, "designType", "v1");
@@ -370,7 +371,7 @@ class InAppPurchasePaywall {
     final products = List.generate(offering.products.length, (index) {
       return InAppPurchasePaywallProduct.fromConfigs(
         product: offering.products[index],
-        configs: paywall["product"],
+        configs: product is Map ? product : {},
         index: index,
       );
     });
