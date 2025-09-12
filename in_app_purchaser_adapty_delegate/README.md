@@ -1,1 +1,0 @@
-## in_app_purchaser_adapty_delegate

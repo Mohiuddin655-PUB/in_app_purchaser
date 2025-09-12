@@ -33,10 +33,10 @@ dependencies:
 
   in_app_purchaser:
     path: ../
-#  in_app_purchaser_adapty_delegate: ^1.0.0
-  in_app_purchaser_qonversion_delegate: ^1.0.0
-  in_app_purchaser_revenue_cat_delegate: ^1.0.0
-  in_app_purchaser_delegate: ^1.0.0
+
+  adapty_flutter: ^3.11.1
+  purchases_flutter: ^9.6.0
+  qonversion_flutter: ^10.0.2
 
 
   # The following adds the Cupertino Icons font to your application.

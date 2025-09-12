@@ -1,16 +1,23 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchaser/in_app_purchaser.dart';
-import 'package:in_app_purchaser_revenue_cat_delegate/in_app_purchaser_revenue_cat_delegate.dart';
 
-const kQonversionApiKey = "";
+import 'adapty.dart';
+import 'qonversion.dart';
+import 'revenue_cat.dart';
 
 void main() {
   runApp(
-    PurchaseProvider(
-      delegate: const RevenueCatDelegate(
-        apiKey: kQonversionApiKey,
-      ),
+    InAppPurchaseProvider(
+      enabled: !kIsWeb,
+      delegate: const [
+        AdaptyInAppPurchaseDelegate(),
+        RevenueCatInAppPurchaseDelegate(),
+        QonversionInAppPurchaseDelegate(),
+      ][Platform.isIOS ? 0 : 2],
       child: const MyApp(),
     ),
   );
@@ -45,7 +52,7 @@ class PurchasePaywall extends StatelessWidget {
           child: Stack(
             children: [
               ListenableBuilder(
-                listenable: Purchaser.i,
+                listenable: InAppPurchaser.i,
                 builder: (context, child) {
                   return const PurchaseButton();
                 },
@@ -72,6 +79,7 @@ class _PurchaseButtonState extends State<PurchaseButton> {
 
   @override
   Widget build(BuildContext context) {
+    final products = InAppPurchaser.products();
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
@@ -88,8 +96,8 @@ class _PurchaseButtonState extends State<PurchaseButton> {
             ),
             const SizedBox(height: 20),
             Column(
-              children: List.generate(Purchaser.i.products.length, (index) {
-                final product = Purchaser.i.products.elementAtOrNull(index);
+              children: List.generate(products.length, (index) {
+                final product = products.elementAtOrNull(index);
                 final priceString = product?.priceString ?? '0 BDT';
                 final monthlyPrice = (product?.price ?? 0) / 12;
                 return MonthlyPlan(
@@ -104,7 +112,7 @@ class _PurchaseButtonState extends State<PurchaseButton> {
             const SizedBox(height: 5),
             CupertinoButton(
               padding: EdgeInsets.zero,
-              onPressed: () => Purchaser.i.purchaseAt(selected),
+              onPressed: () => InAppPurchaser.purchaseAt(selected),
               child: Container(
                 height: 65,
                 decoration: BoxDecoration(
@@ -116,7 +124,7 @@ class _PurchaseButtonState extends State<PurchaseButton> {
                 ),
                 alignment: Alignment.center,
                 child: Builder(builder: (context) {
-                  if (Purchaser.i.products.isEmpty) {
+                  if (products.isEmpty) {
                     return const SizedBox.square(
                       dimension: 24,
                       child: CircularProgressIndicator(
@@ -156,7 +164,7 @@ class _PurchaseButtonState extends State<PurchaseButton> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: Purchaser.i.restore,
+                    onTap: InAppPurchaser.restore,
                     child: const Text(
                       'Restore ',
                       style: TextStyle(

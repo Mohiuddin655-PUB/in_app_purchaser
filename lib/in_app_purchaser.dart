@@ -1,8 +1,9 @@
-library in_app_purchaser;
+library;
 
-export 'package:in_app_purchaser_delegate/in_app_purchaser_delegate.dart';
-
+export 'src/delegate.dart';
+export 'src/offering.dart';
+export 'src/paywall.dart';
+export 'src/purchase_result.dart';
 export 'src/purchaser.dart';
-export 'src/status.dart';
-export 'widgets/builder.dart';
+export 'widgets/paywall_builder.dart';
 export 'widgets/provider.dart';

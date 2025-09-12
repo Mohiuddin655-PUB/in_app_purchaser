@@ -3,37 +3,68 @@ import 'dart:developer' as dev;
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:in_app_purchaser_delegate/in_app_purchaser_delegate.dart';
 
-import 'status.dart';
+import 'delegate.dart';
+import 'offering.dart';
+import 'paywall.dart';
+import 'purchase_result.dart';
 
 const _kLogger = "IN_APP_PURCHASER";
 
-typedef AdjustSdkCallback = Future<void> Function(Map<String, String> data);
-typedef FbSdkCallback = Future<void> Function(String id);
+enum InAppPurchaseState {
+  none,
+  running,
+  done,
+  pending,
+  cancel,
+  failed,
+  exist,
+  invalid,
+  empty;
 
-class Purchaser extends ChangeNotifier {
+  bool get isRunning => this == running;
+
+  bool get isDone => this == done;
+
+  bool get isExist => this == exist;
+
+  bool get isPending => this == pending;
+
+  bool get isCancelled => this == cancel;
+
+  bool get isFailed => this == failed;
+
+  bool get isInvalid => this == invalid;
+
+  bool get isEmpty => this == empty;
+}
+
+class InAppPurchaser extends ChangeNotifier {
+  /// --------------------------------------------------------------------------
+  /// INIT START
+  /// --------------------------------------------------------------------------
+
   final bool logEnabled;
-  final PurchaseDelegate _delegate;
 
-  Purchaser._({
-    required PurchaseDelegate delegate,
+  final InAppPurchaseDelegate _delegate;
+
+  bool initialized = false;
+
+  InAppPurchaser._({
+    required InAppPurchaseDelegate delegate,
     required this.logEnabled,
   }) : _delegate = delegate;
 
-  static Purchaser? _i;
+  static InAppPurchaser? _i;
 
-  static Purchaser get i => _i!;
+  static InAppPurchaser get i => _i!;
 
-  static Purchaser init({
-    required PurchaseDelegate delegate,
+  static Future<void> init({
+    required InAppPurchaseDelegate delegate,
     bool logEnabled = true,
-  }) {
-    _i = Purchaser._(
-      delegate: delegate,
-      logEnabled: logEnabled,
-    );
-    return i;
+  }) async {
+    _i = InAppPurchaser._(delegate: delegate, logEnabled: logEnabled);
+    await i.configure();
   }
 
   void _log(Object? msg, [String? method]) {
@@ -43,71 +74,51 @@ class Purchaser extends ChangeNotifier {
 
   void notify() => notifyListeners();
 
-  /// --------------------------------------------------------------------------
-  /// EMITTER START
-  /// --------------------------------------------------------------------------
-
-  final Map<String, int> _emitters = {};
-
-  Future<void> _emit(String name, Future<void> Function() callback) async {
-    final count = _emitters[name] ?? 0;
-    if (count > 5) return;
-    _emitters[name] = count + 1;
-    await callback();
-    await Future.delayed(const Duration(seconds: 3));
-  }
-
-  /// --------------------------------------------------------------------------
-  /// EMITTER END
-  /// --------------------------------------------------------------------------
-
-  /// --------------------------------------------------------------------------
-  /// INIT START
-  /// --------------------------------------------------------------------------
-
-  bool isActive = false;
-
-  Future<void> _check(Object? data) async {
-    try {
-      _log("checking...");
-      if (data == null) {
-        _log("nullable!", "checking error");
-        return;
-      }
-      isActive = await _delegate.checkStatus(data);
-      _log(isActive, "checked");
-    } catch (e) {
-      _log(e, "checking error");
-    }
-  }
-
-  Future<void> _listen(Object? data) async {
-    await _check(data);
-    notify();
-  }
-
   ValueNotifier<InAppPurchaseState> initState = ValueNotifier(
     InAppPurchaseState.none,
   );
+
+  StreamSubscription? _sub;
 
   Future<void> configure() async {
     try {
       _log("initializing...");
       initState.value = InAppPurchaseState.running;
       await _delegate.init();
-      _delegate.stream.listen(_listen);
-      _emit("login", identify);
-      _emit("_fetchProducts", _fetchProducts);
-      _emit("_fetchOtoProducts", _fetchOtoProducts);
+      await _delegate.init();
+      _sub?.cancel();
+      _sub = _delegate.stream.listen(_listen);
+      _emit("initProfile", initProfile);
       if (!kIsWeb && Platform.isIOS) {
         _emit("initAdjust", initAdjust);
         _emit("initFacebookSdk", initFacebookSdk);
       }
       _log("initialized!");
       initState.value = InAppPurchaseState.done;
+      fetchAll();
+      initialized = true;
     } catch (e) {
       _log(e, "initialization error");
       initState.value = InAppPurchaseState.failed;
+    }
+  }
+
+  ValueNotifier<InAppPurchaseState> profileState = ValueNotifier(
+    InAppPurchaseState.none,
+  );
+
+  Future<void> initProfile() async {
+    try {
+      _log("profile initializing...");
+      profileState.value = InAppPurchaseState.running;
+      profile = await _delegate.profile(null);
+      if (profile != null) await _check(profile);
+      _emitters["initProfile"] = 10;
+      _log("profile initialized!");
+      profileState.value = InAppPurchaseState.done;
+    } catch (e) {
+      _log(e, "profile initialization error");
+      profileState.value = InAppPurchaseState.failed;
     }
   }
 
@@ -147,49 +158,12 @@ class Purchaser extends ChangeNotifier {
     }
   }
 
-  ValueNotifier<InAppPurchaseState> identifyState = ValueNotifier(
-    InAppPurchaseState.none,
-  );
-
-  Future<void> identify([String? id]) async {
-    try {
-      _log("identifying...");
-      identifyState.value = InAppPurchaseState.running;
-      if ((id ?? _delegate.uid).isEmpty) {
-        _log("invalid id", "identification error");
-        identifyState.value = InAppPurchaseState.failed;
-        return;
-      }
-      final data = await _delegate.identify(id ?? _delegate.uid);
-      if (data == null) {
-        _log("invalid", "identification error");
-        identifyState.value = InAppPurchaseState.failed;
-        return;
-      }
-      _emitters["login"] = 10;
-      _log("identified!");
-      identifyState.value = InAppPurchaseState.done;
-    } catch (e) {
-      _log(e, "identification error");
-      identifyState.value = InAppPurchaseState.failed;
-    }
-  }
-
-  ValueNotifier<InAppPurchaseState> logShowState = ValueNotifier(
-    InAppPurchaseState.none,
-  );
-
-  Future<void> logShow([String? id]) async {
-    try {
-      _log("log showing...");
-      logShowState.value = InAppPurchaseState.running;
-      await _delegate.logShow(id ?? offering.id);
-      _log("log shown!");
-      logShowState.value = InAppPurchaseState.done;
-    } catch (e) {
-      _log(e, "log showing error");
-      logShowState.value = InAppPurchaseState.failed;
-    }
+  void _disposeInits() {
+    _sub?.cancel();
+    initState.dispose();
+    profileState.dispose();
+    adjustSdkState.dispose();
+    facebookSdkState.dispose();
   }
 
   /// --------------------------------------------------------------------------
@@ -197,168 +171,375 @@ class Purchaser extends ChangeNotifier {
   /// --------------------------------------------------------------------------
 
   /// --------------------------------------------------------------------------
-  /// EXTERNAL CALLBACKS START
+  /// EMITTER START
   /// --------------------------------------------------------------------------
 
-  List<String> abTestingIds = [];
+  final Map<String, int> _emitters = {};
 
-  bool isAbTesting(String id) => abTestingIds.contains(id);
-
-  ValueNotifier<InAppPurchaseState> uploadState = ValueNotifier(
-    InAppPurchaseState.none,
-  );
-
-  Future<void> upload() async {
-    try {
-      _log("uploading...");
-      uploadState.value = InAppPurchaseState.running;
-      if (!kIsWeb && Platform.isIOS) {
-        _emit("initAdjust", initAdjust);
-        _emit("initFacebookSdk", initFacebookSdk);
-      }
-      await _delegate.update();
-      _log("uploaded!");
-      uploadState.value = InAppPurchaseState.done;
-    } catch (e) {
-      _log(e, "uploading error");
-      uploadState.value = InAppPurchaseState.failed;
-    }
+  Future<void> _emit(String name, Future<void> Function() callback) async {
+    final count = _emitters[name] ?? 0;
+    if (count > 5) return;
+    _emitters[name] = count + 1;
+    await callback();
+    await Future.delayed(const Duration(seconds: 5));
   }
 
   /// --------------------------------------------------------------------------
-  /// EXTERNAL CALLBACKS END
+  /// EMITTER END
   /// --------------------------------------------------------------------------
 
   /// --------------------------------------------------------------------------
-  /// FETCH PRODUCTS START
+  /// PREMIUM CHECKER START
   /// --------------------------------------------------------------------------
 
-  List<InAppPackage> products = [];
-  InAppOffering offering = InAppOffering.empty();
-  ValueNotifier<InAppPurchaseState> offeringState = ValueNotifier(
+  String? _uid;
+
+  bool _premium = false;
+
+  bool _premiumDefault = false;
+
+  Set<String> _ignorableUsers = {};
+
+  Set<String> _features = {};
+
+  Map<String, Set<int>> _ignorableIndexes = {};
+
+  InAppPurchaseProfile? profile;
+
+  Future<void> _check(InAppPurchaseProfile? data) async {
+    try {
+      _log("checking...");
+      if (data == null) {
+        _log("nullable!", "checking error");
+        return;
+      }
+      _premium = await check(data);
+      _log(isPremium, "checked");
+    } catch (e) {
+      _log(e, "checking error");
+    }
+  }
+
+  Future<void> _listen(InAppPurchaseProfile? data) async {
+    await _check(data);
+    notify();
+  }
+
+  bool get premium => isPremium;
+
+  static bool get isPremium => isPremiumUser(i._uid);
+
+  static bool isPremiumUser(String? uid) {
+    if (i._premiumDefault) return true;
+    if (i._premium) return true;
+    if ((uid ?? '').isNotEmpty && i._ignorableUsers.contains(uid)) return true;
+    return false;
+  }
+
+  static bool isPremiumFeature(String feature, [int? ignoreIndex]) {
+    if (isPremium) return false;
+    if ((i._ignorableIndexes[feature] ?? {}).contains(ignoreIndex)) {
+      return false;
+    }
+    return i._features.contains(feature);
+  }
+
+  static Future<bool> check([InAppPurchaseProfile? data]) async {
+    data ??= i.profile ??= await i._delegate.profile(null);
+    final id = data.accessLevels.keys.firstOrNull;
+    if (id == null || id.isEmpty) return false;
+    final info = data.accessLevels[id];
+    if (info == null) return false;
+    return info.isActive;
+  }
+
+  static void setFeatures(Set<String> features) {
+    i._features = features;
+    i.notify();
+  }
+
+  static void setIgnorableUsers(Set<String> uids) {
+    i._ignorableUsers = uids;
+    i.notify();
+  }
+
+  static void setIgnorableFeatureIndexes(String feature, Set<int> indexes) {
+    if (indexes.isEmpty) {
+      i._ignorableIndexes.remove(feature);
+    } else {
+      i._ignorableIndexes[feature] = indexes;
+    }
+    i.notify();
+  }
+
+  static void setIgnorableMappedFeatureIndexes(Map<String, Set<int>> indexes) {
+    if (indexes.isEmpty) {
+      i._ignorableIndexes.clear();
+    } else {
+      i._ignorableIndexes = indexes;
+    }
+    i.notify();
+  }
+
+  static void setDefaultPremiumStatus(bool status) {
+    i._premiumDefault = status;
+    i.notify();
+  }
+
+  static ValueNotifier<InAppPurchaseState> loginState = ValueNotifier(
     InAppPurchaseState.none,
   );
 
-  Future<void> _fetchProducts() async {
+  static Future<void> login(String uid, {bool isDefaultPremium = false}) async {
+    try {
+      i._log("logging...");
+      loginState.value = InAppPurchaseState.running;
+      await i._delegate.login(uid);
+      i._premiumDefault = isDefaultPremium;
+      i._premium = await check();
+      i._uid = uid;
+      i._log("loggedIn");
+      loginState.value = InAppPurchaseState.done;
+    } catch (e) {
+      i._log("logging_failed");
+      loginState.value = InAppPurchaseState.failed;
+    }
+    i.notify();
+  }
+
+  static ValueNotifier<InAppPurchaseState> logoutState = ValueNotifier(
+    InAppPurchaseState.none,
+  );
+
+  static Future<void> logout() async {
+    try {
+      i._log("logging_out...");
+      logoutState.value = InAppPurchaseState.running;
+      await i._delegate.logout();
+      i.profile = null;
+      i._premiumDefault = false;
+      i._premium = false;
+      i._uid = null;
+      i._log("loggedOut");
+      logoutState.value = InAppPurchaseState.done;
+    } catch (e) {
+      i._log("logged_out_failed");
+      logoutState.value = InAppPurchaseState.failed;
+    }
+    i.notify();
+  }
+
+  void _disposePremiumChecker() {
+    loginState.dispose();
+    logoutState.dispose();
+  }
+
+  /// --------------------------------------------------------------------------
+  /// PREMIUM CHECKER END
+  /// --------------------------------------------------------------------------
+
+  /// --------------------------------------------------------------------------
+  /// OFFERING START
+  /// --------------------------------------------------------------------------
+
+  final Map<String, InAppPurchaseOffering> _offerings = {};
+  final Map<String, ValueNotifier<InAppPurchaseState>> fetchingStates = {};
+
+  Future<void> _fetch(String key, String placement) async {
+    final state = fetchingState(placement);
     try {
       _log("offering fetching...");
-      offeringState.value = InAppPurchaseState.running;
-      final result = await _delegate.fetchPackages();
+      state.value = InAppPurchaseState.running;
+      final result = await _delegate.offering(placement);
       if (result.isEmpty) {
         _log("Not found!", "offering error");
-        offeringState.value = InAppPurchaseState.failed;
+        state.value = InAppPurchaseState.failed;
         return;
       }
-      offering = result;
-      abTestingIds = _delegate.filterAbTestingIds(result).toList();
-      products = _delegate.parsePackages(result.products).toList();
-      _emitters["_fetchProducts"] = 10;
-      _log(products, "offering fetched");
-      offeringState.value = InAppPurchaseState.done;
+      _offerings[placement] = result;
+      _emitters[key] = 10;
+      _log("offering fetched");
+      state.value = InAppPurchaseState.done;
     } catch (e) {
       _log(e, "offering error");
-      offeringState.value = InAppPurchaseState.failed;
+      state.value = InAppPurchaseState.failed;
     }
   }
 
-  List<InAppPackage> otoProducts = [];
-  InAppOffering otoOffering = InAppOffering.empty();
-  ValueNotifier<InAppPurchaseState> otoOfferingState = ValueNotifier(
-    InAppPurchaseState.none,
-  );
+  static InAppPurchaseOffering? offering(String placement) {
+    return i._offerings[placement];
+  }
 
-  Future<void> _fetchOtoProducts() async {
-    try {
-      _log("oto offering fetching...");
-      otoOfferingState.value = InAppPurchaseState.running;
-      final result = await _delegate.fetchOtoPackages();
-      if (result.isEmpty) {
-        _log("Not found!", "oto offering error");
-        otoOfferingState.value = InAppPurchaseState.failed;
-        return;
-      }
-      otoOffering = result;
-      otoProducts = _delegate.parsePackages(result.products).toList();
-      _emitters["_fetchOtoProducts"] = 10;
-      _log(products, "oto offering fetched");
-      otoOfferingState.value = InAppPurchaseState.done;
-    } catch (e) {
-      _log(e, "oto offering error");
-      otoOfferingState.value = InAppPurchaseState.failed;
+  static T parseConfig<T extends Object?>(
+    Map source,
+    String key,
+    T defaultValue,
+  ) {
+    return i._delegate.parseConfig(source, key, defaultValue);
+  }
+
+  static InAppPurchasePaywall? paywall(String placement) {
+    final offer = offering(placement);
+    if (offer == null) return null;
+    return i._delegate.paywall(offer);
+  }
+
+  static InAppPurchaseProduct? productAt(int index, [String? placement]) {
+    return products(placement).elementAtOrNull(index);
+  }
+
+  static List<InAppPurchaseProduct> products([String? placement]) {
+    placement ??= i._delegate.placements.firstOrNull;
+    if (placement == null || placement.isEmpty) return [];
+    return offering(placement)?.products ?? [];
+  }
+
+  static ValueNotifier<InAppPurchaseState> fetchingState(String placement) {
+    return i.fetchingStates[placement] ??= ValueNotifier(
+      InAppPurchaseState.none,
+    );
+  }
+
+  static Future<void> fetch(String placement) {
+    final key = "_fetch:$placement";
+    return i._emit(key, () => i._fetch(key, placement));
+  }
+
+  static Future<void> fetchAll() async {
+    await Future.wait(i._delegate.placements.map(fetch));
+  }
+
+  void _disposeOffering() {
+    for (var state in fetchingStates.values) {
+      state.dispose();
     }
   }
 
   /// --------------------------------------------------------------------------
-  /// FETCH PRODUCTS END
+  /// OFFERING END
   /// --------------------------------------------------------------------------
 
   /// --------------------------------------------------------------------------
   /// PURCHASE AND RESTORE START
   /// --------------------------------------------------------------------------
 
-  ValueNotifier<InAppPurchaseState> purchasingState = ValueNotifier(
+  static ValueNotifier<InAppPurchaseState> purchasingState = ValueNotifier(
     InAppPurchaseState.none,
   );
 
-  Future<bool> purchase(Object raw) async {
+  static Future<InAppPurchaseResult> purchase(
+    InAppPurchaseProduct product,
+  ) async {
     try {
-      _log("purchasing...");
+      if (isPremium) {
+        i._log("purchasing_failed: already purchased");
+        purchasingState.value = InAppPurchaseState.exist;
+        return InAppPurchaseResultAlreadyPurchased(
+          product: product,
+          profile: i.profile,
+        );
+      }
+      i._log("purchasing...");
       purchasingState.value = InAppPurchaseState.running;
-      final data = await _delegate.purchase(raw);
-      if (data != null) await _check(data);
-      _log(isActive, "purchased");
-      purchasingState.value = InAppPurchaseState.done;
-      return isActive;
+      if (product.raw == null) {
+        i._log("purchasing_failed: nullable product");
+        return InAppPurchaseResultInvalid();
+      }
+      final data = await i._delegate.purchase(product);
+      if (data is InAppPurchaseResultSuccess) {
+        await i._check(data.profile);
+        i._log(isPremium, "purchased");
+        purchasingState.value = InAppPurchaseState.done;
+        i.notify();
+        await i._delegate.purchased(data);
+      } else if (data is InAppPurchaseResultPending) {
+        i._log("purchase_pending");
+        purchasingState.value = InAppPurchaseState.pending;
+      } else if (data is InAppPurchaseResultUserCancelled) {
+        i._log("purchasing_cancelled");
+        purchasingState.value = InAppPurchaseState.cancel;
+      } else {
+        i._log("purchase_failed");
+        purchasingState.value = InAppPurchaseState.failed;
+      }
+      return data;
     } catch (e) {
-      _log(e, "purchasing error");
+      i._log(e, "purchasing error");
       purchasingState.value = InAppPurchaseState.failed;
-      return false;
+      return InAppPurchaseResultFailed();
     }
   }
 
-  Future<bool> purchaseAt(int index) async {
-    _log("purchase_at[$index]");
-    final package = products.elementAtOrNull(index)?.raw;
-    if (package == null) return false;
-    return purchase(package);
+  static Future<InAppPurchaseResult> purchaseAt(
+    int index, {
+    String? placement,
+  }) async {
+    i._log("purchasing_at[$index]");
+    placement ??= i._delegate.placements.firstOrNull;
+    if (placement == null || placement.isEmpty) {
+      i._log("purchasing_failed: invalid placement");
+      purchasingState.value = InAppPurchaseState.invalid;
+      return InAppPurchaseResultInvalid();
+    }
+    final products = offering(placement)?.products;
+    if (products == null || products.isEmpty) {
+      i._log("purchasing_failed: products is empty!");
+      purchasingState.value = InAppPurchaseState.empty;
+      return InAppPurchaseResultInvalid();
+    }
+    final product = products.elementAtOrNull(index);
+    if (product == null) {
+      i._log("purchasing_failed: invalid product or index");
+      purchasingState.value = InAppPurchaseState.invalid;
+      return InAppPurchaseResultInvalid();
+    }
+    return purchase(product);
   }
 
-  ValueNotifier<InAppPurchaseState> restoringState = ValueNotifier(
+  static ValueNotifier<InAppPurchaseState> restoringState = ValueNotifier(
     InAppPurchaseState.none,
   );
 
-  Future<bool> restore([bool silent = false]) async {
+  static Future<InAppPurchaseProfile?> restore([bool silent = false]) async {
     try {
-      _log("restoring...");
+      i._log("restoring...");
       if (!silent) restoringState.value = InAppPurchaseState.running;
-      final data = await _delegate.restore();
-      if (data != null) await _check(data);
-      _log(isActive, "restored");
+      final data = await i._delegate.restore();
+      if (data != null) await i._check(data);
+      i._log(isPremium, "restored");
       if (!silent) restoringState.value = InAppPurchaseState.done;
-      return isActive;
+      i.notify();
+      return data;
     } catch (e) {
-      _log(e, "restoring error");
+      i._log(e, "restoring error");
       if (!silent) restoringState.value = InAppPurchaseState.failed;
-      return false;
+      return null;
     }
+  }
+
+  void _disposePurchaseAndRestore() {
+    purchasingState.dispose();
+    restoringState.dispose();
   }
 
   /// --------------------------------------------------------------------------
   /// PURCHASE AND RESTORE END
   /// --------------------------------------------------------------------------
 
+  /// --------------------------------------------------------------------------
+  /// STRINGIFY START
+  /// --------------------------------------------------------------------------
+
+  /// --------------------------------------------------------------------------
+  /// STRINGIFY END
+  /// --------------------------------------------------------------------------
+
   @override
   void dispose() {
-    initState.dispose();
-    adjustSdkState.dispose();
-    facebookSdkState.dispose();
-    identifyState.dispose();
-    logShowState.dispose();
-    uploadState.dispose();
-    offeringState.dispose();
-    otoOfferingState.dispose();
-    purchasingState.dispose();
-    restoringState.dispose();
+    _disposeInits();
+    _disposePremiumChecker();
+    _disposeOffering();
+    _disposePurchaseAndRestore();
     super.dispose();
   }
 }
