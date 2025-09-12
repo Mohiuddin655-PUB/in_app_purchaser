@@ -21,26 +21,64 @@ class InAppPurchasePaywallStyle {
   final Color? backgroundColor;
   final double? width;
   final double? height;
-  final double? size;
+  final double? blur;
   final Border? border;
   final BorderRadius? borderRadius;
+  final List<BoxShadow>? boxShadow;
   final EdgeInsets? margin;
+  final int? maxLines;
   final EdgeInsets? padding;
   final EdgeInsets? position;
+  final LinearGradient? gradient;
+  final double? size;
+  final TextAlign? textAlign;
+  final TextStyle? textStyle;
 
   const InAppPurchasePaywallStyle({
     this.alignment,
     this.color,
     this.backgroundColor,
+    this.blur,
     this.width,
     this.height,
     this.size,
     this.border,
     this.borderRadius,
+    this.boxShadow,
     this.margin,
+    this.maxLines,
     this.padding,
     this.position,
+    this.gradient,
+    this.textAlign,
+    this.textStyle,
   });
+
+  static T? _enums<T extends Enum>(Object? source, Iterable<T> enums) {
+    try {
+      return enums.firstWhere((e) {
+        if (e.index == source) return true;
+        if (e.name == source) return true;
+        if (e.toString() == source) return true;
+        return false;
+      });
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static FontWeight? _fontWeight(Object? source) {
+    try {
+      return FontWeight.values.firstWhere((e) {
+        if (e.index == source) return true;
+        if (e.value == source) return true;
+        if (e.toString() == source) return true;
+        return false;
+      });
+    } catch (_) {
+      return null;
+    }
+  }
 
   static Alignment? _alignment(Object? source) {
     if (source is! Map || source.isEmpty) return null;
@@ -51,11 +89,139 @@ class InAppPurchasePaywallStyle {
     return source is num ? source.toDouble() : null;
   }
 
+  static int? _int(Object? source) {
+    return source is num ? source.toInt() : null;
+  }
+
+  static String? _string(Object? source) {
+    return source is String && source.isNotEmpty ? source : null;
+  }
+
   static Color? _color(Object? source) {
     if (source is! String || source.isEmpty) return null;
     final value = int.tryParse(source);
     if (value == null || value < 0) return null;
     return Color(value);
+  }
+
+  static FontStyle? _fontStyle(Object? source) {
+    return _enums(source, FontStyle.values);
+  }
+
+  static Offset? _offset(Object? source) {
+    if (source is! Map || source.isEmpty) return null;
+    return Offset(
+      _double(source['dx']) ?? 0,
+      _double(source['dy']) ?? 0,
+    );
+  }
+
+  static Shadow? _shadow(Object? source) {
+    if (source is! Map || source.isEmpty) return null;
+    return Shadow(
+      color: _color(source['color']) ?? Colors.transparent,
+      offset: _offset(source['offset']) ?? Offset.zero,
+      blurRadius: _double(source['blurRadius']) ?? 0,
+    );
+  }
+
+  static BlurStyle? _blurStyle(Object? source) {
+    return _enums(source, BlurStyle.values);
+  }
+
+  static TextDecoration? _textDecoration(Object? source) {
+    if (source is! String || source.isEmpty) return null;
+    switch (source.trim().toString()) {
+      case "lineThrough":
+        return TextDecoration.lineThrough;
+      case "overline":
+        return TextDecoration.overline;
+      case "underline":
+        return TextDecoration.underline;
+      default:
+        return null;
+    }
+  }
+
+  static TextDecorationStyle? _decorationStyle(Object? source) {
+    return _enums(source, TextDecorationStyle.values);
+  }
+
+  static TextAlign? _textAlign(Object? source) {
+    return _enums(source, TextAlign.values);
+  }
+
+  static TextOverflow? _textOverflow(Object? source) {
+    return _enums(source, TextOverflow.values);
+  }
+
+  static TextStyle? _textStyle(Object? source) {
+    if (source is! Map || source.isEmpty) return null;
+    final shadows = source["shadows"];
+    return TextStyle(
+      color: _color(source['color']),
+      fontSize: _double(source['fontSize']),
+      fontWeight: _fontWeight(source['fontWeight']),
+      fontStyle: _fontStyle(source['fontStyle']),
+      fontFamily: _string(source['fontFamily']),
+      letterSpacing: _double(source['letterSpacing']),
+      wordSpacing: _double(source['wordSpacing']),
+      height: _double(source['height']),
+      shadows: shadows is List
+          ? shadows.map(_shadow).whereType<Shadow>().toList()
+          : null,
+      decoration: _textDecoration(source['decoration']),
+      decorationColor: _color(source['decorationColor']),
+      decorationStyle: _decorationStyle(source['decorationStyle']),
+      decorationThickness: _double(source['decorationThickness']),
+      overflow: _textOverflow(source['overflow']),
+    );
+  }
+
+  static BoxShadow? _boxShadow(Object? source) {
+    if (source is! Map || source.isEmpty) return null;
+    final shadow = _shadow(source);
+    if (shadow == null) return null;
+    return BoxShadow(
+      color: shadow.color,
+      offset: shadow.offset,
+      blurRadius: shadow.blurRadius,
+      spreadRadius: _double(source['spreadRadius']) ?? 0,
+      blurStyle: _blurStyle(source['blurStyle']) ?? BlurStyle.normal,
+    );
+  }
+
+  static GradientTransform? _gradientTransform(Object? source) {
+    if (source is! Map || source.isEmpty) return null;
+    final type = source["type"];
+    switch (type) {
+      case "rotation":
+        return GradientRotation(_double(source["radians"]) ?? 0);
+      default:
+        return null;
+    }
+  }
+
+  static LinearGradient? _gradient(Object? source) {
+    if (source is! Map || source.isEmpty) return null;
+    final colors = source['colors'];
+    final stops = source['stops'];
+    final tileMode = source['tileMode'];
+    return LinearGradient(
+      begin: _alignment(source['begin']) ?? Alignment.centerLeft,
+      end: _alignment(source['end']) ?? Alignment.centerRight,
+      colors:
+          colors is List ? colors.map(_color).whereType<Color>().toList() : [],
+      stops:
+          stops is List ? stops.map(_double).whereType<double>().toList() : [],
+      tileMode: TileMode.values.where((e) {
+            if (e.toString() == tileMode.toString()) return true;
+            if (e.name == tileMode.toString()) return true;
+            return false;
+          }).firstOrNull ??
+          TileMode.clamp,
+      transform: _gradientTransform(source["transform"]),
+    );
   }
 
   static BorderSide _borderSide(Object? source) {
@@ -106,18 +272,27 @@ class InAppPurchasePaywallStyle {
 
   factory InAppPurchasePaywallStyle.parse(Object? source) {
     if (source is! Map) return InAppPurchasePaywallStyle();
+    final boxShadow = source['boxShadow'];
     return InAppPurchasePaywallStyle(
       alignment: _alignment(source['alignment']),
       color: _color(source['color']),
       backgroundColor: _color(source['backgroundColor']),
+      blur: _double(source['blur']),
       width: _double(source['width']),
       height: _double(source['height']),
       size: _double(source['size']),
       border: _border(source['border']),
       borderRadius: _borderRadius(source['borderRadius']),
+      boxShadow: boxShadow is List
+          ? boxShadow.map(_boxShadow).whereType<BoxShadow>().toList()
+          : null,
       margin: _edgeInsets(source['margin']),
+      maxLines: _int(source['maxLines']),
       padding: _edgeInsets(source['padding']),
       position: _edgeInsets(source['position']),
+      gradient: _gradient(source['gradient']),
+      textAlign: _textAlign(source['textAlign']),
+      textStyle: _textStyle(source['textStyle']),
     );
   }
 }
@@ -325,6 +500,10 @@ class InAppPurchasePaywall {
   final String designType;
   final bool skipMode;
 
+  final String? heroImage;
+  final InAppPurchasePaywallStyle? heroImageStyle;
+  final String? image;
+  final InAppPurchasePaywallStyle? imageStyle;
   final String? headerText;
   final InAppPurchasePaywallStyle headerStyle;
   final String? bodyText;
@@ -342,6 +521,10 @@ class InAppPurchasePaywall {
     this.initialIndex = 0,
     this.designType = "v1",
     this.skipMode = false,
+    this.heroImage,
+    this.heroImageStyle = const InAppPurchasePaywallStyle(),
+    this.image,
+    this.imageStyle = const InAppPurchasePaywallStyle(),
     this.headerText,
     this.headerStyle = const InAppPurchasePaywallStyle(),
     this.bodyText,
@@ -362,6 +545,8 @@ class InAppPurchasePaywall {
 
     final hasSkip = parser(paywall, "skippable", false);
     final designType = parser(paywall, "designType", "v1");
+    final heroImage = parser<String?>(paywall, "heroImage", null);
+    final image = parser<String?>(paywall, "image", null);
     final headerText = parser<String?>(paywall, "headerText", null);
     final bodyText = parser<String?>(paywall, "bodyText", null);
     final titleText = parser<String?>(paywall, "titleText", null);
@@ -381,14 +566,20 @@ class InAppPurchasePaywall {
       products: products,
       designType: designType,
       skipMode: hasSkip,
+      heroImage: heroImage,
+      heroImageStyle:
+          InAppPurchasePaywallStyle.parse(paywall["heroImageStyle"]),
+      image: image,
+      imageStyle: InAppPurchasePaywallStyle.parse(paywall["imageStyle"]),
       headerText: headerText,
       headerStyle: InAppPurchasePaywallStyle.parse(paywall["headerStyle"]),
       bodyText: bodyText,
       bodyStyle: InAppPurchasePaywallStyle.parse(paywall["bodyStyle"]),
       titleText: titleText,
-      titleStyle: InAppPurchasePaywallStyle.parse(paywall["bodyStyle"]),
+      titleStyle: InAppPurchasePaywallStyle.parse(paywall["titleStyle"]),
       description: description,
-      descriptionStyle: InAppPurchasePaywallStyle.parse(paywall["bodyStyle"]),
+      descriptionStyle:
+          InAppPurchasePaywallStyle.parse(paywall["descriptionStyle"]),
       features: features,
       featureStyle: InAppPurchasePaywallStyle.parse(paywall["featureStyle"]),
     );
