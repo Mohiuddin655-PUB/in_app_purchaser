@@ -1,3 +1,7 @@
+## 2.0.4
+
+* Theme mode supported
+
 ## 2.0.3
 
 * Improved paywall config styled position
