@@ -5,6 +5,8 @@ import 'purchase_result.dart';
 abstract class InAppPurchaseDelegate {
   const InAppPurchaseDelegate();
 
+  bool get isDarkTheme => false;
+
   Set<String> get placements;
 
   Stream<InAppPurchaseProfile> get stream;
@@ -22,7 +24,7 @@ abstract class InAppPurchaseDelegate {
   Future<InAppPurchaseOffering> offering(String placement);
 
   InAppPurchasePaywall paywall(InAppPurchaseOffering offering) {
-    return InAppPurchasePaywall.fromOffering(offering);
+    return InAppPurchasePaywall.fromOffering(offering, isDarkTheme);
   }
 
   T parseConfig<T extends Object?>(Map source, String key, T defaultValue);

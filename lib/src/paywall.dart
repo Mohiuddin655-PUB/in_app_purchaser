@@ -15,6 +15,30 @@ class InAppPurchasePaywallConfigFormatters {
   static const unit = "{UNIT}";
 }
 
+class _Theme<T> {
+  final T light;
+  final T? _dark;
+
+  T get dart => _dark ?? light;
+
+  T of(bool isDark) => isDark ? dart : light;
+
+  const _Theme({
+    required this.light,
+    T? dark,
+  }) : _dark = dark;
+}
+
+class InAppPurchasePaywallStyleState {
+  final InAppPurchasePaywallStyle selected;
+  final InAppPurchasePaywallStyle unselected;
+
+  const InAppPurchasePaywallStyleState({
+    required this.selected,
+    required this.unselected,
+  });
+}
+
 class InAppPurchasePaywallStylePosition {
   final double? top;
   final double? bottom;
@@ -115,7 +139,13 @@ class InAppPurchasePaywallStyle {
     return source is String && source.isNotEmpty ? source : null;
   }
 
-  static Color? _color(Object? source) {
+  static Color? _color(Object? source, bool dark) {
+    if (source is Map && source.isNotEmpty) {
+      return _Theme(
+        light: _color(source['light'], dark),
+        dark: _color(source['dark'], dark),
+      ).of(dark);
+    }
     if (source is! String || source.isEmpty) return null;
     final value = int.tryParse(source);
     if (value == null || value < 0) return null;
@@ -134,10 +164,10 @@ class InAppPurchasePaywallStyle {
     );
   }
 
-  static Shadow? _shadow(Object? source) {
+  static Shadow? _shadow(Object? source, bool dark) {
     if (source is! Map || source.isEmpty) return null;
     return Shadow(
-      color: _color(source['color']) ?? Colors.transparent,
+      color: _color(source['color'], dark) ?? Colors.transparent,
       offset: _offset(source['offset']) ?? Offset.zero,
       blurRadius: _double(source['blurRadius']) ?? 0,
     );
@@ -173,11 +203,11 @@ class InAppPurchasePaywallStyle {
     return _enums(source, TextOverflow.values);
   }
 
-  static TextStyle? _textStyle(Object? source) {
+  static TextStyle? _textStyle(Object? source, bool dark) {
     if (source is! Map || source.isEmpty) return null;
     final shadows = source["shadows"];
     return TextStyle(
-      color: _color(source['color']),
+      color: _color(source['color'], dark),
       fontSize: _double(source['fontSize']),
       fontWeight: _fontWeight(source['fontWeight']),
       fontStyle: _fontStyle(source['fontStyle']),
@@ -186,19 +216,19 @@ class InAppPurchasePaywallStyle {
       wordSpacing: _double(source['wordSpacing']),
       height: _double(source['height']),
       shadows: shadows is List
-          ? shadows.map(_shadow).whereType<Shadow>().toList()
+          ? shadows.map((e) => _shadow(e, dark)).whereType<Shadow>().toList()
           : null,
       decoration: _textDecoration(source['decoration']),
-      decorationColor: _color(source['decorationColor']),
+      decorationColor: _color(source['decorationColor'], dark),
       decorationStyle: _decorationStyle(source['decorationStyle']),
       decorationThickness: _double(source['decorationThickness']),
       overflow: _textOverflow(source['overflow']),
     );
   }
 
-  static BoxShadow? _boxShadow(Object? source) {
+  static BoxShadow? _boxShadow(Object? source, bool dark) {
     if (source is! Map || source.isEmpty) return null;
-    final shadow = _shadow(source);
+    final shadow = _shadow(source, dark);
     if (shadow == null) return null;
     return BoxShadow(
       color: shadow.color,
@@ -220,7 +250,7 @@ class InAppPurchasePaywallStyle {
     }
   }
 
-  static LinearGradient? _gradient(Object? source) {
+  static LinearGradient? _gradient(Object? source, bool dark) {
     if (source is! Map || source.isEmpty) return null;
     final colors = source['colors'];
     final stops = source['stops'];
@@ -228,8 +258,9 @@ class InAppPurchasePaywallStyle {
     return LinearGradient(
       begin: _alignment(source['begin']) ?? Alignment.centerLeft,
       end: _alignment(source['end']) ?? Alignment.centerRight,
-      colors:
-          colors is List ? colors.map(_color).whereType<Color>().toList() : [],
+      colors: colors is List
+          ? colors.map((e) => _color(e, dark)).whereType<Color>().toList()
+          : [],
       stops:
           stops is List ? stops.map(_double).whereType<double>().toList() : [],
       tileMode: TileMode.values.where((e) {
@@ -242,21 +273,21 @@ class InAppPurchasePaywallStyle {
     );
   }
 
-  static BorderSide _borderSide(Object? source) {
+  static BorderSide _borderSide(Object? source, bool dark) {
     if (source is! Map || source.isEmpty) return BorderSide.none;
-    final color = _color(source['color']);
+    final color = _color(source['color'], dark);
     final width = source['width'];
     if (color == null) return BorderSide.none;
     return BorderSide(color: color, width: width is num ? width.toDouble() : 0);
   }
 
-  static Border? _border(Object? source) {
+  static Border? _border(Object? source, bool dark) {
     if (source is! Map || source.isEmpty) return null;
     return Border(
-      top: _borderSide(source["top"]),
-      bottom: _borderSide(source["bottom"]),
-      left: _borderSide(source["left"]),
-      right: _borderSide(source["right"]),
+      top: _borderSide(source["top"], dark),
+      bottom: _borderSide(source["bottom"], dark),
+      left: _borderSide(source["left"], dark),
+      right: _borderSide(source["right"], dark),
     );
   }
 
@@ -300,29 +331,32 @@ class InAppPurchasePaywallStyle {
     );
   }
 
-  factory InAppPurchasePaywallStyle.parse(Object? source) {
+  factory InAppPurchasePaywallStyle.parse(Object? source, bool dark) {
     if (source is! Map) return InAppPurchasePaywallStyle();
     final boxShadow = source['boxShadow'];
     return InAppPurchasePaywallStyle(
       alignment: _alignment(source['alignment']),
-      color: _color(source['color']),
-      backgroundColor: _color(source['backgroundColor']),
+      color: _color(source['color'], dark),
+      backgroundColor: _color(source['backgroundColor'], dark),
       blur: _double(source['blur']),
       width: _double(source['width']),
       height: _double(source['height']),
       size: _double(source['size']),
-      border: _border(source['border']),
+      border: _border(source['border'], dark),
       borderRadius: _borderRadius(source['borderRadius']),
       boxShadow: boxShadow is List
-          ? boxShadow.map(_boxShadow).whereType<BoxShadow>().toList()
+          ? boxShadow
+              .map((e) => _boxShadow(e, dark))
+              .whereType<BoxShadow>()
+              .toList()
           : null,
       margin: _edgeInsets(source['margin']),
       maxLines: _int(source['maxLines']),
       padding: _edgeInsets(source['padding']),
       position: _position(source['position']),
-      gradient: _gradient(source['gradient']),
+      gradient: _gradient(source['gradient'], dark),
       textAlign: _textAlign(source['textAlign']),
-      textStyle: _textStyle(source['textStyle']),
+      textStyle: _textStyle(source['textStyle'], dark),
     );
   }
 }
@@ -472,6 +506,7 @@ class InAppPurchasePaywallProduct {
     required InAppPurchaseProduct product,
     required Map configs,
     required int index,
+    required bool dark,
   }) {
     final parser = InAppPurchaser.parseConfig;
 
@@ -495,28 +530,49 @@ class InAppPurchasePaywallProduct {
       price: prices.elementAtOrNull(index),
       unit: units.elementAtOrNull(index),
       leftTopText: leftTopTexts.elementAtOrNull(index),
-      leftTopStyle: InAppPurchasePaywallStyle.parse(configs["leftTopStyle"]),
+      leftTopStyle: InAppPurchasePaywallStyle.parse(
+        configs["leftTopStyle"],
+        dark,
+      ),
       leftBottomText: leftBottomTexts.elementAtOrNull(index),
       leftBottomStyle: InAppPurchasePaywallStyle.parse(
         configs["leftBottomStyle"],
+        dark,
       ),
       rightTopText: rightTopTexts.elementAtOrNull(index),
-      rightTopStyle: InAppPurchasePaywallStyle.parse(configs["rightTopStyle"]),
+      rightTopStyle: InAppPurchasePaywallStyle.parse(
+        configs["rightTopStyle"],
+        dark,
+      ),
       rightBottomText: rightBottomTexts.elementAtOrNull(index),
       rightBottomStyle: InAppPurchasePaywallStyle.parse(
         configs["rightBottomStyle"],
+        dark,
       ),
       badgeText: badgeTexts.elementAtOrNull(index),
-      badgeStyle: InAppPurchasePaywallStyle.parse(configs["badgeStyle"]),
+      badgeStyle: InAppPurchasePaywallStyle.parse(
+        configs["badgeStyle"],
+        dark,
+      ),
       buttonText: buttonTexts.elementAtOrNull(index),
-      buttonStyle: InAppPurchasePaywallStyle.parse(configs["buttonStyle"]),
+      buttonStyle: InAppPurchasePaywallStyle.parse(
+        configs["buttonStyle"],
+        dark,
+      ),
       bottomText: bottomTexts.elementAtOrNull(index),
-      bottomStyle: InAppPurchasePaywallStyle.parse(configs["bottomStyle"]),
+      bottomStyle: InAppPurchasePaywallStyle.parse(
+        configs["bottomStyle"],
+        dark,
+      ),
       titleText: titleTexts.elementAtOrNull(index),
-      titleStyle: InAppPurchasePaywallStyle.parse(configs["titleStyle"]),
+      titleStyle: InAppPurchasePaywallStyle.parse(
+        configs["titleStyle"],
+        dark,
+      ),
       descriptionText: descriptionTexts.elementAtOrNull(index),
       descriptionStyle: InAppPurchasePaywallStyle.parse(
         configs["descriptionStyle"],
+        dark,
       ),
     );
   }
@@ -567,7 +623,10 @@ class InAppPurchasePaywall {
     this.featureStyle = const InAppPurchasePaywallStyle(),
   });
 
-  factory InAppPurchasePaywall.fromOffering(InAppPurchaseOffering offering) {
+  factory InAppPurchasePaywall.fromOffering(
+    InAppPurchaseOffering offering,
+    bool dark,
+  ) {
     final parser = InAppPurchaser.parseConfig;
     final configs = offering.configs;
     final paywall = configs["paywall"];
@@ -588,6 +647,7 @@ class InAppPurchasePaywall {
         product: offering.products[index],
         configs: product is Map ? product : {},
         index: index,
+        dark: dark,
       );
     });
 
@@ -597,21 +657,40 @@ class InAppPurchasePaywall {
       designType: designType,
       skipMode: hasSkip,
       heroImage: heroImage,
-      heroImageStyle:
-          InAppPurchasePaywallStyle.parse(paywall["heroImageStyle"]),
+      heroImageStyle: InAppPurchasePaywallStyle.parse(
+        paywall["heroImageStyle"],
+        dark,
+      ),
       image: image,
-      imageStyle: InAppPurchasePaywallStyle.parse(paywall["imageStyle"]),
+      imageStyle: InAppPurchasePaywallStyle.parse(
+        paywall["imageStyle"],
+        dark,
+      ),
       headerText: headerText,
-      headerStyle: InAppPurchasePaywallStyle.parse(paywall["headerStyle"]),
+      headerStyle: InAppPurchasePaywallStyle.parse(
+        paywall["headerStyle"],
+        dark,
+      ),
       bodyText: bodyText,
-      bodyStyle: InAppPurchasePaywallStyle.parse(paywall["bodyStyle"]),
+      bodyStyle: InAppPurchasePaywallStyle.parse(
+        paywall["bodyStyle"],
+        dark,
+      ),
       titleText: titleText,
-      titleStyle: InAppPurchasePaywallStyle.parse(paywall["titleStyle"]),
+      titleStyle: InAppPurchasePaywallStyle.parse(
+        paywall["titleStyle"],
+        dark,
+      ),
       description: description,
-      descriptionStyle:
-          InAppPurchasePaywallStyle.parse(paywall["descriptionStyle"]),
+      descriptionStyle: InAppPurchasePaywallStyle.parse(
+        paywall["descriptionStyle"],
+        dark,
+      ),
       features: features,
-      featureStyle: InAppPurchasePaywallStyle.parse(paywall["featureStyle"]),
+      featureStyle: InAppPurchasePaywallStyle.parse(
+        paywall["featureStyle"],
+        dark,
+      ),
     );
   }
 }
