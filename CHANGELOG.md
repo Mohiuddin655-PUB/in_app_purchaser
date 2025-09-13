@@ -1,3 +1,7 @@
+## 2.0.7
+
+* Multi-state selected mode supported
+
 ## 2.0.6
 
 * Multi-state supported
