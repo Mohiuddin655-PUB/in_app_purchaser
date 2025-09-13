@@ -62,13 +62,6 @@ class RevenueCatInAppPurchaseDelegate extends InAppPurchaseDelegate {
   }
 
   @override
-  T parseConfig<T extends Object?>(Map source, String key, T defaultValue) {
-    final x = source[key];
-    if (x is T) return x;
-    return defaultValue;
-  }
-
-  @override
   Future<InAppPurchaseProfile> profile(Object? raw) async {
     if (raw is! CustomerInfo) return Purchases.getCustomerInfo().then(profile);
     return InAppPurchaseProfile(

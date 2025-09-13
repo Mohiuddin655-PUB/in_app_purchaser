@@ -27,7 +27,9 @@ abstract class InAppPurchaseDelegate {
     return InAppPurchasePaywall.fromOffering(offering, isDarkTheme);
   }
 
-  T parseConfig<T extends Object?>(Map source, String key, T defaultValue);
+  T parseConfig<T extends Object?>(Object? value, T defaultValue) {
+    return value is T ? value : defaultValue;
+  }
 
   Future<InAppPurchaseResult> purchase(InAppPurchaseProduct product);
 

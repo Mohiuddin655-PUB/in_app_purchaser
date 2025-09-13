@@ -69,7 +69,9 @@ class AdaptyInAppPurchaseDelegate extends InAppPurchaseDelegate {
   Future<InAppPurchaseOffering> offering(String placement) async {
     final paywall = await instance.getPaywall(placementId: placement);
     final configs = paywall.remoteConfig?.dictionary ?? {};
-    final products = await instance.getPaywallProducts(paywall: paywall).then((products,) {
+    final products = await instance.getPaywallProducts(paywall: paywall).then((
+        products,
+        ) {
       return products.map((e) {
         return InAppPurchaseProduct(
           id: e.vendorProductId,
@@ -87,13 +89,6 @@ class AdaptyInAppPurchaseDelegate extends InAppPurchaseDelegate {
       products: List.of(products),
       configs: configs,
     );
-  }
-
-  @override
-  T parseConfig<T extends Object?>(Map source, String key, T defaultValue) {
-    final x = source[key];
-    if (x is T) return x;
-    return defaultValue;
   }
 
   @override
@@ -231,8 +226,7 @@ class RevenueCatInAppPurchaseDelegate extends InAppPurchaseDelegate {
   @override
   Future<void> init() async {
     await Purchases.configure(
-      PurchasesConfiguration("API_KEY")
-        ..appUserID = "USER_ID",
+      PurchasesConfiguration("API_KEY")..appUserID = "USER_ID",
     );
     await Purchases.collectDeviceIdentifiers();
   }
@@ -278,13 +272,6 @@ class RevenueCatInAppPurchaseDelegate extends InAppPurchaseDelegate {
       products: List.of(products),
       configs: offering.metadata,
     );
-  }
-
-  @override
-  T parseConfig<T extends Object?>(Map source, String key, T defaultValue) {
-    final x = source[key];
-    if (x is T) return x;
-    return defaultValue;
   }
 
   @override
@@ -497,13 +484,6 @@ class QonversionInAppPurchaseDelegate extends InAppPurchaseDelegate {
       products: List.of(products),
       configs: configs.payload,
     );
-  }
-
-  @override
-  T parseConfig<T extends Object?>(Map source, String key, T defaultValue) {
-    final x = source[key];
-    if (x is T) return x;
-    return defaultValue;
   }
 
   @override

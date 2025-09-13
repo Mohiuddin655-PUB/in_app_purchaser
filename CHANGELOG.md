@@ -1,3 +1,7 @@
+## 2.0.6
+
+* Multi-state supported
+
 ## 2.0.5
 
 * Add Toggle state for paywall config style

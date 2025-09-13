@@ -370,12 +370,8 @@ class InAppPurchaser extends ChangeNotifier {
     return i._offerings[placement];
   }
 
-  static T parseConfig<T extends Object?>(
-    Map source,
-    String key,
-    T defaultValue,
-  ) {
-    return i._delegate.parseConfig(source, key, defaultValue);
+  static T parseConfig<T extends Object?>(Object? value, T defaultValue) {
+    return i._delegate.parseConfig(value, defaultValue);
   }
 
   static InAppPurchasePaywall? paywall(String placement) {
