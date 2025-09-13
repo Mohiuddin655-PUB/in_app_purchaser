@@ -1,3 +1,7 @@
+## 2.0.5
+
+* Add Toggle state for paywall config style
+
 ## 2.0.4
 
 * Theme mode supported

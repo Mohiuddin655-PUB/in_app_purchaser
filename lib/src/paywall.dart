@@ -15,28 +15,33 @@ class InAppPurchasePaywallConfigFormatters {
   static const unit = "{UNIT}";
 }
 
-class _Theme<T> {
-  final T light;
-  final T? _dark;
+class InAppPurchasePaywallStyleState<T> {
+  final T primary;
+  final T? _secondary;
 
-  T get dart => _dark ?? light;
+  T get secondary => _secondary ?? primary;
 
-  T of(bool isDark) => isDark ? dart : light;
-
-  const _Theme({
-    required this.light,
-    T? dark,
-  }) : _dark = dark;
-}
-
-class InAppPurchasePaywallStyleState {
-  final InAppPurchasePaywallStyle selected;
-  final InAppPurchasePaywallStyle unselected;
+  T of(bool isSecondary) => isSecondary ? secondary : primary;
 
   const InAppPurchasePaywallStyleState({
-    required this.selected,
-    required this.unselected,
-  });
+    required this.primary,
+    T? secondary,
+  }) : _secondary = secondary;
+
+  const InAppPurchasePaywallStyleState.all(T value) : this(primary: value);
+
+  factory InAppPurchasePaywallStyleState.parse(
+    Object? source,
+    T Function(Object? source) callback,
+  ) {
+    if (source is! Map || !source.keys.contains("primary")) {
+      return InAppPurchasePaywallStyleState.all(callback(source));
+    }
+    return InAppPurchasePaywallStyleState(
+      primary: callback('primary'),
+      secondary: callback('secondary'),
+    );
+  }
 }
 
 class InAppPurchasePaywallStylePosition {
@@ -58,42 +63,45 @@ class InAppPurchasePaywallStylePosition {
 }
 
 class InAppPurchasePaywallStyle {
-  final Alignment? alignment;
-  final Color? color;
-  final Color? backgroundColor;
-  final double? width;
-  final double? height;
-  final double? blur;
-  final Border? border;
-  final BorderRadius? borderRadius;
-  final List<BoxShadow>? boxShadow;
-  final EdgeInsets? margin;
-  final int? maxLines;
-  final EdgeInsets? padding;
-  final InAppPurchasePaywallStylePosition? position;
-  final LinearGradient? gradient;
-  final double? size;
-  final TextAlign? textAlign;
-  final TextStyle? textStyle;
+  final InAppPurchasePaywallStyleState<Alignment?> alignment;
+  final InAppPurchasePaywallStyleState<double?> duration;
+  final InAppPurchasePaywallStyleState<Color?> color;
+  final InAppPurchasePaywallStyleState<Color?> backgroundColor;
+  final InAppPurchasePaywallStyleState<double?> width;
+  final InAppPurchasePaywallStyleState<double?> height;
+  final InAppPurchasePaywallStyleState<double?> blur;
+  final InAppPurchasePaywallStyleState<Border?> border;
+  final InAppPurchasePaywallStyleState<BorderRadius?> borderRadius;
+  final InAppPurchasePaywallStyleState<List<BoxShadow>?> boxShadow;
+  final InAppPurchasePaywallStyleState<EdgeInsets?> margin;
+  final InAppPurchasePaywallStyleState<int?> maxLines;
+  final InAppPurchasePaywallStyleState<EdgeInsets?> padding;
+  final InAppPurchasePaywallStyleState<InAppPurchasePaywallStylePosition?>
+      position;
+  final InAppPurchasePaywallStyleState<LinearGradient?> gradient;
+  final InAppPurchasePaywallStyleState<double?> size;
+  final InAppPurchasePaywallStyleState<TextAlign?> textAlign;
+  final InAppPurchasePaywallStyleState<TextStyle?> textStyle;
 
   const InAppPurchasePaywallStyle({
-    this.alignment,
-    this.color,
-    this.backgroundColor,
-    this.blur,
-    this.width,
-    this.height,
-    this.size,
-    this.border,
-    this.borderRadius,
-    this.boxShadow,
-    this.margin,
-    this.maxLines,
-    this.padding,
-    this.position,
-    this.gradient,
-    this.textAlign,
-    this.textStyle,
+    this.alignment = const InAppPurchasePaywallStyleState.all(null),
+    this.duration = const InAppPurchasePaywallStyleState.all(null),
+    this.color = const InAppPurchasePaywallStyleState.all(null),
+    this.backgroundColor = const InAppPurchasePaywallStyleState.all(null),
+    this.blur = const InAppPurchasePaywallStyleState.all(null),
+    this.width = const InAppPurchasePaywallStyleState.all(null),
+    this.height = const InAppPurchasePaywallStyleState.all(null),
+    this.size = const InAppPurchasePaywallStyleState.all(null),
+    this.border = const InAppPurchasePaywallStyleState.all(null),
+    this.borderRadius = const InAppPurchasePaywallStyleState.all(null),
+    this.boxShadow = const InAppPurchasePaywallStyleState.all(null),
+    this.margin = const InAppPurchasePaywallStyleState.all(null),
+    this.maxLines = const InAppPurchasePaywallStyleState.all(null),
+    this.padding = const InAppPurchasePaywallStyleState.all(null),
+    this.position = const InAppPurchasePaywallStyleState.all(null),
+    this.gradient = const InAppPurchasePaywallStyleState.all(null),
+    this.textAlign = const InAppPurchasePaywallStyleState.all(null),
+    this.textStyle = const InAppPurchasePaywallStyleState.all(null),
   });
 
   static T? _enums<T extends Enum>(Object? source, Iterable<T> enums) {
@@ -141,9 +149,9 @@ class InAppPurchasePaywallStyle {
 
   static Color? _color(Object? source, bool dark) {
     if (source is Map && source.isNotEmpty) {
-      return _Theme(
-        light: _color(source['light'], dark),
-        dark: _color(source['dark'], dark),
+      return InAppPurchasePaywallStyleState(
+        primary: _color(source['light'], dark),
+        secondary: _color(source['dark'], dark),
       ).of(dark);
     }
     if (source is! String || source.isEmpty) return null;
@@ -237,6 +245,12 @@ class InAppPurchasePaywallStyle {
       spreadRadius: _double(source['spreadRadius']) ?? 0,
       blurStyle: _blurStyle(source['blurStyle']) ?? BlurStyle.normal,
     );
+  }
+
+  static List<T>? _list<T>(
+      Object? source, T? Function(Object? value) callback) {
+    if (source is! List || source.isEmpty) return null;
+    return source.map(callback).whereType<T>().toList();
   }
 
   static GradientTransform? _gradientTransform(Object? source) {
@@ -333,30 +347,74 @@ class InAppPurchasePaywallStyle {
 
   factory InAppPurchasePaywallStyle.parse(Object? source, bool dark) {
     if (source is! Map) return InAppPurchasePaywallStyle();
-    final boxShadow = source['boxShadow'];
     return InAppPurchasePaywallStyle(
-      alignment: _alignment(source['alignment']),
-      color: _color(source['color'], dark),
-      backgroundColor: _color(source['backgroundColor'], dark),
-      blur: _double(source['blur']),
-      width: _double(source['width']),
-      height: _double(source['height']),
-      size: _double(source['size']),
-      border: _border(source['border'], dark),
-      borderRadius: _borderRadius(source['borderRadius']),
-      boxShadow: boxShadow is List
-          ? boxShadow
-              .map((e) => _boxShadow(e, dark))
-              .whereType<BoxShadow>()
-              .toList()
-          : null,
-      margin: _edgeInsets(source['margin']),
-      maxLines: _int(source['maxLines']),
-      padding: _edgeInsets(source['padding']),
-      position: _position(source['position']),
-      gradient: _gradient(source['gradient'], dark),
-      textAlign: _textAlign(source['textAlign']),
-      textStyle: _textStyle(source['textStyle'], dark),
+      alignment: InAppPurchasePaywallStyleState.parse(
+        source['alignment'],
+        _alignment,
+      ),
+      color: InAppPurchasePaywallStyleState.parse(
+        source['color'],
+        (value) => _color(value, dark),
+      ),
+      backgroundColor: InAppPurchasePaywallStyleState.parse(
+        source['backgroundColor'],
+        (value) => _color(value, dark),
+      ),
+      blur: InAppPurchasePaywallStyleState.parse(
+        source['blur'],
+        _double,
+      ),
+      width: InAppPurchasePaywallStyleState.parse(
+        source['width'],
+        _double,
+      ),
+      height: InAppPurchasePaywallStyleState.parse(
+        source['height'],
+        _double,
+      ),
+      size: InAppPurchasePaywallStyleState.parse(
+        source['size'],
+        _double,
+      ),
+      border: InAppPurchasePaywallStyleState.parse(
+        source['border'],
+        (value) => _border(value, dark),
+      ),
+      borderRadius: InAppPurchasePaywallStyleState.parse(
+        source['borderRadius'],
+        _borderRadius,
+      ),
+      boxShadow: InAppPurchasePaywallStyleState.parse(source['boxShadow'], (v) {
+        return _list(v, (e) => _boxShadow(e, dark));
+      }),
+      margin: InAppPurchasePaywallStyleState.parse(
+        source['margin'],
+        _edgeInsets,
+      ),
+      maxLines: InAppPurchasePaywallStyleState.parse(
+        source['maxLines'],
+        _int,
+      ),
+      padding: InAppPurchasePaywallStyleState.parse(
+        source['padding'],
+        _edgeInsets,
+      ),
+      position: InAppPurchasePaywallStyleState.parse(
+        source['position'],
+        _position,
+      ),
+      gradient: InAppPurchasePaywallStyleState.parse(
+        source['gradient'],
+        (value) => _gradient(value, dark),
+      ),
+      textAlign: InAppPurchasePaywallStyleState.parse(
+        source['textAlign'],
+        _textAlign,
+      ),
+      textStyle: InAppPurchasePaywallStyleState.parse(
+        source['textStyle'],
+        (value) => _textStyle(value, dark),
+      ),
     );
   }
 }
@@ -368,24 +426,24 @@ class InAppPurchasePaywallProduct {
   final int? _unit;
 
   final String? _titleText;
-  final InAppPurchasePaywallStyle? titleStyle;
+  final InAppPurchasePaywallStyle titleStyle;
   final String? _descriptionText;
-  final InAppPurchasePaywallStyle? descriptionStyle;
+  final InAppPurchasePaywallStyle descriptionStyle;
 
   final String? _leftTopText;
-  final InAppPurchasePaywallStyle? leftTopStyle;
+  final InAppPurchasePaywallStyle leftTopStyle;
   final String? _leftBottomText;
-  final InAppPurchasePaywallStyle? leftBottomStyle;
+  final InAppPurchasePaywallStyle leftBottomStyle;
   final String? _rightTopText;
-  final InAppPurchasePaywallStyle? rightTopStyle;
+  final InAppPurchasePaywallStyle rightTopStyle;
   final String? _rightBottomText;
-  final InAppPurchasePaywallStyle? rightBottomStyle;
+  final InAppPurchasePaywallStyle rightBottomStyle;
   final String? _badgeText;
-  final InAppPurchasePaywallStyle? badgeStyle;
+  final InAppPurchasePaywallStyle badgeStyle;
   final String? _buttonText;
-  final InAppPurchasePaywallStyle? buttonStyle;
+  final InAppPurchasePaywallStyle buttonStyle;
   final String? _bottomText;
-  final InAppPurchasePaywallStyle? bottomStyle;
+  final InAppPurchasePaywallStyle bottomStyle;
 
   String? get titleText {
     if (_titleText == null) return null;
@@ -480,15 +538,15 @@ class InAppPurchasePaywallProduct {
     String? badgeText,
     String? buttonText,
     String? bottomText,
-    this.leftTopStyle,
-    this.leftBottomStyle,
-    this.rightTopStyle,
-    this.rightBottomStyle,
-    this.badgeStyle,
-    this.buttonStyle,
-    this.bottomStyle,
-    this.titleStyle,
-    this.descriptionStyle,
+    this.leftTopStyle = const InAppPurchasePaywallStyle(),
+    this.leftBottomStyle = const InAppPurchasePaywallStyle(),
+    this.rightTopStyle = const InAppPurchasePaywallStyle(),
+    this.rightBottomStyle = const InAppPurchasePaywallStyle(),
+    this.badgeStyle = const InAppPurchasePaywallStyle(),
+    this.buttonStyle = const InAppPurchasePaywallStyle(),
+    this.bottomStyle = const InAppPurchasePaywallStyle(),
+    this.titleStyle = const InAppPurchasePaywallStyle(),
+    this.descriptionStyle = const InAppPurchasePaywallStyle(),
   })  : _price = price,
         _period = period,
         _unit = unit,
@@ -587,9 +645,9 @@ class InAppPurchasePaywall {
   final bool skipMode;
 
   final String? heroImage;
-  final InAppPurchasePaywallStyle? heroImageStyle;
+  final InAppPurchasePaywallStyle heroImageStyle;
   final String? image;
-  final InAppPurchasePaywallStyle? imageStyle;
+  final InAppPurchasePaywallStyle imageStyle;
   final String? headerText;
   final InAppPurchasePaywallStyle headerStyle;
   final String? bodyText;
