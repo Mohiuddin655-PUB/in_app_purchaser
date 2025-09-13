@@ -15,6 +15,24 @@ class InAppPurchasePaywallConfigFormatters {
   static const unit = "{UNIT}";
 }
 
+class InAppPurchasePaywallStylePosition {
+  final double? top;
+  final double? bottom;
+  final double? left;
+  final double? right;
+  final double? width;
+  final double? height;
+
+  const InAppPurchasePaywallStylePosition({
+    this.top,
+    this.bottom,
+    this.left,
+    this.right,
+    this.width,
+    this.height,
+  });
+}
+
 class InAppPurchasePaywallStyle {
   final Alignment? alignment;
   final Color? color;
@@ -28,7 +46,7 @@ class InAppPurchasePaywallStyle {
   final EdgeInsets? margin;
   final int? maxLines;
   final EdgeInsets? padding;
-  final EdgeInsets? position;
+  final InAppPurchasePaywallStylePosition? position;
   final LinearGradient? gradient;
   final double? size;
   final TextAlign? textAlign;
@@ -270,6 +288,18 @@ class InAppPurchasePaywallStyle {
     );
   }
 
+  static InAppPurchasePaywallStylePosition? _position(Object? source) {
+    if (source is! Map || source.isEmpty) return null;
+    return InAppPurchasePaywallStylePosition(
+      left: _double(source['left']),
+      right: _double(source['right']),
+      top: _double(source['top']),
+      bottom: _double(source['bottom']),
+      width: _double(source['width']),
+      height: _double(source['height']),
+    );
+  }
+
   factory InAppPurchasePaywallStyle.parse(Object? source) {
     if (source is! Map) return InAppPurchasePaywallStyle();
     final boxShadow = source['boxShadow'];
@@ -289,7 +319,7 @@ class InAppPurchasePaywallStyle {
       margin: _edgeInsets(source['margin']),
       maxLines: _int(source['maxLines']),
       padding: _edgeInsets(source['padding']),
-      position: _edgeInsets(source['position']),
+      position: _position(source['position']),
       gradient: _gradient(source['gradient']),
       textAlign: _textAlign(source['textAlign']),
       textStyle: _textStyle(source['textStyle']),
