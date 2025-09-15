@@ -1,3 +1,4 @@
+## 2.0.9
 ## 2.0.8
 
 * Improve paywall config style
