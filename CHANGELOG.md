@@ -1,3 +1,9 @@
+## 2.0.8
+
+* Improve paywall config style
+* Add Configured text widget
+* Add Configured decorated box
+
 ## 2.0.7
 
 * Multi-state selected mode supported
