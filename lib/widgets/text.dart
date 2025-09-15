@@ -7,7 +7,6 @@ class InAppPurchasePaywallText extends StatelessWidget {
   final Color? color;
   final double? fontSize;
   final TextStyle? style;
-  final Widget child;
 
   const InAppPurchasePaywallText(
     this.data, {
@@ -17,7 +16,6 @@ class InAppPurchasePaywallText extends StatelessWidget {
     this.maxLines,
     this.style,
     this.textAlign,
-    required this.child,
   });
 
   @override
