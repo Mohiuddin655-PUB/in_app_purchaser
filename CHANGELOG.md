@@ -1,3 +1,7 @@
+## 2.0.12
+
+* Add product config style
+
 ## 2.0.11
 
 * Improve text widget

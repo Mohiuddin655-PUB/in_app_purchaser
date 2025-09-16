@@ -1021,6 +1021,8 @@ class InAppPurchasePaywallProduct {
   final InAppPurchasePaywallState<String?>? _descriptionText;
   final InAppPurchasePaywallStyle descriptionStyle;
 
+  final InAppPurchasePaywallStyle style;
+
   final InAppPurchasePaywallState<String?>? _badgeText;
   final InAppPurchasePaywallStyle badgeStyle;
 
@@ -1153,6 +1155,10 @@ class InAppPurchasePaywallProduct {
     return descriptionStyle.copyWith(selected: selected);
   }
 
+  InAppPurchasePaywallStyle get selectedStyle {
+    return style.copyWith(selected: selected);
+  }
+
   InAppPurchasePaywallStyle get selectedBadgeStyle {
     return badgeStyle.copyWith(selected: selected);
   }
@@ -1251,6 +1257,7 @@ class InAppPurchasePaywallProduct {
     InAppPurchasePaywallState<String?>? bottomText,
     this.titleStyle = const InAppPurchasePaywallStyle(),
     this.descriptionStyle = const InAppPurchasePaywallStyle(),
+    this.style = const InAppPurchasePaywallStyle(),
     this.badgeStyle = const InAppPurchasePaywallStyle(),
     this.leftStyle = const InAppPurchasePaywallStyle(),
     this.leftTopStyle = const InAppPurchasePaywallStyle(),
@@ -1305,6 +1312,7 @@ class InAppPurchasePaywallProduct {
     addObject("rightTopText", _rightTopText?.toDictionary((e) => e));
     addObject("titleText", _titleText?.toDictionary((e) => e));
 
+    addDictionary("style", style.dictionary);
     addDictionary("badgeStyle", badgeStyle.dictionary);
     addDictionary("bottomStyle", bottomStyle.dictionary);
     addDictionary("buttonStyle", buttonStyle.dictionary);
@@ -1341,6 +1349,10 @@ class InAppPurchasePaywallProduct {
       unit: InAppPurchasePaywallState.parse(
         configs['unit'],
         (v) => parser<int?>(v, null),
+      ),
+      style: InAppPurchasePaywallStyle.parse(
+        configs['style'],
+        dark,
       ),
       leftStyle: InAppPurchasePaywallStyle.parse(
         configs['leftStyle'],
@@ -1451,6 +1463,7 @@ class InAppPurchasePaywallProduct {
     InAppPurchasePaywallStyle? titleStyle,
     InAppPurchasePaywallState<String?>? descriptionText,
     InAppPurchasePaywallStyle? descriptionStyle,
+    InAppPurchasePaywallStyle? style,
     InAppPurchasePaywallStyle? leftStyle,
     InAppPurchasePaywallState<String?>? leftTopText,
     InAppPurchasePaywallStyle? leftTopStyle,
@@ -1475,6 +1488,7 @@ class InAppPurchasePaywallProduct {
     return InAppPurchasePaywallProduct(
       selected: selected ?? this.selected,
       product: product ?? this.product,
+      style: style ?? this.style,
       badgeStyle: badgeStyle ?? this.badgeStyle,
       badgeText: badgeText ?? _badgeText,
       bottomStyle: bottomStyle ?? this.bottomStyle,
@@ -1511,6 +1525,11 @@ class InAppPurchasePaywallProduct {
     TextDirection? textDirection,
   }) {
     return copyWith(
+      style: style.resolveWith(
+        selected: selected,
+        scaler: scaler,
+        textDirection: textDirection,
+      ),
       badgeStyle: badgeStyle.resolveWith(
         selected: selected,
         scaler: scaler,

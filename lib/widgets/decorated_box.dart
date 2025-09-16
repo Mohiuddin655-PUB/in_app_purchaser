@@ -32,6 +32,11 @@ class InAppPurchasePaywallDecoratedBox extends StatelessWidget {
         : this.style;
 
     final duration = Duration(milliseconds: style.duration ?? 0);
+
+    final alignment = style.alignment;
+    final position = style.position;
+    final isStackMode = alignment != null || position != null;
+
     Widget child = AnimatedContainer(
       duration: duration,
       decoration: BoxDecoration(
@@ -54,8 +59,8 @@ class InAppPurchasePaywallDecoratedBox extends StatelessWidget {
       margin: style.margin,
       alignment: Alignment.center,
       clipBehavior: Clip.antiAlias,
-      height: style.height,
-      width: style.width,
+      height: isStackMode ? null : style.height,
+      width: isStackMode ? null : style.width,
       child: this.child,
     );
     final opacity = style.opacity ?? 0;
@@ -98,7 +103,6 @@ class InAppPurchasePaywallDecoratedBox extends StatelessWidget {
         ),
       );
     }
-    final position = style.position;
     if (position != null) {
       if (duration != Duration.zero) {
         child = AnimatedPositioned(
@@ -123,7 +127,6 @@ class InAppPurchasePaywallDecoratedBox extends StatelessWidget {
         );
       }
     }
-    final alignment = style.alignment;
     if (alignment != null) {
       child = AnimatedAlign(
         alignment: alignment,
