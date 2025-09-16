@@ -1,5 +1,11 @@
+## 2.0.11
+
+* Improve text widget
+
 ## 2.0.10
+
 ## 2.0.9
+
 ## 2.0.8
 
 * Improve paywall config style

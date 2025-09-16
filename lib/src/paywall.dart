@@ -36,7 +36,9 @@ class InAppPurchasePaywallState<T> {
     Object? source,
     T Function(Object? source) callback,
   ) {
-    if (source is! Map || !source.keys.contains("primary")) {
+    if (source is! Map ||
+        !source.keys.contains("primary") ||
+        !source.keys.contains("secondary")) {
       return InAppPurchasePaywallState.all(callback(source));
     }
     return InAppPurchasePaywallState(
@@ -132,7 +134,9 @@ class InAppPurchasePaywallStyle {
   final InAppPurchasePaywallState<BorderRadius?> borderRadiusState;
   final InAppPurchasePaywallState<List<BoxShadow>?> boxShadowState;
   final InAppPurchasePaywallState<Color?> colorState;
+  final InAppPurchasePaywallState<Alignment?> contentAlignmentState;
   final InAppPurchasePaywallState<int?> durationState;
+  final InAppPurchasePaywallState<int?> flexState;
   final InAppPurchasePaywallState<LinearGradient?> gradientState;
   final InAppPurchasePaywallState<double?> heightState;
   final InAppPurchasePaywallState<String?> imageState;
@@ -166,7 +170,11 @@ class InAppPurchasePaywallStyle {
 
   Color? get color => colorState.of(selected);
 
+  Alignment? get contentAlignment => contentAlignmentState.of(selected);
+
   int? get duration => durationState.of(selected);
+
+  int? get flex => flexState.of(selected);
 
   LinearGradient? get gradient => gradientState.of(selected);
 
@@ -201,17 +209,18 @@ class InAppPurchasePaywallStyle {
   const InAppPurchasePaywallStyle({
     this.selected = false,
     this.alignmentState = const InAppPurchasePaywallState.all(null),
-    this.durationState = const InAppPurchasePaywallState.all(null),
-    this.colorState = const InAppPurchasePaywallState.all(null),
     this.backgroundColorState = const InAppPurchasePaywallState.all(null),
-    this.blurState = const InAppPurchasePaywallState.all(null),
-    this.widthState = const InAppPurchasePaywallState.all(null),
-    this.heightState = const InAppPurchasePaywallState.all(null),
-    this.sizeState = const InAppPurchasePaywallState.all(null),
     this.blendModeState = const InAppPurchasePaywallState.all(null),
+    this.blurState = const InAppPurchasePaywallState.all(null),
     this.borderState = const InAppPurchasePaywallState.all(null),
     this.borderRadiusState = const InAppPurchasePaywallState.all(null),
     this.boxShadowState = const InAppPurchasePaywallState.all(null),
+    this.colorState = const InAppPurchasePaywallState.all(null),
+    this.contentAlignmentState = const InAppPurchasePaywallState.all(null),
+    this.durationState = const InAppPurchasePaywallState.all(null),
+    this.flexState = const InAppPurchasePaywallState.all(null),
+    this.gradientState = const InAppPurchasePaywallState.all(null),
+    this.heightState = const InAppPurchasePaywallState.all(null),
     this.imageState = const InAppPurchasePaywallState.all(null),
     this.imageOpacityState = const InAppPurchasePaywallState.all(null),
     this.imageScaleState = const InAppPurchasePaywallState.all(null),
@@ -220,10 +229,11 @@ class InAppPurchasePaywallStyle {
     this.opacityState = const InAppPurchasePaywallState.all(null),
     this.paddingState = const InAppPurchasePaywallState.all(null),
     this.positionState = const InAppPurchasePaywallState.all(null),
-    this.gradientState = const InAppPurchasePaywallState.all(null),
     this.scaleState = const InAppPurchasePaywallState.all(null),
+    this.sizeState = const InAppPurchasePaywallState.all(null),
     this.textAlignState = const InAppPurchasePaywallState.all(null),
     this.textStyleState = const InAppPurchasePaywallState.all(null),
+    this.widthState = const InAppPurchasePaywallState.all(null),
   });
 
   static T? parseEnum<T extends Enum>(Object? source, Iterable<T> enums) {
@@ -261,7 +271,9 @@ class InAppPurchasePaywallStyle {
   }
 
   static double? parseDouble(Object? source) {
-    return source is num ? source.toDouble() : null;
+    if (source is num) return source.toDouble();
+    if (source is String && source.contains('infinity')) return double.infinity;
+    return null;
   }
 
   static int? parseInt(Object? source) {
@@ -276,17 +288,50 @@ class InAppPurchasePaywallStyle {
     return source is String && source.isNotEmpty ? source : null;
   }
 
-  static Color? parseColor(Object? source, bool dark) {
+  static Color? parseColor(String source) {
+    source = source.toLowerCase();
+    if (source.startsWith('#') && source.length == 7) {
+      final a = int.tryParse(source.substring(1), radix: 16);
+      if (a == null) return null;
+      return Color(a + 0xFF000000);
+    } else if ((source.startsWith("0x") || source.startsWith("0X")) &&
+        source.length == 10) {
+      final a = int.tryParse(source);
+      if (a == null) return null;
+      return Color(a);
+    } else {
+      return {
+        "amber": Colors.amber,
+        "black": Colors.black,
+        "blue": Colors.blue,
+        "brown": Colors.brown,
+        "cyan": Colors.cyan,
+        "grey": Colors.grey,
+        "green": Colors.green,
+        "indigo": Colors.indigo,
+        "lime": Colors.lime,
+        "orange": Colors.orange,
+        "pink": Colors.pink,
+        "purple": Colors.purple,
+        "red": Colors.red,
+        "teal": Colors.teal,
+        "transparent": Colors.transparent,
+        "none": Colors.transparent,
+        "white": Colors.white,
+        "yellow": Colors.yellow,
+      }[source];
+    }
+  }
+
+  static Color? _parseColor(Object? source, bool dark) {
     if (source is Map && source.isNotEmpty) {
       return InAppPurchasePaywallState(
-        primary: parseColor(source['primary'], dark),
-        secondary: parseColor(source['secondary'], dark),
+        primary: parseColor(source['primary']),
+        secondary: parseColor(source['secondary']),
       ).of(dark);
     }
     if (source is! String || source.isEmpty) return null;
-    final value = int.tryParse(source);
-    if (value == null || value < 0) return null;
-    return Color(value);
+    return parseColor(source);
   }
 
   static BlendMode? parseBlendMode(Object? source) {
@@ -308,7 +353,7 @@ class InAppPurchasePaywallStyle {
   static Shadow? parseShadow(Object? source, bool dark) {
     if (source is! Map || source.isEmpty) return null;
     return Shadow(
-      color: parseColor(source['color'], dark) ?? Colors.transparent,
+      color: _parseColor(source['color'], dark) ?? Colors.transparent,
       offset: parseOffset(source['offset']) ?? Offset.zero,
       blurRadius: parseDouble(source['blurRadius']) ?? 0,
     );
@@ -371,7 +416,7 @@ class InAppPurchasePaywallStyle {
     final shadows = source["shadows"];
     final fontFamilyFallback = source["fontFamilyFallback"];
     return TextStyle(
-      backgroundColor: parseColor(source['backgroundColor'], dark),
+      backgroundColor: _parseColor(source['backgroundColor'], dark),
       debugLabel: parseString(source['debugLabel']),
       fontFamilyFallback: fontFamilyFallback is List
           ? fontFamilyFallback.map(parseString).whereType<String>().toList()
@@ -384,7 +429,7 @@ class InAppPurchasePaywallStyle {
       locale: parseLocale(source['locale']),
       package: parseString(source['package']),
       textBaseline: parseEnum(source['textBaseline'], TextBaseline.values),
-      color: parseColor(source['color'], dark),
+      color: _parseColor(source['color'], dark),
       fontSize: parseDouble(source['fontSize']),
       fontWeight: parserFontWeight(source['fontWeight']),
       fontStyle: parseFontStyle(source['fontStyle']),
@@ -399,7 +444,7 @@ class InAppPurchasePaywallStyle {
               .toList()
           : null,
       decoration: parseTextDecoration(source['decoration']),
-      decorationColor: parseColor(source['decorationColor'], dark),
+      decorationColor: _parseColor(source['decorationColor'], dark),
       decorationStyle: parseDecorationStyle(source['decorationStyle']),
       decorationThickness: parseDouble(source['decorationThickness']),
       overflow: parseEnum(source['overflow'], TextOverflow.values),
@@ -442,7 +487,7 @@ class InAppPurchasePaywallStyle {
     if (source is! Map || source.isEmpty) return null;
     final colors = source['colors'];
     final mColors = colors is List
-        ? colors.map((e) => parseColor(e, dark)).whereType<Color>().toList()
+        ? colors.map((e) => _parseColor(e, dark)).whereType<Color>().toList()
         : <Color>[];
     if (mColors.length < 2) return null;
     final stops = source['stops'];
@@ -466,7 +511,7 @@ class InAppPurchasePaywallStyle {
 
   static BorderSide parseBorderSide(Object? source, bool dark) {
     if (source is! Map || source.isEmpty) return BorderSide.none;
-    final color = parseColor(source['color'], dark);
+    final color = _parseColor(source['color'], dark);
     final width = parseDouble(source['width']) ?? 0;
     if (color == null || width <= 0) return BorderSide.none;
     return BorderSide(color: color, width: width);
@@ -584,7 +629,12 @@ class InAppPurchasePaywallStyle {
         }).toList();
       }),
       "color": colorState.toDictionary((e) => e?.toARGB32()),
+      "contentAlignment": contentAlignmentState.toDictionary((e) {
+        if (e == null) return null;
+        return {"x": e.x, "y": e.y};
+      }),
       "duration": durationState.toDictionary((e) => e),
+      "flex": flexState.toDictionary((e) => e),
       "gradient": gradientState.toDictionary((e) {
         if (e == null) return null;
         final begin = e.begin;
@@ -688,7 +738,7 @@ class InAppPurchasePaywallStyle {
       ),
       backgroundColorState: InAppPurchasePaywallState.parse(
         source['backgroundColor'],
-        (value) => parseColor(value, dark),
+        (value) => _parseColor(value, dark),
       ),
       blendModeState: InAppPurchasePaywallState.parse(
         source['blendMode'],
@@ -711,10 +761,18 @@ class InAppPurchasePaywallStyle {
       }),
       colorState: InAppPurchasePaywallState.parse(
         source['color'],
-        (value) => parseColor(value, dark),
+        (value) => _parseColor(value, dark),
+      ),
+      contentAlignmentState: InAppPurchasePaywallState.parse(
+        source['contentAlignment'],
+        parseAlignment,
       ),
       durationState: InAppPurchasePaywallState.parse(
         source['duration'],
+        parseInt,
+      ),
+      flexState: InAppPurchasePaywallState.parse(
+        source['flex'],
         parseInt,
       ),
       gradientState: InAppPurchasePaywallState.parse(
@@ -790,7 +848,9 @@ class InAppPurchasePaywallStyle {
     InAppPurchasePaywallState<BorderRadius?>? borderRadiusState,
     InAppPurchasePaywallState<List<BoxShadow>?>? boxShadowState,
     InAppPurchasePaywallState<Color?>? colorState,
+    InAppPurchasePaywallState<Alignment?>? contentAlignmentState,
     InAppPurchasePaywallState<int?>? durationState,
+    InAppPurchasePaywallState<int?>? flexState,
     InAppPurchasePaywallState<LinearGradient?>? gradientState,
     InAppPurchasePaywallState<double?>? heightState,
     InAppPurchasePaywallState<String?>? imageState,
@@ -817,7 +877,10 @@ class InAppPurchasePaywallStyle {
       borderRadiusState: borderRadiusState ?? this.borderRadiusState,
       boxShadowState: boxShadowState ?? this.boxShadowState,
       colorState: colorState ?? this.colorState,
+      contentAlignmentState:
+          contentAlignmentState ?? this.contentAlignmentState,
       durationState: durationState ?? this.durationState,
+      flexState: flexState ?? this.flexState,
       gradientState: gradientState ?? this.gradientState,
       heightState: heightState ?? this.heightState,
       imageState: imageState ?? this.imageState,
@@ -912,6 +975,8 @@ class InAppPurchasePaywallStyle {
           );
         }).toList();
       }),
+      contentAlignmentState:
+          contentAlignmentState.resolveWith(resolveAlignment),
       marginState: marginState.resolveWith(resolveEdge),
       paddingState: paddingState.resolveWith(resolveEdge),
       positionState: positionState.resolveWith((value) {
@@ -956,20 +1021,25 @@ class InAppPurchasePaywallProduct {
   final InAppPurchasePaywallState<String?>? _descriptionText;
   final InAppPurchasePaywallStyle descriptionStyle;
 
+  final InAppPurchasePaywallState<String?>? _badgeText;
+  final InAppPurchasePaywallStyle badgeStyle;
+
+  final InAppPurchasePaywallStyle leftStyle;
   final InAppPurchasePaywallState<String?>? _leftTopText;
   final InAppPurchasePaywallStyle leftTopStyle;
   final InAppPurchasePaywallState<String?>? _leftMiddleText;
   final InAppPurchasePaywallStyle leftMiddleStyle;
   final InAppPurchasePaywallState<String?>? _leftBottomText;
   final InAppPurchasePaywallStyle leftBottomStyle;
+
+  final InAppPurchasePaywallStyle rightStyle;
   final InAppPurchasePaywallState<String?>? _rightTopText;
   final InAppPurchasePaywallStyle rightTopStyle;
   final InAppPurchasePaywallState<String?>? _rightMiddleText;
   final InAppPurchasePaywallStyle rightMiddleStyle;
   final InAppPurchasePaywallState<String?>? _rightBottomText;
   final InAppPurchasePaywallStyle rightBottomStyle;
-  final InAppPurchasePaywallState<String?>? _badgeText;
-  final InAppPurchasePaywallStyle badgeStyle;
+
   final InAppPurchasePaywallState<String?>? _buttonText;
   final InAppPurchasePaywallStyle buttonStyle;
   final InAppPurchasePaywallState<String?>? _bottomText;
@@ -1075,8 +1145,61 @@ class InAppPurchasePaywallProduct {
         InAppPurchasePaywallState.all(null);
   }
 
-  String stringify(String? value) {
-    if (value == null || value.isEmpty) return '';
+  InAppPurchasePaywallStyle get selectedTitleStyle {
+    return titleStyle.copyWith(selected: selected);
+  }
+
+  InAppPurchasePaywallStyle get selectedDescriptionStyle {
+    return descriptionStyle.copyWith(selected: selected);
+  }
+
+  InAppPurchasePaywallStyle get selectedBadgeStyle {
+    return badgeStyle.copyWith(selected: selected);
+  }
+
+  InAppPurchasePaywallStyle get selectedLeftStyle {
+    return leftStyle.copyWith(selected: selected);
+  }
+
+  InAppPurchasePaywallStyle get selectedLeftTopStyle {
+    return leftTopStyle.copyWith(selected: selected);
+  }
+
+  InAppPurchasePaywallStyle get selectedLeftMiddleStyle {
+    return leftMiddleStyle.copyWith(selected: selected);
+  }
+
+  InAppPurchasePaywallStyle get selectedLeftBottomStyle {
+    return leftBottomStyle.copyWith(selected: selected);
+  }
+
+  InAppPurchasePaywallStyle get selectedRightStyle {
+    return rightStyle.copyWith(selected: selected);
+  }
+
+  InAppPurchasePaywallStyle get selectedRightTopStyle {
+    return rightTopStyle.copyWith(selected: selected);
+  }
+
+  InAppPurchasePaywallStyle get selectedRightMiddleStyle {
+    return rightMiddleStyle.copyWith(selected: selected);
+  }
+
+  InAppPurchasePaywallStyle get selectedRightBottomStyle {
+    return rightBottomStyle.copyWith(selected: selected);
+  }
+
+  InAppPurchasePaywallStyle get selectedButtonStyle {
+    return buttonStyle.copyWith(selected: selected);
+  }
+
+  InAppPurchasePaywallStyle get selectedBottomStyle {
+    return bottomStyle.copyWith(selected: selected);
+  }
+
+  String? stringify(String? value) {
+    if (value == null) return null;
+    if (value.isEmpty) return '';
     final period = this.period ?? 'mo';
     final unit = this.unit ?? 1;
     final currency = this.currency ?? "USD";
@@ -1126,17 +1249,19 @@ class InAppPurchasePaywallProduct {
     InAppPurchasePaywallState<String?>? badgeText,
     InAppPurchasePaywallState<String?>? buttonText,
     InAppPurchasePaywallState<String?>? bottomText,
+    this.titleStyle = const InAppPurchasePaywallStyle(),
+    this.descriptionStyle = const InAppPurchasePaywallStyle(),
+    this.badgeStyle = const InAppPurchasePaywallStyle(),
+    this.leftStyle = const InAppPurchasePaywallStyle(),
     this.leftTopStyle = const InAppPurchasePaywallStyle(),
     this.leftMiddleStyle = const InAppPurchasePaywallStyle(),
     this.leftBottomStyle = const InAppPurchasePaywallStyle(),
+    this.rightStyle = const InAppPurchasePaywallStyle(),
     this.rightTopStyle = const InAppPurchasePaywallStyle(),
     this.rightMiddleStyle = const InAppPurchasePaywallStyle(),
     this.rightBottomStyle = const InAppPurchasePaywallStyle(),
-    this.badgeStyle = const InAppPurchasePaywallStyle(),
     this.buttonStyle = const InAppPurchasePaywallStyle(),
     this.bottomStyle = const InAppPurchasePaywallStyle(),
-    this.titleStyle = const InAppPurchasePaywallStyle(),
-    this.descriptionStyle = const InAppPurchasePaywallStyle(),
   })  : _price = price,
         _period = period,
         _unit = unit,
@@ -1184,9 +1309,11 @@ class InAppPurchasePaywallProduct {
     addDictionary("bottomStyle", bottomStyle.dictionary);
     addDictionary("buttonStyle", buttonStyle.dictionary);
     addDictionary("descriptionStyle", descriptionStyle.dictionary);
+    addDictionary("leftStyle", leftStyle.dictionary);
     addDictionary("leftBottomStyle", leftBottomStyle.dictionary);
     addDictionary("leftMiddleStyle", leftMiddleStyle.dictionary);
     addDictionary("leftTopStyle", leftTopStyle.dictionary);
+    addDictionary("rightStyle", rightStyle.dictionary);
     addDictionary("rightBottomStyle", rightBottomStyle.dictionary);
     addDictionary("rightMiddleStyle", rightMiddleStyle.dictionary);
     addDictionary("rightTopStyle", rightTopStyle.dictionary);
@@ -1197,7 +1324,6 @@ class InAppPurchasePaywallProduct {
   factory InAppPurchasePaywallProduct.fromConfigs({
     required InAppPurchaseProduct product,
     required Map configs,
-    required int index,
     required bool dark,
   }) {
     final parser = InAppPurchaser.parseConfig;
@@ -1215,6 +1341,10 @@ class InAppPurchasePaywallProduct {
       unit: InAppPurchasePaywallState.parse(
         configs['unit'],
         (v) => parser<int?>(v, null),
+      ),
+      leftStyle: InAppPurchasePaywallStyle.parse(
+        configs['leftStyle'],
+        dark,
       ),
       leftTopText: InAppPurchasePaywallState.parse(
         configs['leftTopText'],
@@ -1238,6 +1368,10 @@ class InAppPurchasePaywallProduct {
       ),
       leftBottomStyle: InAppPurchasePaywallStyle.parse(
         configs["leftBottomStyle"],
+        dark,
+      ),
+      rightStyle: InAppPurchasePaywallStyle.parse(
+        configs["rightStyle"],
         dark,
       ),
       rightTopText: InAppPurchasePaywallState.parse(
@@ -1317,12 +1451,14 @@ class InAppPurchasePaywallProduct {
     InAppPurchasePaywallStyle? titleStyle,
     InAppPurchasePaywallState<String?>? descriptionText,
     InAppPurchasePaywallStyle? descriptionStyle,
+    InAppPurchasePaywallStyle? leftStyle,
     InAppPurchasePaywallState<String?>? leftTopText,
     InAppPurchasePaywallStyle? leftTopStyle,
     InAppPurchasePaywallState<String?>? leftMiddleText,
     InAppPurchasePaywallStyle? leftMiddleStyle,
     InAppPurchasePaywallState<String?>? leftBottomText,
     InAppPurchasePaywallStyle? leftBottomStyle,
+    InAppPurchasePaywallStyle? rightStyle,
     InAppPurchasePaywallState<String?>? rightTopText,
     InAppPurchasePaywallStyle? rightTopStyle,
     InAppPurchasePaywallState<String?>? rightMiddleText,
@@ -1347,6 +1483,7 @@ class InAppPurchasePaywallProduct {
       buttonText: buttonText ?? _buttonText,
       descriptionStyle: descriptionStyle ?? this.descriptionStyle,
       descriptionText: descriptionText ?? _descriptionText,
+      leftStyle: leftStyle ?? this.leftStyle,
       leftBottomStyle: leftBottomStyle ?? this.leftBottomStyle,
       leftBottomText: leftBottomText ?? _leftBottomText,
       leftMiddleStyle: leftMiddleStyle ?? this.leftMiddleStyle,
@@ -1355,6 +1492,7 @@ class InAppPurchasePaywallProduct {
       leftTopText: leftTopText ?? _leftTopText,
       period: period ?? _period,
       price: price ?? _price,
+      rightStyle: rightStyle ?? this.rightStyle,
       rightBottomStyle: rightBottomStyle ?? this.rightBottomStyle,
       rightBottomText: rightBottomText ?? _rightBottomText,
       rightMiddleStyle: rightMiddleStyle ?? this.rightMiddleStyle,
@@ -1393,6 +1531,11 @@ class InAppPurchasePaywallProduct {
         scaler: scaler,
         textDirection: textDirection,
       ),
+      leftStyle: leftStyle.resolveWith(
+        selected: selected,
+        scaler: scaler,
+        textDirection: textDirection,
+      ),
       leftBottomStyle: leftBottomStyle.resolveWith(
         selected: selected,
         scaler: scaler,
@@ -1404,6 +1547,11 @@ class InAppPurchasePaywallProduct {
         textDirection: textDirection,
       ),
       leftTopStyle: leftTopStyle.resolveWith(
+        selected: selected,
+        scaler: scaler,
+        textDirection: textDirection,
+      ),
+      rightStyle: rightStyle.resolveWith(
         selected: selected,
         scaler: scaler,
         textDirection: textDirection,
@@ -1454,6 +1602,7 @@ class InAppPurchasePaywall {
   final InAppPurchasePaywallStyle descriptionStyle;
   final List features;
   final InAppPurchasePaywallStyle featureStyle;
+  final InAppPurchasePaywallStyle style;
 
   const InAppPurchasePaywall({
     required this.id,
@@ -1475,6 +1624,7 @@ class InAppPurchasePaywall {
     this.descriptionStyle = const InAppPurchasePaywallStyle(),
     this.features = const [],
     this.featureStyle = const InAppPurchasePaywallStyle(),
+    this.style = const InAppPurchasePaywallStyle(),
   });
 
   Map<String, dynamic> get dictionary {
@@ -1509,6 +1659,7 @@ class InAppPurchasePaywall {
     addDictionary("titleStyle", titleStyle.dictionary);
     addDictionary("descriptionStyle", descriptionStyle.dictionary);
     addDictionary("featureStyle", featureStyle.dictionary);
+    addDictionary("style", style.dictionary);
     return map;
   }
 
@@ -1537,13 +1688,13 @@ class InAppPurchasePaywall {
     final titleStyle = parser<Map?>(configs["titleStyle"], null);
     final descriptionStyle = parser<Map?>(configs["descriptionStyle"], null);
     final featureStyle = parser<Map?>(configs["featureStyle"], null);
+    final style = parser<Map?>(configs["style"], null);
 
     final mProducts = List.generate(offering.products.length, (index) {
       final productConfigs = products?.elementAtOrNull(index);
       return InAppPurchasePaywallProduct.fromConfigs(
         product: offering.products[index],
         configs: productConfigs is Map ? productConfigs : {},
-        index: index,
         dark: dark,
       );
     });
@@ -1568,6 +1719,7 @@ class InAppPurchasePaywall {
       descriptionStyle: InAppPurchasePaywallStyle.parse(descriptionStyle, dark),
       features: features ?? [],
       featureStyle: InAppPurchasePaywallStyle.parse(featureStyle, dark),
+      style: InAppPurchasePaywallStyle.parse(style, dark),
     );
   }
 
@@ -1591,6 +1743,7 @@ class InAppPurchasePaywall {
     InAppPurchasePaywallStyle? descriptionStyle,
     List? features,
     InAppPurchasePaywallStyle? featureStyle,
+    InAppPurchasePaywallStyle? style,
   }) {
     return InAppPurchasePaywall(
       id: id ?? this.id,
@@ -1612,6 +1765,7 @@ class InAppPurchasePaywall {
       descriptionStyle: descriptionStyle ?? this.descriptionStyle,
       features: features ?? this.features,
       featureStyle: featureStyle ?? this.featureStyle,
+      style: style ?? this.style,
     );
   }
 
@@ -1652,6 +1806,11 @@ class InAppPurchasePaywall {
         textDirection: textDirection,
       ),
       titleStyle: bodyStyle.resolveWith(
+        selected: selected,
+        scaler: scaler,
+        textDirection: textDirection,
+      ),
+      style: style.resolveWith(
         selected: selected,
         scaler: scaler,
         textDirection: textDirection,
