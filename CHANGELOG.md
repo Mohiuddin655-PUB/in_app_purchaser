@@ -1,3 +1,7 @@
+## 2.0.17
+
+* filter json data for text style and position
+
 ## 2.0.16
 
 * filter json data

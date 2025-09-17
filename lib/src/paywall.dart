@@ -54,12 +54,15 @@ class InAppPurchasePaywallState<T> {
     );
   }
 
-  Object? toDictionary(Object? Function(T? value) callback) {
+  Object? toDictionary(Object? Function(T? value) callback,
+      [bool filter = true]) {
     if (_secondary == null) return callback(primary);
-    return {
+    final entries = {
       "primary": callback(primary),
       "secondary": callback(_secondary),
-    };
+    }.entries.where((e) => e.value != null);
+    if (entries.isEmpty) return null;
+    return Map.fromEntries(entries);
   }
 }
 
@@ -121,6 +124,18 @@ class InAppPurchasePaywallStylePosition {
       width: dp(width),
       height: dp(height),
     );
+  }
+
+  Map<String, double>? get dictionary {
+    final map = {
+      if (width != null) "width": width!,
+      if (height != null) "height": height!,
+      if (top != null) "top": top!,
+      if (bottom != null) "bottom": bottom!,
+      if (left != null) "left": left!,
+      if (right != null) "right": right!,
+    };
+    return map.isEmpty ? null : map;
   }
 }
 
@@ -687,24 +702,14 @@ class InAppPurchasePaywallStyle {
           "bottom": e.bottom,
         };
       }),
-      "position": positionState.toDictionary((e) {
-        if (e == null) return null;
-        return {
-          "width": e.width,
-          "height": e.height,
-          "left": e.left,
-          "right": e.right,
-          "top": e.top,
-          "bottom": e.bottom,
-        };
-      }),
+      "position": positionState.toDictionary((e) => e?.dictionary),
       "scale": scaleState.toDictionary((e) => e),
       "size": sizeState.toDictionary((e) => e),
       "textAlign": textAlignState.toDictionary((e) => e?.name),
       "textStyle": textStyleState.toDictionary((e) {
         if (e == null) return null;
         TextDecoration.underline.toString();
-        return {
+        final entries = {
           "backgroundColor": colorToHex(e.backgroundColor),
           "color": colorToHex(e.color),
           "decorationThickness": e.decorationThickness,
@@ -736,7 +741,8 @@ class InAppPurchasePaywallStyle {
               .toList(),
           "textBaseline": e.textBaseline?.name,
           "wordSpacing": e.wordSpacing,
-        };
+        }.entries.where((e) => e.value != null);
+        return Map.fromEntries(entries);
       }),
       "width": widthState.toDictionary(_safeEncodableDouble),
     }.entries.where((e) => e.value != null);
