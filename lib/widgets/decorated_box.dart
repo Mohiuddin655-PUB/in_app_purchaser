@@ -35,7 +35,6 @@ class InAppPurchasePaywallDecoratedBox extends StatelessWidget {
 
     final alignment = style.alignment;
     final position = style.position;
-    final isStackMode = alignment != null || position != null;
 
     Widget child = AnimatedContainer(
       duration: duration,
@@ -57,10 +56,10 @@ class InAppPurchasePaywallDecoratedBox extends StatelessWidget {
       ),
       padding: style.padding,
       margin: style.margin,
-      alignment: Alignment.center,
+      alignment: style.contentAlignment,
       clipBehavior: Clip.antiAlias,
-      height: isStackMode ? null : style.height,
-      width: isStackMode ? null : style.width,
+      height: style.height,
+      width: style.width,
       child: this.child,
     );
     final opacity = style.opacity ?? 0;

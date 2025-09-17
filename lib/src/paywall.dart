@@ -1625,60 +1625,66 @@ class InAppPurchasePaywall {
   final int initialIndex;
   final String designType;
   final bool skipMode;
+  final bool safeArea;
   final bool defaultMode;
 
-  final String? heroImage;
-  final InAppPurchasePaywallStyle heroImageStyle;
+  final String? hero;
   final String? image;
-  final InAppPurchasePaywallStyle imageStyle;
-  final String? headerText;
-  final InAppPurchasePaywallStyle headerStyle;
-  final String? bodyText;
-  final InAppPurchasePaywallStyle bodyStyle;
-  final String? titleText;
-  final InAppPurchasePaywallStyle titleStyle;
-  final String? descriptionText;
-  final InAppPurchasePaywallStyle descriptionStyle;
+  final String? title;
+  final String? subtitle;
   final List features;
-  final InAppPurchasePaywallStyle featureStyle;
+
   final InAppPurchasePaywallStyle style;
+  final InAppPurchasePaywallStyle heroStyle;
+
+  final InAppPurchasePaywallStyle headerStyle;
+  final InAppPurchasePaywallStyle bodyStyle;
+  final InAppPurchasePaywallStyle footerStyle;
+
+  final InAppPurchasePaywallStyle imageStyle;
+  final InAppPurchasePaywallStyle titleStyle;
+  final InAppPurchasePaywallStyle subtitleStyle;
+  final InAppPurchasePaywallStyle featureStyle;
+
+  final InAppPurchasePaywallStyle closeButtonStyle;
+  final InAppPurchasePaywallStyle textButtonStyle;
 
   const InAppPurchasePaywall({
     required this.id,
     required this.products,
     this.initialIndex = 0,
     this.designType = "v1",
+    this.safeArea = true,
     this.skipMode = false,
     this.defaultMode = true,
-    this.heroImage,
-    this.heroImageStyle = const InAppPurchasePaywallStyle(),
+    this.hero,
     this.image,
-    this.imageStyle = const InAppPurchasePaywallStyle(),
-    this.headerText,
-    this.headerStyle = const InAppPurchasePaywallStyle(),
-    this.bodyText,
-    this.bodyStyle = const InAppPurchasePaywallStyle(),
-    this.titleText,
-    this.titleStyle = const InAppPurchasePaywallStyle(),
-    this.descriptionText,
-    this.descriptionStyle = const InAppPurchasePaywallStyle(),
+    this.title,
+    this.subtitle,
     this.features = const [],
-    this.featureStyle = const InAppPurchasePaywallStyle(),
     this.style = const InAppPurchasePaywallStyle(),
+    this.heroStyle = const InAppPurchasePaywallStyle(),
+    this.headerStyle = const InAppPurchasePaywallStyle(),
+    this.bodyStyle = const InAppPurchasePaywallStyle(),
+    this.footerStyle = const InAppPurchasePaywallStyle(),
+    this.imageStyle = const InAppPurchasePaywallStyle(),
+    this.titleStyle = const InAppPurchasePaywallStyle(),
+    this.subtitleStyle = const InAppPurchasePaywallStyle(),
+    this.featureStyle = const InAppPurchasePaywallStyle(),
+    this.closeButtonStyle = const InAppPurchasePaywallStyle(),
+    this.textButtonStyle = const InAppPurchasePaywallStyle(),
   });
 
   Map<String, dynamic> get dictionary {
     final map = {
       if (initialIndex > 0) "initialIndex": initialIndex,
       if (designType.isNotEmpty) "designType": designType,
-      if (skipMode) "skipMode": skipMode,
-      if ((heroImage ?? '').isNotEmpty) "heroImage": heroImage,
+      "safeArea": safeArea,
+      "skipMode": skipMode,
+      if ((hero ?? '').isNotEmpty) "hero": hero,
       if ((image ?? '').isNotEmpty) "image": image,
-      if ((headerText ?? '').isNotEmpty) "headerText": headerText,
-      if ((bodyText ?? '').isNotEmpty) "bodyText": bodyText,
-      if ((titleText ?? '').isNotEmpty) "titleText": titleText,
-      if ((descriptionText ?? '').isNotEmpty)
-        "descriptionText": descriptionText,
+      if ((title ?? '').isNotEmpty) "title": title,
+      if ((subtitle ?? '').isNotEmpty) "subtitle": subtitle,
       if (features.isNotEmpty) "features": features,
       if (products.isNotEmpty)
         "products": products
@@ -1692,14 +1698,20 @@ class InAppPurchasePaywall {
       map[key] = value;
     }
 
-    addDictionary("heroImageStyle", heroImageStyle.dictionary);
-    addDictionary("imageStyle", imageStyle.dictionary);
+    addDictionary("style", style.dictionary);
+    addDictionary("heroStyle", heroStyle.dictionary);
+
     addDictionary("headerStyle", headerStyle.dictionary);
     addDictionary("bodyStyle", bodyStyle.dictionary);
+    addDictionary("footerStyle", footerStyle.dictionary);
+
+    addDictionary("imageStyle", imageStyle.dictionary);
     addDictionary("titleStyle", titleStyle.dictionary);
-    addDictionary("descriptionStyle", descriptionStyle.dictionary);
+    addDictionary("subtitleStyle", subtitleStyle.dictionary);
     addDictionary("featureStyle", featureStyle.dictionary);
-    addDictionary("style", style.dictionary);
+
+    addDictionary("closeButtonStyle", closeButtonStyle.dictionary);
+    addDictionary("textButtonStyle", textButtonStyle.dictionary);
     return map;
   }
 
@@ -1725,23 +1737,30 @@ class InAppPurchasePaywall {
 
     final initialIndex = parser(configs["initialIndex"], 0);
     final designType = parser(configs["designType"], 'v1');
+    final safeArea = parser(configs["safeArea"], true);
     final skipMode = parser(configs["skipMode"], false);
-    final heroImage = parser<String?>(configs["heroImage"], null);
+
+    final hero = parser<String?>(configs["hero"], null);
     final image = parser<String?>(configs["image"], null);
-    final headerText = parser<String?>(configs["headerText"], null);
-    final bodyText = parser<String?>(configs["bodyText"], null);
-    final titleText = parser<String?>(configs["titleText"], null);
-    final descriptionText = parser<String?>(configs["descriptionText"], null);
+    final title = parser<String?>(configs["title"], null);
+    final subtitle = parser<String?>(configs["subtitle"], null);
     final features = parser<List?>(configs["features"], null);
     final products = parser<List?>(configs["products"], null);
-    final heroImageStyle = parser<Map?>(configs["heroImageStyle"], null);
-    final imageStyle = parser<Map?>(configs["imageStyle"], null);
+
+    final style = parser<Map?>(configs["style"], null);
+    final heroStyle = parser<Map?>(configs["heroStyle"], null);
+
     final headerStyle = parser<Map?>(configs["headerStyle"], null);
     final bodyStyle = parser<Map?>(configs["bodyStyle"], null);
+    final footerStyle = parser<Map?>(configs["footerStyle"], null);
+
+    final imageStyle = parser<Map?>(configs["imageStyle"], null);
     final titleStyle = parser<Map?>(configs["titleStyle"], null);
-    final descriptionStyle = parser<Map?>(configs["descriptionStyle"], null);
+    final subtitleStyle = parser<Map?>(configs["subtitleStyle"], null);
     final featureStyle = parser<Map?>(configs["featureStyle"], null);
-    final style = parser<Map?>(configs["style"], null);
+
+    final closeButtonStyle = parser<Map?>(configs["closeButtonStyle"], null);
+    final textButtonStyle = parser<Map?>(configs["textButtonStyle"], null);
 
     final mProducts = List.generate(packages.length, (index) {
       final productConfigs = products?.elementAtOrNull(index);
@@ -1756,24 +1775,26 @@ class InAppPurchasePaywall {
       defaultMode: false,
       id: placement,
       initialIndex: initialIndex,
-      products: mProducts,
       designType: designType,
+      safeArea: safeArea,
       skipMode: skipMode,
-      heroImage: heroImage,
-      heroImageStyle: InAppPurchasePaywallStyle.parse(heroImageStyle, dark),
+      hero: hero,
       image: image,
-      imageStyle: InAppPurchasePaywallStyle.parse(imageStyle, dark),
-      headerText: headerText,
-      headerStyle: InAppPurchasePaywallStyle.parse(headerStyle, dark),
-      bodyText: bodyText,
-      bodyStyle: InAppPurchasePaywallStyle.parse(bodyStyle, dark),
-      titleText: titleText,
-      titleStyle: InAppPurchasePaywallStyle.parse(titleStyle, dark),
-      descriptionText: descriptionText,
-      descriptionStyle: InAppPurchasePaywallStyle.parse(descriptionStyle, dark),
+      title: title,
+      subtitle: subtitle,
       features: features ?? [],
-      featureStyle: InAppPurchasePaywallStyle.parse(featureStyle, dark),
+      products: mProducts,
       style: InAppPurchasePaywallStyle.parse(style, dark),
+      heroStyle: InAppPurchasePaywallStyle.parse(heroStyle, dark),
+      headerStyle: InAppPurchasePaywallStyle.parse(headerStyle, dark),
+      bodyStyle: InAppPurchasePaywallStyle.parse(bodyStyle, dark),
+      footerStyle: InAppPurchasePaywallStyle.parse(footerStyle, dark),
+      imageStyle: InAppPurchasePaywallStyle.parse(imageStyle, dark),
+      titleStyle: InAppPurchasePaywallStyle.parse(titleStyle, dark),
+      subtitleStyle: InAppPurchasePaywallStyle.parse(subtitleStyle, dark),
+      featureStyle: InAppPurchasePaywallStyle.parse(featureStyle, dark),
+      closeButtonStyle: InAppPurchasePaywallStyle.parse(closeButtonStyle, dark),
+      textButtonStyle: InAppPurchasePaywallStyle.parse(textButtonStyle, dark),
     );
   }
 
@@ -1783,44 +1804,49 @@ class InAppPurchasePaywall {
     int? initialIndex,
     String? designType,
     bool? skipMode,
-    String? heroImage,
-    InAppPurchasePaywallStyle? heroImageStyle,
+    bool? safeArea,
+    bool? defaultMode,
+    String? hero,
     String? image,
-    InAppPurchasePaywallStyle? imageStyle,
-    String? headerText,
-    InAppPurchasePaywallStyle? headerStyle,
-    String? bodyText,
-    InAppPurchasePaywallStyle? bodyStyle,
-    String? titleText,
-    InAppPurchasePaywallStyle? titleStyle,
-    String? descriptionText,
-    InAppPurchasePaywallStyle? descriptionStyle,
+    String? title,
+    String? subtitle,
     List? features,
-    InAppPurchasePaywallStyle? featureStyle,
     InAppPurchasePaywallStyle? style,
+    InAppPurchasePaywallStyle? heroStyle,
+    InAppPurchasePaywallStyle? headerStyle,
+    InAppPurchasePaywallStyle? bodyStyle,
+    InAppPurchasePaywallStyle? footerStyle,
+    InAppPurchasePaywallStyle? imageStyle,
+    InAppPurchasePaywallStyle? titleStyle,
+    InAppPurchasePaywallStyle? subtitleStyle,
+    InAppPurchasePaywallStyle? featureStyle,
+    InAppPurchasePaywallStyle? closeButtonStyle,
+    InAppPurchasePaywallStyle? textButtonStyle,
   }) {
     return InAppPurchasePaywall(
-      defaultMode: defaultMode,
       id: id ?? this.id,
+      products: products ?? this.products,
       initialIndex: initialIndex ?? this.initialIndex,
       designType: designType ?? this.designType,
       skipMode: skipMode ?? this.skipMode,
-      products: products ?? this.products,
-      heroImage: heroImage ?? this.heroImage,
-      heroImageStyle: heroImageStyle ?? this.heroImageStyle,
+      safeArea: safeArea ?? this.safeArea,
+      defaultMode: defaultMode ?? this.defaultMode,
+      hero: hero ?? this.hero,
       image: image ?? this.image,
-      imageStyle: imageStyle ?? this.imageStyle,
-      headerText: headerText ?? this.headerText,
-      headerStyle: headerStyle ?? this.headerStyle,
-      bodyText: bodyText ?? this.bodyText,
-      bodyStyle: bodyStyle ?? this.bodyStyle,
-      titleText: titleText ?? this.titleText,
-      titleStyle: titleStyle ?? this.titleStyle,
-      descriptionText: descriptionText ?? this.descriptionText,
-      descriptionStyle: descriptionStyle ?? this.descriptionStyle,
+      title: title ?? this.title,
+      subtitle: subtitle ?? this.subtitle,
       features: features ?? this.features,
-      featureStyle: featureStyle ?? this.featureStyle,
       style: style ?? this.style,
+      heroStyle: heroStyle ?? this.heroStyle,
+      headerStyle: headerStyle ?? this.headerStyle,
+      bodyStyle: bodyStyle ?? this.bodyStyle,
+      footerStyle: footerStyle ?? this.footerStyle,
+      imageStyle: imageStyle ?? this.imageStyle,
+      titleStyle: titleStyle ?? this.titleStyle,
+      subtitleStyle: subtitleStyle ?? this.subtitleStyle,
+      featureStyle: featureStyle ?? this.featureStyle,
+      closeButtonStyle: closeButtonStyle ?? this.closeButtonStyle,
+      textButtonStyle: textButtonStyle ?? this.textButtonStyle,
     );
   }
 
@@ -1830,17 +1856,19 @@ class InAppPurchasePaywall {
     TextDirection? textDirection,
   }) {
     return copyWith(
-      bodyStyle: bodyStyle.resolveWith(
+      products: products.map((e) {
+        return e.resolveWith(
+          selected: selected,
+          scaler: scaler,
+          textDirection: textDirection,
+        );
+      }).toList(),
+      style: style.resolveWith(
         selected: selected,
         scaler: scaler,
         textDirection: textDirection,
       ),
-      descriptionStyle: descriptionStyle.resolveWith(
-        selected: selected,
-        scaler: scaler,
-        textDirection: textDirection,
-      ),
-      featureStyle: featureStyle.resolveWith(
+      heroStyle: heroStyle.resolveWith(
         selected: selected,
         scaler: scaler,
         textDirection: textDirection,
@@ -1850,7 +1878,12 @@ class InAppPurchasePaywall {
         scaler: scaler,
         textDirection: textDirection,
       ),
-      heroImageStyle: heroImageStyle.resolveWith(
+      bodyStyle: bodyStyle.resolveWith(
+        selected: selected,
+        scaler: scaler,
+        textDirection: textDirection,
+      ),
+      footerStyle: footerStyle.resolveWith(
         selected: selected,
         scaler: scaler,
         textDirection: textDirection,
@@ -1865,18 +1898,26 @@ class InAppPurchasePaywall {
         scaler: scaler,
         textDirection: textDirection,
       ),
-      style: style.resolveWith(
+      subtitleStyle: subtitleStyle.resolveWith(
         selected: selected,
         scaler: scaler,
         textDirection: textDirection,
       ),
-      products: products.map((e) {
-        return e.resolveWith(
-          selected: selected,
-          scaler: scaler,
-          textDirection: textDirection,
-        );
-      }).toList(),
+      featureStyle: featureStyle.resolveWith(
+        selected: selected,
+        scaler: scaler,
+        textDirection: textDirection,
+      ),
+      closeButtonStyle: closeButtonStyle.resolveWith(
+        selected: selected,
+        scaler: scaler,
+        textDirection: textDirection,
+      ),
+      textButtonStyle: textButtonStyle.resolveWith(
+        selected: selected,
+        scaler: scaler,
+        textDirection: textDirection,
+      ),
     );
   }
 }

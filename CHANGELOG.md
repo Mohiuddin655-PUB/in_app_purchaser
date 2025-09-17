@@ -1,3 +1,7 @@
+## 2.0.22
+
+* Improve paywall configs
+
 ## 2.0.21
 
 * InAppPurchasePaywallState parsing bug fixed
