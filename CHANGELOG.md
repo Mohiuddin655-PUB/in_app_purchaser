@@ -1,3 +1,7 @@
+## 2.0.20
+
+* InAppPurchasePaywallState parsing bug fixed
+
 ## 2.0.19
 
 * DefaultMode bug fixed

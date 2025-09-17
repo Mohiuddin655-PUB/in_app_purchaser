@@ -36,15 +36,14 @@ class InAppPurchasePaywallState<T> {
     Object? source,
     T Function(Object? source) callback,
   ) {
-    if (source is! Map ||
-        !source.keys.contains("primary") ||
-        !source.keys.contains("secondary")) {
-      return InAppPurchasePaywallState.all(callback(source));
+    if (source is Map &&
+        source.keys.any((e) => ['primary', 'secondary'].contains(e))) {
+      return InAppPurchasePaywallState(
+        primary: callback('primary'),
+        secondary: callback('secondary'),
+      );
     }
-    return InAppPurchasePaywallState(
-      primary: callback('primary'),
-      secondary: callback('secondary'),
-    );
+    return InAppPurchasePaywallState.all(callback(source));
   }
 
   InAppPurchasePaywallState<T> resolveWith(T Function(T value) callback) {
