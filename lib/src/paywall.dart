@@ -1626,6 +1626,7 @@ class InAppPurchasePaywall {
   final int initialIndex;
   final String designType;
   final bool skipMode;
+  final bool defaultMode;
 
   final String? heroImage;
   final InAppPurchasePaywallStyle heroImageStyle;
@@ -1664,7 +1665,30 @@ class InAppPurchasePaywall {
     this.features = const [],
     this.featureStyle = const InAppPurchasePaywallStyle(),
     this.style = const InAppPurchasePaywallStyle(),
-  });
+  }) : defaultMode = false;
+
+  const InAppPurchasePaywall.defaultMode({
+    required this.id,
+    required this.products,
+    this.initialIndex = 0,
+    this.designType = "v1",
+    this.skipMode = false,
+    this.heroImage,
+    this.heroImageStyle = const InAppPurchasePaywallStyle(),
+    this.image,
+    this.imageStyle = const InAppPurchasePaywallStyle(),
+    this.headerText,
+    this.headerStyle = const InAppPurchasePaywallStyle(),
+    this.bodyText,
+    this.bodyStyle = const InAppPurchasePaywallStyle(),
+    this.titleText,
+    this.titleStyle = const InAppPurchasePaywallStyle(),
+    this.descriptionText,
+    this.descriptionStyle = const InAppPurchasePaywallStyle(),
+    this.features = const [],
+    this.featureStyle = const InAppPurchasePaywallStyle(),
+    this.style = const InAppPurchasePaywallStyle(),
+  }) : defaultMode = true;
 
   Map<String, dynamic> get dictionary {
     final map = {
@@ -1819,32 +1843,32 @@ class InAppPurchasePaywall {
         scaler: scaler,
         textDirection: textDirection,
       ),
-      descriptionStyle: bodyStyle.resolveWith(
+      descriptionStyle: descriptionStyle.resolveWith(
         selected: selected,
         scaler: scaler,
         textDirection: textDirection,
       ),
-      featureStyle: bodyStyle.resolveWith(
+      featureStyle: featureStyle.resolveWith(
         selected: selected,
         scaler: scaler,
         textDirection: textDirection,
       ),
-      headerStyle: bodyStyle.resolveWith(
+      headerStyle: headerStyle.resolveWith(
         selected: selected,
         scaler: scaler,
         textDirection: textDirection,
       ),
-      heroImageStyle: bodyStyle.resolveWith(
+      heroImageStyle: heroImageStyle.resolveWith(
         selected: selected,
         scaler: scaler,
         textDirection: textDirection,
       ),
-      imageStyle: bodyStyle.resolveWith(
+      imageStyle: imageStyle.resolveWith(
         selected: selected,
         scaler: scaler,
         textDirection: textDirection,
       ),
-      titleStyle: bodyStyle.resolveWith(
+      titleStyle: titleStyle.resolveWith(
         selected: selected,
         scaler: scaler,
         textDirection: textDirection,

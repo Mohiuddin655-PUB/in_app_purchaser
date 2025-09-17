@@ -1,3 +1,8 @@
+## 2.0.18
+
+* Add defaultMode paywall to manage initial paywall loading
+* Paywall resolveWith bug fixed
+
 ## 2.0.17
 
 * filter json data for text style and position
