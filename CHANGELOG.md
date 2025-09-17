@@ -1,3 +1,7 @@
+## 2.0.13
+
+* Encode bug fixed to convert dart to json
+
 ## 2.0.12
 
 * Add product config style

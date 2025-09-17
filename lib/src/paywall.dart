@@ -619,7 +619,7 @@ class InAppPurchasePaywallStyle {
         return e.map((bs) {
           {
             return {
-              "color": bs.color,
+              "color": bs.color.toARGB32(),
               "offset": {"dx": bs.offset.dx, "dy": bs.offset.dy},
               "blurRadius": bs.blurRadius,
               "blurStyle": bs.blurStyle.name,
@@ -716,7 +716,7 @@ class InAppPurchasePaywallStyle {
           "overflow": e.overflow?.name,
           "shadows": e.shadows
               ?.map((e) => {
-                    "color": e.color,
+                    "color": e.color.toARGB32(),
                     "offset": {"dx": e.offset.dx, "dy": e.offset.dy},
                     "blurRadius": e.blurRadius,
                   })
