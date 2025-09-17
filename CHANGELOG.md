@@ -1,3 +1,8 @@
+## 2.0.21
+
+* InAppPurchasePaywallState parsing bug fixed
+* InAppPurchasePaywall parseable
+
 ## 2.0.20
 
 * InAppPurchasePaywallState parsing bug fixed

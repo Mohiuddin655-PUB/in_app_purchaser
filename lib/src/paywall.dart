@@ -39,8 +39,8 @@ class InAppPurchasePaywallState<T> {
     if (source is Map &&
         source.keys.any((e) => ['primary', 'secondary'].contains(e))) {
       return InAppPurchasePaywallState(
-        primary: callback('primary'),
-        secondary: callback('secondary'),
+        primary: callback(source['primary']),
+        secondary: callback(source['secondary']),
       );
     }
     return InAppPurchasePaywallState.all(callback(source));
@@ -1687,9 +1687,9 @@ class InAppPurchasePaywall {
             .toList(),
     };
 
-    void addDictionary(String key, Map map) {
-      if (map.isEmpty) return;
-      map[key] = map;
+    void addDictionary(String key, Map value) {
+      if (value.isEmpty) return;
+      map[key] = value;
     }
 
     addDictionary("heroImageStyle", heroImageStyle.dictionary);
@@ -1707,8 +1707,21 @@ class InAppPurchasePaywall {
     InAppPurchaseOffering offering,
     bool dark,
   ) {
+    return InAppPurchasePaywall.parse(
+      placement: offering.id,
+      configs: offering.configs,
+      packages: offering.products,
+      dark: dark,
+    );
+  }
+
+  factory InAppPurchasePaywall.parse({
+    required String placement,
+    required Map<String, dynamic> configs,
+    required List<InAppPurchaseProduct> packages,
+    bool dark = false,
+  }) {
     final parser = InAppPurchaser.parseConfig;
-    final configs = offering.configs;
 
     final initialIndex = parser(configs["initialIndex"], 0);
     final designType = parser(configs["designType"], 'v1');
@@ -1730,10 +1743,10 @@ class InAppPurchasePaywall {
     final featureStyle = parser<Map?>(configs["featureStyle"], null);
     final style = parser<Map?>(configs["style"], null);
 
-    final mProducts = List.generate(offering.products.length, (index) {
+    final mProducts = List.generate(packages.length, (index) {
       final productConfigs = products?.elementAtOrNull(index);
       return InAppPurchasePaywallProduct.fromConfigs(
-        product: offering.products[index],
+        product: packages[index],
         configs: productConfigs is Map ? productConfigs : {},
         dark: dark,
       );
@@ -1741,7 +1754,7 @@ class InAppPurchasePaywall {
 
     return InAppPurchasePaywall(
       defaultMode: false,
-      id: offering.id,
+      id: placement,
       initialIndex: initialIndex,
       products: mProducts,
       designType: designType,
