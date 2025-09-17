@@ -1,3 +1,7 @@
+## 2.0.15
+
+* double infinity bug fix for dart to json conversion
+
 ## 2.0.14
 
 * Color code bug fixed to convert as hexCode

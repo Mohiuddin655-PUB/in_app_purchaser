@@ -270,9 +270,20 @@ class InAppPurchasePaywallStyle {
     );
   }
 
+  static Object? _safeEncodableDouble(double? value) {
+    if (value == null) return null;
+    return value.isInfinite
+        ? 'infinity'
+        : value.isNaN
+            ? 'nan'
+            : value;
+  }
+
   static double? parseDouble(Object? source) {
     if (source is num) return source.toDouble();
-    if (source is String && source.contains('infinity')) return double.infinity;
+    if (source is! String) return null;
+    if (source.contains('infinity')) return double.infinity;
+    if (source.contains('nan')) return double.nan;
     return null;
   }
 
@@ -652,7 +663,7 @@ class InAppPurchasePaywallStyle {
             "transform": {"radians": transform.radians, "type": "rotation"},
         };
       }),
-      "height": heightState.toDictionary((e) => e),
+      "height": heightState.toDictionary(_safeEncodableDouble),
       "image": imageState.toDictionary((e) => e),
       "imageOpacity": imageOpacityState.toDictionary((e) => e),
       "imageScale": imageScaleState.toDictionary((e) => e),
@@ -727,7 +738,7 @@ class InAppPurchasePaywallStyle {
           "wordSpacing": e.wordSpacing,
         };
       }),
-      "width": widthState.toDictionary((e) => e),
+      "width": widthState.toDictionary(_safeEncodableDouble),
     };
   }
 
