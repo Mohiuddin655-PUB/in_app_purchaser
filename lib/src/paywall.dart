@@ -574,7 +574,7 @@ class InAppPurchasePaywallStyle {
   }
 
   Map<String, dynamic> get dictionary {
-    return {
+    final entries = {
       "alignment": alignmentState.toDictionary((e) {
         if (e == null) return null;
         return {"x": e.x, "y": e.y};
@@ -739,7 +739,8 @@ class InAppPurchasePaywallStyle {
         };
       }),
       "width": widthState.toDictionary(_safeEncodableDouble),
-    };
+    }.entries.where((e) => e.value != null);
+    return Map.fromEntries(entries);
   }
 
   factory InAppPurchasePaywallStyle.parse(Object? source, bool dark) {

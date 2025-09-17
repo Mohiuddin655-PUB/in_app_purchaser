@@ -1,3 +1,7 @@
+## 2.0.16
+
+* filter json data
+
 ## 2.0.15
 
 * double infinity bug fix for dart to json conversion
