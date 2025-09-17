@@ -1,3 +1,7 @@
+## 2.0.19
+
+* DefaultMode bug fixed
+
 ## 2.0.18
 
 * Add defaultMode paywall to manage initial paywall loading

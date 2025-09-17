@@ -1650,6 +1650,7 @@ class InAppPurchasePaywall {
     this.initialIndex = 0,
     this.designType = "v1",
     this.skipMode = false,
+    this.defaultMode = true,
     this.heroImage,
     this.heroImageStyle = const InAppPurchasePaywallStyle(),
     this.image,
@@ -1665,30 +1666,7 @@ class InAppPurchasePaywall {
     this.features = const [],
     this.featureStyle = const InAppPurchasePaywallStyle(),
     this.style = const InAppPurchasePaywallStyle(),
-  }) : defaultMode = false;
-
-  const InAppPurchasePaywall.defaultMode({
-    required this.id,
-    required this.products,
-    this.initialIndex = 0,
-    this.designType = "v1",
-    this.skipMode = false,
-    this.heroImage,
-    this.heroImageStyle = const InAppPurchasePaywallStyle(),
-    this.image,
-    this.imageStyle = const InAppPurchasePaywallStyle(),
-    this.headerText,
-    this.headerStyle = const InAppPurchasePaywallStyle(),
-    this.bodyText,
-    this.bodyStyle = const InAppPurchasePaywallStyle(),
-    this.titleText,
-    this.titleStyle = const InAppPurchasePaywallStyle(),
-    this.descriptionText,
-    this.descriptionStyle = const InAppPurchasePaywallStyle(),
-    this.features = const [],
-    this.featureStyle = const InAppPurchasePaywallStyle(),
-    this.style = const InAppPurchasePaywallStyle(),
-  }) : defaultMode = true;
+  });
 
   Map<String, dynamic> get dictionary {
     final map = {
@@ -1763,6 +1741,7 @@ class InAppPurchasePaywall {
     });
 
     return InAppPurchasePaywall(
+      defaultMode: false,
       id: offering.id,
       initialIndex: initialIndex,
       products: mProducts,
@@ -1809,6 +1788,7 @@ class InAppPurchasePaywall {
     InAppPurchasePaywallStyle? style,
   }) {
     return InAppPurchasePaywall(
+      defaultMode: defaultMode,
       id: id ?? this.id,
       initialIndex: initialIndex ?? this.initialIndex,
       designType: designType ?? this.designType,
