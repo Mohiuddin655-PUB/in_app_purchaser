@@ -1,3 +1,7 @@
+## 2.0.14
+
+* Color code bug fixed to convert as hexCode
+
 ## 2.0.13
 
 * Encode bug fixed to convert dart to json

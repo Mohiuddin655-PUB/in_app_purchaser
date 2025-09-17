@@ -288,39 +288,42 @@ class InAppPurchasePaywallStyle {
     return source is String && source.isNotEmpty ? source : null;
   }
 
+  static String? colorToHex(Color? color, {bool withHash = true}) {
+    if (color == null) return null;
+    final hex = color.toARGB32().toRadixString(16).padLeft(8, '0');
+    return withHash ? '#$hex' : '0x$hex';
+  }
+
   static Color? parseColor(String source) {
     source = source.toLowerCase();
-    if (source.startsWith('#') && source.length == 7) {
-      final a = int.tryParse(source.substring(1), radix: 16);
-      if (a == null) return null;
-      return Color(a + 0xFF000000);
-    } else if ((source.startsWith("0x") || source.startsWith("0X")) &&
-        source.length == 10) {
-      final a = int.tryParse(source);
-      if (a == null) return null;
-      return Color(a);
-    } else {
-      return {
-        "amber": Colors.amber,
-        "black": Colors.black,
-        "blue": Colors.blue,
-        "brown": Colors.brown,
-        "cyan": Colors.cyan,
-        "grey": Colors.grey,
-        "green": Colors.green,
-        "indigo": Colors.indigo,
-        "lime": Colors.lime,
-        "orange": Colors.orange,
-        "pink": Colors.pink,
-        "purple": Colors.purple,
-        "red": Colors.red,
-        "teal": Colors.teal,
-        "transparent": Colors.transparent,
-        "none": Colors.transparent,
-        "white": Colors.white,
-        "yellow": Colors.yellow,
-      }[source];
+    if (source.startsWith('#') || source.startsWith("0x")) {
+      source = source.replaceAll('#', '').replaceAll('0x', '');
+      if (source.length == 6) source = "ff$source";
+      if (source.length != 8) return null;
+      final code = int.tryParse('0x$source');
+      if (code == null) return null;
+      return Color(code);
     }
+    return {
+      "amber": Colors.amber,
+      "black": Colors.black,
+      "blue": Colors.blue,
+      "brown": Colors.brown,
+      "cyan": Colors.cyan,
+      "grey": Colors.grey,
+      "green": Colors.green,
+      "indigo": Colors.indigo,
+      "lime": Colors.lime,
+      "orange": Colors.orange,
+      "pink": Colors.pink,
+      "purple": Colors.purple,
+      "red": Colors.red,
+      "teal": Colors.teal,
+      "transparent": Colors.transparent,
+      "none": Colors.transparent,
+      "white": Colors.white,
+      "yellow": Colors.yellow,
+    }[source];
   }
 
   static Color? _parseColor(Object? source, bool dark) {
@@ -565,8 +568,7 @@ class InAppPurchasePaywallStyle {
         if (e == null) return null;
         return {"x": e.x, "y": e.y};
       }),
-      "backgroundColor":
-          backgroundColorState.toDictionary((e) => e?.toARGB32()),
+      "backgroundColor": backgroundColorState.toDictionary(colorToHex),
       "blendMode": blendModeState.toDictionary((e) => e?.name),
       "blur": blurState.toDictionary((e) => e),
       "border": borderState.toDictionary((e) {
@@ -575,7 +577,7 @@ class InAppPurchasePaywallStyle {
           final b = value;
           if (b == BorderSide.none) return null;
           return {
-            "color": b.color.toARGB32(),
+            "color": colorToHex(b.color),
             "width": b.width,
             "style": b.style.name,
             "strokeAlign": b.strokeAlign,
@@ -619,7 +621,7 @@ class InAppPurchasePaywallStyle {
         return e.map((bs) {
           {
             return {
-              "color": bs.color.toARGB32(),
+              "color": colorToHex(bs.color),
               "offset": {"dx": bs.offset.dx, "dy": bs.offset.dy},
               "blurRadius": bs.blurRadius,
               "blurStyle": bs.blurStyle.name,
@@ -628,7 +630,7 @@ class InAppPurchasePaywallStyle {
           }
         }).toList();
       }),
-      "color": colorState.toDictionary((e) => e?.toARGB32()),
+      "color": colorState.toDictionary(colorToHex),
       "contentAlignment": contentAlignmentState.toDictionary((e) {
         if (e == null) return null;
         return {"x": e.x, "y": e.y};
@@ -644,7 +646,7 @@ class InAppPurchasePaywallStyle {
           if (begin is Alignment) "begin": {"x": begin.x, "y": begin.y},
           if (end is Alignment) "end": {"x": end.x, "y": end.y},
           "tileMode": e.tileMode.name,
-          "colors": e.colors.map((e) => e.toARGB32()).toList(),
+          "colors": e.colors.map(colorToHex).toList(),
           "stops": e.stops,
           if (transform is GradientRotation)
             "transform": {"radians": transform.radians, "type": "rotation"},
@@ -692,11 +694,11 @@ class InAppPurchasePaywallStyle {
         if (e == null) return null;
         TextDecoration.underline.toString();
         return {
-          "backgroundColor": e.backgroundColor?.toARGB32(),
-          "color": e.color?.toARGB32(),
+          "backgroundColor": colorToHex(e.backgroundColor),
+          "color": colorToHex(e.color),
           "decorationThickness": e.decorationThickness,
           "decorationStyle": e.decorationStyle?.name,
-          "decorationColor": e.decorationColor?.toARGB32(),
+          "decorationColor": colorToHex(e.decorationColor),
           "decoration": e.decoration?.toString(),
           "debugLabel": e.debugLabel,
           "fontSize": e.fontSize,
@@ -716,7 +718,7 @@ class InAppPurchasePaywallStyle {
           "overflow": e.overflow?.name,
           "shadows": e.shadows
               ?.map((e) => {
-                    "color": e.color.toARGB32(),
+                    "color": colorToHex(e.color),
                     "offset": {"dx": e.offset.dx, "dy": e.offset.dy},
                     "blurRadius": e.blurRadius,
                   })
