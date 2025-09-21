@@ -1,3 +1,7 @@
+## 2.0.23
+
+* Remove InAppPurchasePaywallText widget
+
 ## 2.0.22
 
 * Improve paywall configs

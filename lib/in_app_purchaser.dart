@@ -9,4 +9,3 @@ export 'widgets/decorated_box.dart';
 export 'widgets/lock_builder.dart';
 export 'widgets/paywall_builder.dart';
 export 'widgets/provider.dart';
-export 'widgets/text.dart';
