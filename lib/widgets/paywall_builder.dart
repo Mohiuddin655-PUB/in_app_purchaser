@@ -21,7 +21,8 @@ class InAppPurchasePaywallBuilder extends StatelessWidget {
     return ListenableBuilder(
       listenable: InAppPurchaser.i,
       builder: (context, child) {
-        return builder(context, InAppPurchaser.paywall(placement) ?? initial?.copyWith());
+        return builder(
+            context, InAppPurchaser.paywall(placement) ?? initial?.copyWith());
       },
     );
   }

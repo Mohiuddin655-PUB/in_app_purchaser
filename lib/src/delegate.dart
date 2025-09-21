@@ -7,7 +7,7 @@ abstract class InAppPurchaseDelegate {
 
   bool get isDarkTheme => false;
 
-  Set<String> get placements;
+  Set<String> get placements => {"default"};
 
   Stream<InAppPurchaseProfile> get stream;
 

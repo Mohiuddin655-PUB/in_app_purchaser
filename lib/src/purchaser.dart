@@ -158,7 +158,7 @@ class InAppPurchaser extends ChangeNotifier {
     }
   }
 
-  void _disposeInits() {
+  void _disposeInit() {
     _sub?.cancel();
     initState.dispose();
     profileState.dispose();
@@ -366,15 +366,26 @@ class InAppPurchaser extends ChangeNotifier {
     }
   }
 
-  static InAppPurchaseOffering? offering(String placement) {
-    return i._offerings[placement];
+  static Future<void> fetch(String placement) {
+    final key = "_fetch:$placement";
+    return i._emit(key, () => i._fetch(key, placement));
+  }
+
+  static Future<void> fetchAll() async {
+    await Future.wait(i._delegate.placements.map(fetch));
+  }
+
+  late String placement = _delegate.placements.first;
+
+  static InAppPurchaseOffering? offering([String? placement]) {
+    return i._offerings[placement ?? i.placement];
   }
 
   static T parseConfig<T extends Object?>(Object? value, T defaultValue) {
     return i._delegate.parseConfig(value, defaultValue);
   }
 
-  static InAppPurchasePaywall? paywall(String placement) {
+  static InAppPurchasePaywall? paywall([String? placement]) {
     final offer = offering(placement);
     if (offer == null) return null;
     return i._delegate.paywall(offer);
@@ -385,9 +396,11 @@ class InAppPurchaser extends ChangeNotifier {
   }
 
   static List<InAppPurchaseProduct> products([String? placement]) {
-    placement ??= i._delegate.placements.firstOrNull;
-    if (placement == null || placement.isEmpty) return [];
     return offering(placement)?.products ?? [];
+  }
+
+  static ValueNotifier<InAppPurchaseState> get fetchingDefaultState {
+    return fetchingState(i.placement);
   }
 
   static ValueNotifier<InAppPurchaseState> fetchingState(String placement) {
@@ -396,13 +409,12 @@ class InAppPurchaser extends ChangeNotifier {
     );
   }
 
-  static Future<void> fetch(String placement) {
-    final key = "_fetch:$placement";
-    return i._emit(key, () => i._fetch(key, placement));
-  }
-
-  static Future<void> fetchAll() async {
-    await Future.wait(i._delegate.placements.map(fetch));
+  static void changeDefaultPlacement(String placement) {
+    i.placement = placement;
+    if (!i._offerings.containsKey(placement)) {
+      fetch(placement);
+    }
+    i.notify();
   }
 
   void _disposeOffering() {
@@ -532,7 +544,7 @@ class InAppPurchaser extends ChangeNotifier {
 
   @override
   void dispose() {
-    _disposeInits();
+    _disposeInit();
     _disposePremiumChecker();
     _disposeOffering();
     _disposePurchaseAndRestore();
