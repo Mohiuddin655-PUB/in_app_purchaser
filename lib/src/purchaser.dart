@@ -515,7 +515,13 @@ class InAppPurchaser extends ChangeNotifier {
       final data = await i._delegate.restore();
       if (data != null) await i._check(data);
       i._log(isPremium, "restored");
-      if (!silent) restoringState.value = InAppPurchaseState.done;
+      if (!silent) {
+        if (isPremium) {
+          restoringState.value = InAppPurchaseState.exist;
+        } else {
+          restoringState.value = InAppPurchaseState.empty;
+        }
+      }
       i.notify();
       return data;
     } catch (e) {

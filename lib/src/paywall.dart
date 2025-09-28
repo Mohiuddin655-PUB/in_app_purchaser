@@ -8,11 +8,13 @@ typedef InAppPurchasePaywallScaler = double Function(double value);
 class InAppPurchasePaywallConfigFormatters {
   const InAppPurchasePaywallConfigFormatters._();
 
-  static const currencySign = "{CURRENCY_SIGN}";
   static const currencyName = "{CURRENCY_NAME}";
+  static const currencySymbol = "{CURRENCY_SYMBOL}";
+  static const currencyCode = "{CURRENCY_CODE}";
   static const discountPrice = "{DISCOUNT_PRICE}";
   static const price = "{PRICE}";
   static const formatedPrice = "{FORMATED_PRICE}";
+  static const localizedPrice = "{LOCALIZED_PRICE}";
   static const period = "{PERIOD}";
   static const unit = "{UNIT}";
 }
@@ -1070,9 +1072,11 @@ class InAppPurchasePaywallProduct {
 
   double? get priceOriginal => product.price;
 
-  String? get currency => product.currency;
+  String? get localizedPrice => product.priceString;
 
-  String? get currencySign => product.currencySign;
+  String? get currencyCode => product.currencyCode ?? product.currencySymbol;
+
+  String? get currencySymbol => product.currencySymbol ?? product.currencyCode;
 
   InAppPurchasePaywallState<double?> get priceState {
     return _price ?? InAppPurchasePaywallState.all(null);
@@ -1222,38 +1226,57 @@ class InAppPurchasePaywallProduct {
     return bottomStyle.copyWith(selected: selected);
   }
 
+  String formatPrice(double value) {
+    // keep 2 decimal places
+    String str = value.toStringAsFixed(2);
+
+    // remove trailing .00 or .0 if exists
+    str = str.replaceAll(RegExp(r'([.]*0+)$'), '');
+
+    return str;
+  }
+
   String? stringify(String? value) {
     if (value == null) return null;
     if (value.isEmpty) return '';
     final period = this.period ?? 'mo';
     final unit = this.unit ?? 1;
-    final currency = this.currency ?? "USD";
-    final currencySign = this.currencySign ?? "\$";
+    final currencyCode = this.currencyCode ?? '';
+    final currencySymbol = this.currencySymbol ?? currencyCode;
     final discountPrice = priceOriginal ?? 0;
     final price = this.price ?? discountPrice;
+    final localizedPrice = this.localizedPrice;
     final formatedPrice = discountPrice / unit;
     return value
         .replaceAll(
-          InAppPurchasePaywallConfigFormatters.currencySign,
-          currencySign,
+          InAppPurchasePaywallConfigFormatters.currencySymbol,
+          currencySymbol,
+        )
+        .replaceAll(
+          InAppPurchasePaywallConfigFormatters.currencyCode,
+          currencyCode,
         )
         .replaceAll(
           InAppPurchasePaywallConfigFormatters.currencyName,
-          currency,
+          currencyCode,
         )
         .replaceAll(
           InAppPurchasePaywallConfigFormatters.discountPrice,
-          discountPrice.toStringAsFixed(2),
+          formatPrice(discountPrice),
         )
         .replaceAll(
           InAppPurchasePaywallConfigFormatters.formatedPrice,
-          formatedPrice.toStringAsFixed(2),
+          formatPrice(formatedPrice),
         )
         .replaceAll(InAppPurchasePaywallConfigFormatters.period, period)
         .replaceAll(InAppPurchasePaywallConfigFormatters.unit, unit.toString())
         .replaceAll(
           InAppPurchasePaywallConfigFormatters.price,
-          price.toStringAsFixed(2),
+          formatPrice(price),
+        )
+        .replaceAll(
+          InAppPurchasePaywallConfigFormatters.localizedPrice,
+          localizedPrice ?? '',
         );
   }
 

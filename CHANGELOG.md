@@ -1,3 +1,11 @@
+## 2.0.24
+
+* Add localized contents [price]
+* Filter unnecessary price zeros [ex. 1.304 => 1.3, 4.00 => 4, 54.4783 => 54.48]
+* Rename currency reference
+  name [{CURRENCY_NAME} => {CURRENCY_CODE}, {CURRENCY_SIGN} => {CURRENCY_SYMBOL}]
+* Improved Restore purchase status [restoredAvailable => exist, restoredUnavailable => empty]
+
 ## 2.0.23
 
 * Remove InAppPurchasePaywallText widget

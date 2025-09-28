@@ -4,8 +4,8 @@ class InAppPurchaseProduct {
   final String? description;
   final double? price;
   final String? priceString;
-  final String? currency;
-  final String? currencySign;
+  final String? currencyCode;
+  final String? currencySymbol;
 
   final Object? raw;
 
@@ -15,8 +15,8 @@ class InAppPurchaseProduct {
     this.description,
     this.price,
     this.priceString,
-    this.currency,
-    this.currencySign,
+    this.currencyCode,
+    this.currencySymbol,
     this.raw,
   });
 
@@ -27,8 +27,8 @@ class InAppPurchaseProduct {
       description.hashCode ^
       price.hashCode ^
       priceString.hashCode ^
-      currency.hashCode ^
-      currencySign.hashCode ^
+      currencyCode.hashCode ^
+      currencySymbol.hashCode ^
       raw.hashCode;
 
   @override
@@ -39,8 +39,8 @@ class InAppPurchaseProduct {
         other.description == description &&
         other.price == price &&
         other.priceString == priceString &&
-        other.currency == currency &&
-        other.currencySign == currencySign &&
+        other.currencyCode == currencyCode &&
+        other.currencySymbol == currencySymbol &&
         other.raw == raw;
   }
 
