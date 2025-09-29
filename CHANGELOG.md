@@ -1,3 +1,7 @@
+## 2.0.25
+
+* Add enabled, setUid functions
+
 ## 2.0.24
 
 * Add localized contents [price]

@@ -196,6 +196,8 @@ class InAppPurchaser extends ChangeNotifier {
 
   bool _premium = false;
 
+  bool _enabled = true;
+
   bool _premiumDefault = false;
 
   Set<String> _ignorableUsers = {};
@@ -229,15 +231,20 @@ class InAppPurchaser extends ChangeNotifier {
 
   static bool get isPremium => isPremiumUser(i._uid);
 
-  static bool isPremiumUser(String? uid) {
+  static bool isPremiumUser([String? uid]) {
+    if (!i._enabled) return true;
     if (i._premiumDefault) return true;
     if (i._premium) return true;
     if ((uid ?? '').isNotEmpty && i._ignorableUsers.contains(uid)) return true;
     return false;
   }
 
-  static bool isPremiumFeature(String feature, [int? ignoreIndex]) {
-    if (isPremium) return false;
+  static bool isPremiumFeature(
+    String feature, [
+    int? ignoreIndex,
+    String? uid,
+  ]) {
+    if (isPremiumUser(uid ?? i._uid)) return false;
     if ((i._ignorableIndexes[feature] ?? {}).contains(ignoreIndex)) {
       return false;
     }
@@ -251,6 +258,17 @@ class InAppPurchaser extends ChangeNotifier {
     final info = data.accessLevels[id];
     if (info == null) return false;
     return info.isActive;
+  }
+
+  static void enabled(bool value) {
+    i._enabled = value;
+    i.notify();
+  }
+
+  static void setUid(String? uid) {
+    i._uid = uid;
+    if ((uid ?? '').isEmpty) return;
+    i.notify();
   }
 
   static void setFeatures(Set<String> features) {
