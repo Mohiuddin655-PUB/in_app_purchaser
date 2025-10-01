@@ -1364,11 +1364,12 @@ class InAppPurchasePaywallProduct {
   String formatPrice(double value) {
     final code = currencyCode ?? currencySymbol ?? '';
     if (InAppPurchaser.i.configDelegate != null) {
-      return InAppPurchaser.i.configDelegate!.convertPrice(
+      final formatted = InAppPurchaser.i.configDelegate!.convertPrice(
         InAppPurchaser.i.locale,
         code,
         value,
       );
+      if (formatted != null) return formatted;
     }
     String str = value.toStringAsFixed(2);
     str = str.replaceAll(RegExp(r'([.]*0+)$'), '');
