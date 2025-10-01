@@ -1,5 +1,6 @@
 library;
 
+export 'src/configs.dart';
 export 'src/delegate.dart';
 export 'src/offering.dart';
 export 'src/paywall.dart';

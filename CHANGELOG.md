@@ -1,3 +1,8 @@
+## 2.0.26
+
+* Localization supported
+* Price formating supported
+
 ## 2.0.25
 
 * Add enabled, setUid functions

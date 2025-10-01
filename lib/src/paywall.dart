@@ -8,15 +8,10 @@ typedef InAppPurchasePaywallScaler = double Function(double value);
 class InAppPurchasePaywallConfigFormatters {
   const InAppPurchasePaywallConfigFormatters._();
 
-  static const currencyName = "{CURRENCY_NAME}";
-  static const currencySymbol = "{CURRENCY_SYMBOL}";
-  static const currencyCode = "{CURRENCY_CODE}";
   static const discountPrice = "{DISCOUNT_PRICE}";
   static const price = "{PRICE}";
   static const formatedPrice = "{FORMATED_PRICE}";
   static const localizedPrice = "{LOCALIZED_PRICE}";
-  static const period = "{PERIOD}";
-  static const unit = "{UNIT}";
 }
 
 class InAppPurchasePaywallState<T> {
@@ -65,6 +60,101 @@ class InAppPurchasePaywallState<T> {
     if (entries.isEmpty) return null;
     return Map.fromEntries(entries);
   }
+}
+
+class InAppPurchasePaywallLocalizedContent<T> {
+  final T? value;
+  final Map<String, T> values;
+
+  bool get isEmpty => value == null && values.isEmpty;
+
+  bool get isNotEmpty => !isEmpty;
+
+  T? get localized => localize();
+
+  T? localize({String? language}) {
+    language ??= InAppPurchaser.i.locale.languageCode;
+    T? x = values[language];
+    if (x == null && InAppPurchaser.i.configDelegate != null) {
+      final l = InAppPurchaser.i.locale;
+      final d = InAppPurchaser.i.configDelegate!;
+      Object? lt(Object? e) {
+        if (e is String) return d.localize(l, e);
+        if (e is Map) return e.map((k, v) => MapEntry(k, lt(v)));
+        if (e is List) return e.map(lt).toList();
+        return e;
+      }
+
+      final y = lt(value);
+      if (y is T) x = y;
+    }
+    return x ?? value;
+  }
+
+  const InAppPurchasePaywallLocalizedContent(
+    this.value, [
+    this.values = const {},
+  ]);
+
+  const InAppPurchasePaywallLocalizedContent.empty() : this(null);
+
+  factory InAppPurchasePaywallLocalizedContent.parse(Object? source) {
+    if (source is T) {
+      return InAppPurchasePaywallLocalizedContent(source);
+    }
+    if (source is! Map || source.isEmpty) {
+      return InAppPurchasePaywallLocalizedContent.empty();
+    }
+    final en = source['en'];
+    final entries = source.entries.map((e) {
+      final key = e.key;
+      if (key is! String || key.isEmpty) return null;
+      final value = e.value;
+      if (value is! T) return null;
+      return MapEntry(key, value);
+    }).whereType<MapEntry<String, T>>();
+    return InAppPurchasePaywallLocalizedContent(
+      en is T ? en : null,
+      Map.fromEntries(entries),
+    );
+  }
+
+  InAppPurchasePaywallLocalizedContent<T> copyWith({
+    T? value,
+    Map<String, T>? values,
+  }) {
+    return InAppPurchasePaywallLocalizedContent(
+      value ?? this.value,
+      values ?? this.values,
+    );
+  }
+
+  Object? toDictionary(Object? Function(T? value) callback) {
+    final value = callback(this.value);
+    final entries = values.entries.map((e) {
+      final value = callback(e.value);
+      if (value == null) return null;
+      return MapEntry(e.key, value);
+    }).whereType<MapEntry<String, Object>>();
+    final x = Map.fromEntries(entries);
+    if (value != null) x['en'] = value;
+    if (x.length <= 1) return value;
+    return x;
+  }
+
+  @override
+  int get hashCode => value.hashCode ^ values.hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is InAppPurchasePaywallLocalizedContent &&
+        other.value == value &&
+        other.values == values;
+  }
+
+  @override
+  String toString() => value.toString();
 }
 
 class InAppPurchasePaywallStylePosition {
@@ -728,7 +818,7 @@ class InAppPurchasePaywallStyle {
               ?.map((e) => {"value": e.value, "axis": e.axis})
               .toList(),
           "height": e.height,
-          "inherit": e.inherit,
+          if (!e.inherit) "inherit": e.inherit,
           "letterSpacing": e.letterSpacing,
           "leadingDistribution": e.leadingDistribution?.name,
           "locale": e.locale?.toString(),
@@ -1034,41 +1124,56 @@ class InAppPurchasePaywallProduct {
   final bool selected;
   final InAppPurchaseProduct product;
   final InAppPurchasePaywallState<double?>? _price;
-  final InAppPurchasePaywallState<String?>? _period;
+  final InAppPurchasePaywallState<double?>? _usdPrice;
+  final InAppPurchasePaywallState<
+      InAppPurchasePaywallLocalizedContent<String?>>? _period;
   final InAppPurchasePaywallState<int?>? _unit;
 
-  final InAppPurchasePaywallState<String?>? _titleText;
+  final InAppPurchasePaywallState<
+      InAppPurchasePaywallLocalizedContent<String?>>? _titleText;
   final InAppPurchasePaywallStyle titleStyle;
-  final InAppPurchasePaywallState<String?>? _descriptionText;
+  final InAppPurchasePaywallState<
+      InAppPurchasePaywallLocalizedContent<String?>>? _descriptionText;
   final InAppPurchasePaywallStyle descriptionStyle;
 
   final InAppPurchasePaywallStyle style;
 
-  final InAppPurchasePaywallState<String?>? _badgeText;
+  final InAppPurchasePaywallState<
+      InAppPurchasePaywallLocalizedContent<String?>>? _badgeText;
   final InAppPurchasePaywallStyle badgeStyle;
 
   final InAppPurchasePaywallStyle leftStyle;
-  final InAppPurchasePaywallState<String?>? _leftTopText;
+  final InAppPurchasePaywallState<
+      InAppPurchasePaywallLocalizedContent<String?>>? _leftTopText;
   final InAppPurchasePaywallStyle leftTopStyle;
-  final InAppPurchasePaywallState<String?>? _leftMiddleText;
+  final InAppPurchasePaywallState<
+      InAppPurchasePaywallLocalizedContent<String?>>? _leftMiddleText;
   final InAppPurchasePaywallStyle leftMiddleStyle;
-  final InAppPurchasePaywallState<String?>? _leftBottomText;
+  final InAppPurchasePaywallState<
+      InAppPurchasePaywallLocalizedContent<String?>>? _leftBottomText;
   final InAppPurchasePaywallStyle leftBottomStyle;
 
   final InAppPurchasePaywallStyle rightStyle;
-  final InAppPurchasePaywallState<String?>? _rightTopText;
+  final InAppPurchasePaywallState<
+      InAppPurchasePaywallLocalizedContent<String?>>? _rightTopText;
   final InAppPurchasePaywallStyle rightTopStyle;
-  final InAppPurchasePaywallState<String?>? _rightMiddleText;
+  final InAppPurchasePaywallState<
+      InAppPurchasePaywallLocalizedContent<String?>>? _rightMiddleText;
   final InAppPurchasePaywallStyle rightMiddleStyle;
-  final InAppPurchasePaywallState<String?>? _rightBottomText;
+  final InAppPurchasePaywallState<
+      InAppPurchasePaywallLocalizedContent<String?>>? _rightBottomText;
   final InAppPurchasePaywallStyle rightBottomStyle;
 
-  final InAppPurchasePaywallState<String?>? _buttonText;
+  final InAppPurchasePaywallState<
+      InAppPurchasePaywallLocalizedContent<String?>>? _buttonText;
   final InAppPurchasePaywallStyle buttonStyle;
-  final InAppPurchasePaywallState<String?>? _bottomText;
+  final InAppPurchasePaywallState<
+      InAppPurchasePaywallLocalizedContent<String?>>? _bottomText;
   final InAppPurchasePaywallStyle bottomStyle;
 
   double? get price => priceState.of(selected);
+
+  double get usdPrice => usdPriceState.of(selected) ?? 0;
 
   double? get priceOriginal => product.price;
 
@@ -1082,10 +1187,17 @@ class InAppPurchasePaywallProduct {
     return _price ?? InAppPurchasePaywallState.all(null);
   }
 
-  String? get period => periodState.of(selected);
+  InAppPurchasePaywallState<double?> get usdPriceState {
+    return _usdPrice ?? InAppPurchasePaywallState.all(null);
+  }
 
-  InAppPurchasePaywallState<String?> get periodState {
-    return _period ?? InAppPurchasePaywallState.all(null);
+  String? get period => periodState.of(selected).value;
+
+  InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>
+      get periodState {
+    return _period ??
+        InAppPurchasePaywallState.all(
+            InAppPurchasePaywallLocalizedContent<String?>.empty());
   }
 
   int? get unit => unitState.of(selected);
@@ -1094,80 +1206,103 @@ class InAppPurchasePaywallProduct {
     return _unit ?? InAppPurchasePaywallState.all(null);
   }
 
-  String? get titleText => titleTextState.of(selected);
+  String? get titleText => titleTextState.of(selected).value;
 
-  InAppPurchasePaywallState<String?> get titleTextState {
+  InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>
+      get titleTextState {
     return _titleText?.resolveWith(stringify) ??
-        InAppPurchasePaywallState.all(null);
+        InAppPurchasePaywallState.all(
+            InAppPurchasePaywallLocalizedContent<String?>.empty());
   }
 
-  String? get descriptionText => descriptionTextState.of(selected);
+  String? get descriptionText => descriptionTextState.of(selected).value;
 
-  InAppPurchasePaywallState<String?> get descriptionTextState {
+  InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>
+      get descriptionTextState {
     return _descriptionText?.resolveWith(stringify) ??
-        InAppPurchasePaywallState.all(null);
+        InAppPurchasePaywallState.all(
+            InAppPurchasePaywallLocalizedContent<String?>.empty());
   }
 
-  String? get leftTopText => leftTopTextState.of(selected);
+  String? get leftTopText => leftTopTextState.of(selected).value;
 
-  InAppPurchasePaywallState<String?> get leftTopTextState {
+  InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>
+      get leftTopTextState {
     return _leftTopText?.resolveWith(stringify) ??
-        InAppPurchasePaywallState.all(null);
+        InAppPurchasePaywallState.all(
+            InAppPurchasePaywallLocalizedContent<String?>.empty());
   }
 
-  String? get leftMiddleText => leftMiddleTextState.of(selected);
+  String? get leftMiddleText => leftMiddleTextState.of(selected).value;
 
-  InAppPurchasePaywallState<String?> get leftMiddleTextState {
+  InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>
+      get leftMiddleTextState {
     return _leftMiddleText?.resolveWith(stringify) ??
-        InAppPurchasePaywallState.all(null);
+        InAppPurchasePaywallState.all(
+            InAppPurchasePaywallLocalizedContent<String?>.empty());
   }
 
-  String? get leftBottomText => leftBottomTextState.of(selected);
+  String? get leftBottomText => leftBottomTextState.of(selected).value;
 
-  InAppPurchasePaywallState<String?> get leftBottomTextState {
+  InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>
+      get leftBottomTextState {
     return _leftBottomText?.resolveWith(stringify) ??
-        InAppPurchasePaywallState.all(null);
+        InAppPurchasePaywallState.all(
+            InAppPurchasePaywallLocalizedContent<String?>.empty());
   }
 
-  String? get rightTopText => rightTopTextState.of(selected);
+  String? get rightTopText => rightTopTextState.of(selected).value;
 
-  InAppPurchasePaywallState<String?> get rightTopTextState {
+  InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>
+      get rightTopTextState {
     return _rightTopText?.resolveWith(stringify) ??
-        InAppPurchasePaywallState.all(null);
+        InAppPurchasePaywallState.all(
+            InAppPurchasePaywallLocalizedContent<String?>.empty());
   }
 
-  String? get rightMiddleText => rightMiddleTextState.of(selected);
+  String? get rightMiddleText => rightMiddleTextState.of(selected).value;
 
-  InAppPurchasePaywallState<String?> get rightMiddleTextState {
+  InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>
+      get rightMiddleTextState {
     return _rightMiddleText?.resolveWith(stringify) ??
-        InAppPurchasePaywallState.all(null);
+        InAppPurchasePaywallState.all(
+            InAppPurchasePaywallLocalizedContent<String?>.empty());
   }
 
-  String? get rightBottomText => rightBottomTextState.of(selected);
+  String? get rightBottomText => rightBottomTextState.of(selected).value;
 
-  InAppPurchasePaywallState<String?> get rightBottomTextState {
+  InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>
+      get rightBottomTextState {
     return _rightBottomText?.resolveWith(stringify) ??
-        InAppPurchasePaywallState.all(null);
+        InAppPurchasePaywallState.all(
+            InAppPurchasePaywallLocalizedContent<String?>.empty());
   }
 
-  String? get badgeText => badgeTextState.of(selected);
+  String? get badgeText => badgeTextState.of(selected).value;
 
-  InAppPurchasePaywallState<String?> get badgeTextState {
-    return _badgeText ?? InAppPurchasePaywallState.all(null);
+  InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>
+      get badgeTextState {
+    return _badgeText ??
+        InAppPurchasePaywallState.all(
+            InAppPurchasePaywallLocalizedContent<String?>.empty());
   }
 
-  String? get buttonText => buttonTextState.of(selected);
+  String? get buttonText => buttonTextState.of(selected).value;
 
-  InAppPurchasePaywallState<String?> get buttonTextState {
+  InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>
+      get buttonTextState {
     return _buttonText?.resolveWith(stringify) ??
-        InAppPurchasePaywallState.all(null);
+        InAppPurchasePaywallState.all(
+            InAppPurchasePaywallLocalizedContent<String?>.empty());
   }
 
-  String? get bottomText => bottomTextState.of(selected);
+  String? get bottomText => bottomTextState.of(selected).value;
 
-  InAppPurchasePaywallState<String?> get bottomTextState {
+  InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>
+      get bottomTextState {
     return _bottomText?.resolveWith(stringify) ??
-        InAppPurchasePaywallState.all(null);
+        InAppPurchasePaywallState.all(
+            InAppPurchasePaywallLocalizedContent<String?>.empty());
   }
 
   InAppPurchasePaywallStyle get selectedTitleStyle {
@@ -1227,39 +1362,35 @@ class InAppPurchasePaywallProduct {
   }
 
   String formatPrice(double value) {
-    // keep 2 decimal places
+    final code = currencyCode ?? currencySymbol ?? '';
+    if (InAppPurchaser.i.configDelegate != null) {
+      return InAppPurchaser.i.configDelegate!.convertPrice(
+        InAppPurchaser.i.locale,
+        code,
+        value,
+      );
+    }
     String str = value.toStringAsFixed(2);
-
-    // remove trailing .00 or .0 if exists
     str = str.replaceAll(RegExp(r'([.]*0+)$'), '');
-
-    return str;
+    return "$code $str";
   }
 
-  String? stringify(String? value) {
-    if (value == null) return null;
-    if (value.isEmpty) return '';
-    final period = this.period ?? 'mo';
-    final unit = this.unit ?? 1;
-    final currencyCode = this.currencyCode ?? '';
-    final currencySymbol = this.currencySymbol ?? currencyCode;
+  double? _cp(double? b, double? r, double? c) {
+    if (b == null || r == null || c == null) return null;
+    final x = (r / b) * c;
+    return (x.roundToDouble() + 0.99 - 1).abs();
+  }
+
+  InAppPurchasePaywallLocalizedContent<String?> stringify(
+    InAppPurchasePaywallLocalizedContent<String?> value,
+  ) {
+    if (value.isEmpty) return InAppPurchasePaywallLocalizedContent<String?>('');
+
     final discountPrice = priceOriginal ?? 0;
-    final price = this.price ?? discountPrice;
-    final localizedPrice = this.localizedPrice;
-    final formatedPrice = discountPrice / unit;
-    return value
-        .replaceAll(
-          InAppPurchasePaywallConfigFormatters.currencySymbol,
-          currencySymbol,
-        )
-        .replaceAll(
-          InAppPurchasePaywallConfigFormatters.currencyCode,
-          currencyCode,
-        )
-        .replaceAll(
-          InAppPurchasePaywallConfigFormatters.currencyName,
-          currencyCode,
-        )
+    final price = _cp(usdPrice, discountPrice, this.price) ?? discountPrice;
+    final formatedPrice = discountPrice / (unit ?? 1);
+
+    final string = (value.localized ?? '')
         .replaceAll(
           InAppPurchasePaywallConfigFormatters.discountPrice,
           formatPrice(discountPrice),
@@ -1268,8 +1399,6 @@ class InAppPurchasePaywallProduct {
           InAppPurchasePaywallConfigFormatters.formatedPrice,
           formatPrice(formatedPrice),
         )
-        .replaceAll(InAppPurchasePaywallConfigFormatters.period, period)
-        .replaceAll(InAppPurchasePaywallConfigFormatters.unit, unit.toString())
         .replaceAll(
           InAppPurchasePaywallConfigFormatters.price,
           formatPrice(price),
@@ -1278,25 +1407,39 @@ class InAppPurchasePaywallProduct {
           InAppPurchasePaywallConfigFormatters.localizedPrice,
           localizedPrice ?? '',
         );
+    return value.copyWith(value: string);
   }
 
   const InAppPurchasePaywallProduct({
-    required this.product,
     this.selected = false,
+    required this.product,
     InAppPurchasePaywallState<double?>? price,
+    InAppPurchasePaywallState<double?>? usdPrice,
     InAppPurchasePaywallState<int?>? unit,
-    InAppPurchasePaywallState<String?>? period,
-    InAppPurchasePaywallState<String?>? titleText,
-    InAppPurchasePaywallState<String?>? descriptionText,
-    InAppPurchasePaywallState<String?>? leftTopText,
-    InAppPurchasePaywallState<String?>? leftMiddleText,
-    InAppPurchasePaywallState<String?>? leftBottomText,
-    InAppPurchasePaywallState<String?>? rightTopText,
-    InAppPurchasePaywallState<String?>? rightMiddleText,
-    InAppPurchasePaywallState<String?>? rightBottomText,
-    InAppPurchasePaywallState<String?>? badgeText,
-    InAppPurchasePaywallState<String?>? buttonText,
-    InAppPurchasePaywallState<String?>? bottomText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        period,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        titleText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        descriptionText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        leftTopText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        leftMiddleText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        leftBottomText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        rightTopText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        rightMiddleText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        rightBottomText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        badgeText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        buttonText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        bottomText,
     this.titleStyle = const InAppPurchasePaywallStyle(),
     this.descriptionStyle = const InAppPurchasePaywallStyle(),
     this.style = const InAppPurchasePaywallStyle(),
@@ -1312,6 +1455,7 @@ class InAppPurchasePaywallProduct {
     this.buttonStyle = const InAppPurchasePaywallStyle(),
     this.bottomStyle = const InAppPurchasePaywallStyle(),
   })  : _price = price,
+        _usdPrice = usdPrice,
         _period = period,
         _unit = unit,
         _titleText = titleText,
@@ -1341,6 +1485,7 @@ class InAppPurchasePaywallProduct {
 
     addObject("period", _period?.toDictionary((e) => e));
     addObject("price", _price?.toDictionary((e) => e));
+    addObject("usdPrice", _usdPrice?.toDictionary((e) => e));
     addObject("unit", _unit?.toDictionary((e) => e));
     addObject("badgeText", _badgeText?.toDictionary((e) => e));
     addObject("bottomText", _bottomText?.toDictionary((e) => e));
@@ -1382,10 +1527,14 @@ class InAppPurchasePaywallProduct {
       product: product,
       period: InAppPurchasePaywallState.parse(
         configs['period'],
-        (v) => parser<String?>(v, null),
+        InAppPurchasePaywallLocalizedContent<String?>.parse,
       ),
       price: InAppPurchasePaywallState.parse(
         configs['price'],
+        (v) => parser<double?>(v, null),
+      ),
+      usdPrice: InAppPurchasePaywallState.parse(
+        configs['usdPrice'],
         (v) => parser<double?>(v, null),
       ),
       unit: InAppPurchasePaywallState.parse(
@@ -1402,7 +1551,7 @@ class InAppPurchasePaywallProduct {
       ),
       leftTopText: InAppPurchasePaywallState.parse(
         configs['leftTopText'],
-        (v) => parser<String?>(v, null),
+        InAppPurchasePaywallLocalizedContent<String?>.parse,
       ),
       leftTopStyle: InAppPurchasePaywallStyle.parse(
         configs["leftTopStyle"],
@@ -1410,7 +1559,7 @@ class InAppPurchasePaywallProduct {
       ),
       leftMiddleText: InAppPurchasePaywallState.parse(
         configs['leftMiddleText'],
-        (v) => parser<String?>(v, null),
+        InAppPurchasePaywallLocalizedContent<String?>.parse,
       ),
       leftMiddleStyle: InAppPurchasePaywallStyle.parse(
         configs["leftMiddleStyle"],
@@ -1418,7 +1567,7 @@ class InAppPurchasePaywallProduct {
       ),
       leftBottomText: InAppPurchasePaywallState.parse(
         configs['leftBottomText'],
-        (v) => parser<String?>(v, null),
+        InAppPurchasePaywallLocalizedContent<String?>.parse,
       ),
       leftBottomStyle: InAppPurchasePaywallStyle.parse(
         configs["leftBottomStyle"],
@@ -1430,7 +1579,7 @@ class InAppPurchasePaywallProduct {
       ),
       rightTopText: InAppPurchasePaywallState.parse(
         configs['rightTopText'],
-        (v) => parser<String?>(v, null),
+        InAppPurchasePaywallLocalizedContent<String?>.parse,
       ),
       rightTopStyle: InAppPurchasePaywallStyle.parse(
         configs["rightTopStyle"],
@@ -1438,7 +1587,7 @@ class InAppPurchasePaywallProduct {
       ),
       rightMiddleText: InAppPurchasePaywallState.parse(
         configs['rightMiddleText'],
-        (v) => parser<String?>(v, null),
+        InAppPurchasePaywallLocalizedContent<String?>.parse,
       ),
       rightMiddleStyle: InAppPurchasePaywallStyle.parse(
         configs["rightMiddleStyle"],
@@ -1446,7 +1595,7 @@ class InAppPurchasePaywallProduct {
       ),
       rightBottomText: InAppPurchasePaywallState.parse(
         configs['rightBottomText'],
-        (v) => parser<String?>(v, null),
+        InAppPurchasePaywallLocalizedContent<String?>.parse,
       ),
       rightBottomStyle: InAppPurchasePaywallStyle.parse(
         configs["rightBottomStyle"],
@@ -1454,7 +1603,7 @@ class InAppPurchasePaywallProduct {
       ),
       badgeText: InAppPurchasePaywallState.parse(
         configs['badgeText'],
-        (v) => parser<String?>(v, null),
+        InAppPurchasePaywallLocalizedContent<String?>.parse,
       ),
       badgeStyle: InAppPurchasePaywallStyle.parse(
         configs["badgeStyle"],
@@ -1462,7 +1611,7 @@ class InAppPurchasePaywallProduct {
       ),
       buttonText: InAppPurchasePaywallState.parse(
         configs['buttonText'],
-        (v) => parser<String?>(v, null),
+        InAppPurchasePaywallLocalizedContent<String?>.parse,
       ),
       buttonStyle: InAppPurchasePaywallStyle.parse(
         configs["buttonStyle"],
@@ -1470,7 +1619,7 @@ class InAppPurchasePaywallProduct {
       ),
       bottomText: InAppPurchasePaywallState.parse(
         configs['bottomText'],
-        (v) => parser<String?>(v, null),
+        InAppPurchasePaywallLocalizedContent<String?>.parse,
       ),
       bottomStyle: InAppPurchasePaywallStyle.parse(
         configs["bottomStyle"],
@@ -1478,7 +1627,7 @@ class InAppPurchasePaywallProduct {
       ),
       titleText: InAppPurchasePaywallState.parse(
         configs['titleText'],
-        (v) => parser<String?>(v, null),
+        InAppPurchasePaywallLocalizedContent<String?>.parse,
       ),
       titleStyle: InAppPurchasePaywallStyle.parse(
         configs["titleStyle"],
@@ -1486,7 +1635,7 @@ class InAppPurchasePaywallProduct {
       ),
       descriptionText: InAppPurchasePaywallState.parse(
         configs['descriptionText'],
-        (v) => parser<String?>(v, null),
+        InAppPurchasePaywallLocalizedContent<String?>.parse,
       ),
       descriptionStyle: InAppPurchasePaywallStyle.parse(
         configs["descriptionStyle"],
@@ -1499,32 +1648,45 @@ class InAppPurchasePaywallProduct {
     bool? selected,
     InAppPurchaseProduct? product,
     InAppPurchasePaywallState<double?>? price,
-    InAppPurchasePaywallState<String?>? period,
+    InAppPurchasePaywallState<double?>? usdPrice,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        period,
     InAppPurchasePaywallState<int?>? unit,
-    InAppPurchasePaywallState<String?>? titleText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        titleText,
     InAppPurchasePaywallStyle? titleStyle,
-    InAppPurchasePaywallState<String?>? descriptionText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        descriptionText,
     InAppPurchasePaywallStyle? descriptionStyle,
     InAppPurchasePaywallStyle? style,
     InAppPurchasePaywallStyle? leftStyle,
-    InAppPurchasePaywallState<String?>? leftTopText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        leftTopText,
     InAppPurchasePaywallStyle? leftTopStyle,
-    InAppPurchasePaywallState<String?>? leftMiddleText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        leftMiddleText,
     InAppPurchasePaywallStyle? leftMiddleStyle,
-    InAppPurchasePaywallState<String?>? leftBottomText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        leftBottomText,
     InAppPurchasePaywallStyle? leftBottomStyle,
     InAppPurchasePaywallStyle? rightStyle,
-    InAppPurchasePaywallState<String?>? rightTopText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        rightTopText,
     InAppPurchasePaywallStyle? rightTopStyle,
-    InAppPurchasePaywallState<String?>? rightMiddleText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        rightMiddleText,
     InAppPurchasePaywallStyle? rightMiddleStyle,
-    InAppPurchasePaywallState<String?>? rightBottomText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        rightBottomText,
     InAppPurchasePaywallStyle? rightBottomStyle,
-    InAppPurchasePaywallState<String?>? badgeText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        badgeText,
     InAppPurchasePaywallStyle? badgeStyle,
-    InAppPurchasePaywallState<String?>? buttonText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        buttonText,
     InAppPurchasePaywallStyle? buttonStyle,
-    InAppPurchasePaywallState<String?>? bottomText,
+    InAppPurchasePaywallState<InAppPurchasePaywallLocalizedContent<String?>>?
+        bottomText,
     InAppPurchasePaywallStyle? bottomStyle,
   }) {
     return InAppPurchasePaywallProduct(
@@ -1548,6 +1710,7 @@ class InAppPurchasePaywallProduct {
       leftTopText: leftTopText ?? _leftTopText,
       period: period ?? _period,
       price: price ?? _price,
+      usdPrice: usdPrice ?? _usdPrice,
       rightStyle: rightStyle ?? this.rightStyle,
       rightBottomStyle: rightBottomStyle ?? this.rightBottomStyle,
       rightBottomText: rightBottomText ?? _rightBottomText,
@@ -1651,11 +1814,11 @@ class InAppPurchasePaywall {
   final bool safeArea;
   final bool defaultMode;
 
-  final String? hero;
-  final String? image;
-  final String? title;
-  final String? subtitle;
-  final List features;
+  final InAppPurchasePaywallLocalizedContent<String?> hero;
+  final InAppPurchasePaywallLocalizedContent<String?> image;
+  final InAppPurchasePaywallLocalizedContent<String?> title;
+  final InAppPurchasePaywallLocalizedContent<String?> subtitle;
+  final InAppPurchasePaywallLocalizedContent<List> features;
 
   final InAppPurchasePaywallStyle style;
   final InAppPurchasePaywallStyle heroStyle;
@@ -1680,11 +1843,11 @@ class InAppPurchasePaywall {
     this.safeArea = true,
     this.skipMode = false,
     this.defaultMode = true,
-    this.hero,
-    this.image,
-    this.title,
-    this.subtitle,
-    this.features = const [],
+    this.hero = const InAppPurchasePaywallLocalizedContent(null),
+    this.image = const InAppPurchasePaywallLocalizedContent(null),
+    this.title = const InAppPurchasePaywallLocalizedContent(null),
+    this.subtitle = const InAppPurchasePaywallLocalizedContent(null),
+    this.features = const InAppPurchasePaywallLocalizedContent([]),
     this.style = const InAppPurchasePaywallStyle(),
     this.heroStyle = const InAppPurchasePaywallStyle(),
     this.headerStyle = const InAppPurchasePaywallStyle(),
@@ -1704,11 +1867,6 @@ class InAppPurchasePaywall {
       if (designType.isNotEmpty) "designType": designType,
       "safeArea": safeArea,
       "skipMode": skipMode,
-      if ((hero ?? '').isNotEmpty) "hero": hero,
-      if ((image ?? '').isNotEmpty) "image": image,
-      if ((title ?? '').isNotEmpty) "title": title,
-      if ((subtitle ?? '').isNotEmpty) "subtitle": subtitle,
-      if (features.isNotEmpty) "features": features,
       if (products.isNotEmpty)
         "products": products
             .map((e) => e.dictionary)
@@ -1716,10 +1874,24 @@ class InAppPurchasePaywall {
             .toList(),
     };
 
+    void addObject(String key, Object? value) {
+      if (value == null) return;
+      map[key] = value;
+    }
+
     void addDictionary(String key, Map value) {
       if (value.isEmpty) return;
       map[key] = value;
     }
+
+    addObject("hero", hero.toDictionary((e) => e));
+    addObject("image", image.toDictionary((e) => e));
+    addObject("title", title.toDictionary((e) => e));
+    addObject("subtitle", subtitle.toDictionary((e) => e));
+    addObject("features", features.toDictionary((e) {
+      if (e == null || e.isEmpty) return null;
+      return e;
+    }));
 
     addDictionary("style", style.dictionary);
     addDictionary("heroStyle", heroStyle.dictionary);
@@ -1758,32 +1930,7 @@ class InAppPurchasePaywall {
   }) {
     final parser = InAppPurchaser.parseConfig;
 
-    final initialIndex = parser(configs["initialIndex"], 0);
-    final designType = parser(configs["designType"], 'v1');
-    final safeArea = parser(configs["safeArea"], true);
-    final skipMode = parser(configs["skipMode"], false);
-
-    final hero = parser<String?>(configs["hero"], null);
-    final image = parser<String?>(configs["image"], null);
-    final title = parser<String?>(configs["title"], null);
-    final subtitle = parser<String?>(configs["subtitle"], null);
-    final features = parser<List?>(configs["features"], null);
     final products = parser<List?>(configs["products"], null);
-
-    final style = parser<Map?>(configs["style"], null);
-    final heroStyle = parser<Map?>(configs["heroStyle"], null);
-
-    final headerStyle = parser<Map?>(configs["headerStyle"], null);
-    final bodyStyle = parser<Map?>(configs["bodyStyle"], null);
-    final footerStyle = parser<Map?>(configs["footerStyle"], null);
-
-    final imageStyle = parser<Map?>(configs["imageStyle"], null);
-    final titleStyle = parser<Map?>(configs["titleStyle"], null);
-    final subtitleStyle = parser<Map?>(configs["subtitleStyle"], null);
-    final featureStyle = parser<Map?>(configs["featureStyle"], null);
-
-    final closeButtonStyle = parser<Map?>(configs["closeButtonStyle"], null);
-    final textButtonStyle = parser<Map?>(configs["textButtonStyle"], null);
 
     final mProducts = List.generate(packages.length, (index) {
       final productConfigs = products?.elementAtOrNull(index);
@@ -1797,27 +1944,45 @@ class InAppPurchasePaywall {
     return InAppPurchasePaywall(
       defaultMode: false,
       id: placement,
-      initialIndex: initialIndex,
-      designType: designType,
-      safeArea: safeArea,
-      skipMode: skipMode,
-      hero: hero,
-      image: image,
-      title: title,
-      subtitle: subtitle,
-      features: features ?? [],
       products: mProducts,
-      style: InAppPurchasePaywallStyle.parse(style, dark),
-      heroStyle: InAppPurchasePaywallStyle.parse(heroStyle, dark),
-      headerStyle: InAppPurchasePaywallStyle.parse(headerStyle, dark),
-      bodyStyle: InAppPurchasePaywallStyle.parse(bodyStyle, dark),
-      footerStyle: InAppPurchasePaywallStyle.parse(footerStyle, dark),
-      imageStyle: InAppPurchasePaywallStyle.parse(imageStyle, dark),
-      titleStyle: InAppPurchasePaywallStyle.parse(titleStyle, dark),
-      subtitleStyle: InAppPurchasePaywallStyle.parse(subtitleStyle, dark),
-      featureStyle: InAppPurchasePaywallStyle.parse(featureStyle, dark),
-      closeButtonStyle: InAppPurchasePaywallStyle.parse(closeButtonStyle, dark),
-      textButtonStyle: InAppPurchasePaywallStyle.parse(textButtonStyle, dark),
+      initialIndex: parser(configs["initialIndex"], 0),
+      designType: parser(configs["designType"], 'v1'),
+      safeArea: parser(configs["safeArea"], true),
+      skipMode: parser(configs["skipMode"], false),
+      hero: InAppPurchasePaywallLocalizedContent.parse(configs['hero']),
+      image: InAppPurchasePaywallLocalizedContent.parse(configs['image']),
+      title: InAppPurchasePaywallLocalizedContent.parse(configs['title']),
+      subtitle: InAppPurchasePaywallLocalizedContent.parse(configs['subtitle']),
+      features: InAppPurchasePaywallLocalizedContent.parse(configs['features']),
+      style: InAppPurchasePaywallStyle.parse(configs["style"], dark),
+      heroStyle: InAppPurchasePaywallStyle.parse(configs["heroStyle"], dark),
+      headerStyle: InAppPurchasePaywallStyle.parse(
+        configs["headerStyle"],
+        dark,
+      ),
+      bodyStyle: InAppPurchasePaywallStyle.parse(configs["bodyStyle"], dark),
+      footerStyle: InAppPurchasePaywallStyle.parse(
+        configs["footerStyle"],
+        dark,
+      ),
+      imageStyle: InAppPurchasePaywallStyle.parse(configs["imageStyle"], dark),
+      titleStyle: InAppPurchasePaywallStyle.parse(configs["titleStyle"], dark),
+      subtitleStyle: InAppPurchasePaywallStyle.parse(
+        configs["subtitleStyle"],
+        dark,
+      ),
+      featureStyle: InAppPurchasePaywallStyle.parse(
+        configs["featureStyle"],
+        dark,
+      ),
+      closeButtonStyle: InAppPurchasePaywallStyle.parse(
+        configs["closeButtonStyle"],
+        dark,
+      ),
+      textButtonStyle: InAppPurchasePaywallStyle.parse(
+        configs["textButtonStyle"],
+        dark,
+      ),
     );
   }
 
@@ -1829,11 +1994,11 @@ class InAppPurchasePaywall {
     bool? skipMode,
     bool? safeArea,
     bool? defaultMode,
-    String? hero,
-    String? image,
-    String? title,
-    String? subtitle,
-    List? features,
+    InAppPurchasePaywallLocalizedContent<String?>? hero,
+    InAppPurchasePaywallLocalizedContent<String?>? image,
+    InAppPurchasePaywallLocalizedContent<String?>? title,
+    InAppPurchasePaywallLocalizedContent<String?>? subtitle,
+    InAppPurchasePaywallLocalizedContent<List>? features,
     InAppPurchasePaywallStyle? style,
     InAppPurchasePaywallStyle? heroStyle,
     InAppPurchasePaywallStyle? headerStyle,

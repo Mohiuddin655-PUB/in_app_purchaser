@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:developer' as dev;
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 
+import 'configs.dart';
 import 'delegate.dart';
 import 'offering.dart';
 import 'paywall.dart';
@@ -47,12 +49,14 @@ class InAppPurchaser extends ChangeNotifier {
   final bool logEnabled;
 
   final InAppPurchaseDelegate _delegate;
+  final InAppPurchaseConfigDelegate? configDelegate;
 
   bool initialized = false;
 
   InAppPurchaser._({
     required InAppPurchaseDelegate delegate,
     required this.logEnabled,
+    this.configDelegate,
   }) : _delegate = delegate;
 
   static InAppPurchaser? _i;
@@ -61,9 +65,14 @@ class InAppPurchaser extends ChangeNotifier {
 
   static Future<void> init({
     required InAppPurchaseDelegate delegate,
+    InAppPurchaseConfigDelegate? configDelegate,
     bool logEnabled = true,
   }) async {
-    _i = InAppPurchaser._(delegate: delegate, logEnabled: logEnabled);
+    _i = InAppPurchaser._(
+      delegate: delegate,
+      configDelegate: configDelegate,
+      logEnabled: logEnabled,
+    );
     await i.configure();
   }
 
@@ -189,6 +198,23 @@ class InAppPurchaser extends ChangeNotifier {
   /// --------------------------------------------------------------------------
 
   /// --------------------------------------------------------------------------
+  /// LOCALIZATION START
+  /// --------------------------------------------------------------------------
+
+  Locale? _locale;
+
+  Locale get locale => _locale ?? Locale("en", "US");
+
+  static void setLocale(Locale? locale, {bool notifiable = true}) {
+    i._locale = locale;
+    if (notifiable) i.notify();
+  }
+
+  /// --------------------------------------------------------------------------
+  /// LOCALIZATION END
+  /// --------------------------------------------------------------------------
+
+  /// --------------------------------------------------------------------------
   /// PREMIUM CHECKER START
   /// --------------------------------------------------------------------------
 
@@ -260,48 +286,50 @@ class InAppPurchaser extends ChangeNotifier {
     return info.isActive;
   }
 
-  static void enabled(bool value) {
+  static void enabled(bool value, {bool notifiable = true}) {
     i._enabled = value;
-    i.notify();
+    if (notifiable) i.notify();
   }
 
-  static void setUid(String? uid) {
+  static void setUid(String? uid, {bool notifiable = true}) {
     i._uid = uid;
-    if ((uid ?? '').isEmpty) return;
-    i.notify();
+    if (notifiable) i.notify();
   }
 
-  static void setFeatures(Set<String> features) {
+  static void setFeatures(Set<String> features, {bool notifiable = true}) {
     i._features = features;
-    i.notify();
+    if (notifiable) i.notify();
   }
 
-  static void setIgnorableUsers(Set<String> uids) {
+  static void setIgnorableUsers(Set<String> uids, {bool notifiable = true}) {
     i._ignorableUsers = uids;
-    i.notify();
+    if (notifiable) i.notify();
   }
 
-  static void setIgnorableFeatureIndexes(String feature, Set<int> indexes) {
+  static void setIgnorableFeatureIndexes(
+    String feature,
+    Set<int> indexes, {
+    bool notifiable = true,
+  }) {
     if (indexes.isEmpty) {
       i._ignorableIndexes.remove(feature);
     } else {
       i._ignorableIndexes[feature] = indexes;
     }
-    i.notify();
+    if (notifiable) i.notify();
   }
 
-  static void setIgnorableMappedFeatureIndexes(Map<String, Set<int>> indexes) {
-    if (indexes.isEmpty) {
-      i._ignorableIndexes.clear();
-    } else {
-      i._ignorableIndexes = indexes;
-    }
-    i.notify();
+  static void setIgnorableMappedFeatureIndexes(
+    Map<String, Set<int>> indexes, {
+    bool notifiable = true,
+  }) {
+    i._ignorableIndexes = indexes;
+    if (notifiable) i.notify();
   }
 
-  static void setDefaultPremiumStatus(bool status) {
+  static void setDefaultPremiumStatus(bool status, {bool notifiable = true}) {
     i._premiumDefault = status;
-    i.notify();
+    if (notifiable) i.notify();
   }
 
   static ValueNotifier<InAppPurchaseState> loginState = ValueNotifier(
