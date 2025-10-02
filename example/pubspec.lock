@@ -91,6 +91,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_text_parser:
+    dependency: "direct main"
+    description:
+      name: flutter_text_parser
+      sha256: "840fe053930035fefc4ce04f242feb8404e9c268225c76095f0100a5c9a134e1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   flutter_web_plugins:
     dependency: transitive
     description: flutter
@@ -269,5 +277,5 @@ packages:
     source: hosted
     version: "1.1.1"
 sdks:
-  dart: ">=3.8.0 <4.0.0"
+  dart: ">=3.9.2 <4.0.0"
   flutter: ">=3.27.0"

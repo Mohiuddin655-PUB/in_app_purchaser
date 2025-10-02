@@ -5,31 +5,39 @@ import 'package:flutter/material.dart';
 import '../utils/style.dart';
 import '../utils/typedefs.dart';
 
-class PaywallDecoratedBox extends StatefulWidget {
+class PaywallDecoratedBox extends StatelessWidget {
+  final bool primary;
   final bool? selected;
-  final PaywallStyle style;
+  final PaywallStyle? style;
   final PaywallScaler? scaler;
   final TextDirection? textDirection;
   final Widget child;
 
   const PaywallDecoratedBox({
     super.key,
+    this.primary = true,
     this.selected,
-    required this.style,
+    this.style,
     this.textDirection,
     this.scaler,
     required this.child,
   });
 
-  @override
-  State<PaywallDecoratedBox> createState() => _PaywallDecoratedBoxState();
-}
+  PaywallStyle? get _style {
+    if (!primary) return style;
+    if (textDirection != null || scaler != null) {
+      return style?.resolveWith(
+        selected: selected,
+        textDirection: textDirection,
+        scaler: scaler,
+      );
+    }
+    if (selected != null) return style?.copyWith(selected: selected);
+    return style;
+  }
 
-class _PaywallDecoratedBoxState extends State<PaywallDecoratedBox> {
-  late PaywallStyle style;
-
-  ImageProvider? get _image {
-    final src = style.image ?? '';
+  ImageProvider? _image(String? src) {
+    src ??= '';
     if (src.isEmpty) return null;
     if (src.startsWith("https")) {
       return NetworkImage(src);
@@ -39,73 +47,40 @@ class _PaywallDecoratedBoxState extends State<PaywallDecoratedBox> {
     return null;
   }
 
-  @override
-  void initState() {
-    super.initState();
-    if (widget.textDirection != null || widget.scaler != null) {
-      style = widget.style.resolveWith(
-        selected: widget.selected,
-        textDirection: widget.textDirection,
-        scaler: widget.scaler,
-      );
-    } else if (widget.selected != null) {
-      style = widget.style.copyWith(selected: widget.selected);
-    } else {
-      style = widget.style;
-    }
-  }
+  Widget _build(BuildContext context, PaywallStyle s) {
+    final duration = Duration(milliseconds: s.duration ?? 0);
 
-  @override
-  void didUpdateWidget(covariant PaywallDecoratedBox oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.textDirection != oldWidget.textDirection) {
-      style = widget.style.resolveWith(
-        selected: widget.selected,
-        textDirection: widget.textDirection,
-        scaler: widget.scaler,
-      );
-    } else if (widget.selected != oldWidget.selected) {
-      style = widget.style.copyWith(selected: widget.selected);
-    } else if (widget.style != oldWidget.style) {
-      style = widget.style;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final duration = Duration(milliseconds: style.duration ?? 0);
-
-    final alignment = style.alignment;
-    final position = style.position;
+    final alignment = s.alignment;
+    final position = s.position;
 
     Widget child = AnimatedContainer(
       duration: duration,
-      constraints: style.constraints,
+      constraints: s.constraints,
       decoration: BoxDecoration(
-        color: style.backgroundColor,
-        borderRadius: style.borderRadius,
-        boxShadow: style.boxShadow,
-        border: style.border,
-        gradient: style.gradient,
-        backgroundBlendMode: style.blendMode,
-        image: _image != null
+        color: s.backgroundColor,
+        borderRadius: s.borderRadius,
+        boxShadow: s.boxShadow,
+        border: s.border,
+        gradient: s.gradient,
+        backgroundBlendMode: s.blendMode,
+        image: (s.image ?? '').isNotEmpty
             ? DecorationImage(
-                image: _image!,
+                image: _image(s.image)!,
                 fit: BoxFit.cover,
-                opacity: style.imageOpacity ?? 1,
-                scale: style.imageScale ?? 1,
+                opacity: s.imageOpacity ?? 1,
+                scale: s.imageScale ?? 1,
               )
             : null,
       ),
-      padding: style.padding,
-      margin: style.margin,
-      alignment: style.contentAlignment,
+      padding: s.padding,
+      margin: s.margin,
+      alignment: s.contentAlignment,
       clipBehavior: Clip.antiAlias,
-      height: style.height,
-      width: style.width,
-      child: widget.child,
+      height: s.height,
+      width: s.width,
+      child: this.child,
     );
-    final opacity = style.opacity ?? 0.0;
+    final opacity = s.opacity ?? 0.0;
     if (opacity > 0) {
       if (duration != Duration.zero) {
         child = AnimatedOpacity(
@@ -120,7 +95,7 @@ class _PaywallDecoratedBoxState extends State<PaywallDecoratedBox> {
         );
       }
     }
-    final scale = style.scale;
+    final scale = s.scale;
     if (scale != null) {
       if (duration != Duration.zero) {
         child = AnimatedScale(
@@ -135,7 +110,7 @@ class _PaywallDecoratedBoxState extends State<PaywallDecoratedBox> {
         );
       }
     }
-    final blur = style.blur;
+    final blur = s.blur;
     if (blur != null && blur > 0) {
       child = ClipRect(
         clipBehavior: Clip.antiAlias,
@@ -177,5 +152,12 @@ class _PaywallDecoratedBoxState extends State<PaywallDecoratedBox> {
       );
     }
     return child;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final style = _style;
+    if (style == null) return child;
+    return _build(context, style);
   }
 }
