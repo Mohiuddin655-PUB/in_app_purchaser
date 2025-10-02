@@ -2,17 +2,17 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../src/paywall.dart'
-    show InAppPurchasePaywallStyle, InAppPurchasePaywallScaler;
+import '../utils/style.dart';
+import '../utils/typedefs.dart';
 
-class InAppPurchasePaywallDecoratedBox extends StatelessWidget {
+class PaywallDecoratedBox extends StatefulWidget {
   final bool? selected;
-  final InAppPurchasePaywallStyle style;
-  final InAppPurchasePaywallScaler? scaler;
+  final PaywallStyle style;
+  final PaywallScaler? scaler;
   final TextDirection? textDirection;
   final Widget child;
 
-  const InAppPurchasePaywallDecoratedBox({
+  const PaywallDecoratedBox({
     super.key,
     this.selected,
     required this.style,
@@ -22,15 +22,57 @@ class InAppPurchasePaywallDecoratedBox extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final style = selected != null || scaler != null || textDirection != null
-        ? this.style.resolveWith(
-              scaler: scaler,
-              textDirection: textDirection,
-              selected: selected,
-            )
-        : this.style;
+  State<PaywallDecoratedBox> createState() => _PaywallDecoratedBoxState();
+}
 
+class _PaywallDecoratedBoxState extends State<PaywallDecoratedBox> {
+  late PaywallStyle style;
+
+  ImageProvider? get _image {
+    final src = style.image ?? '';
+    if (src.isEmpty) return null;
+    if (src.startsWith("https")) {
+      return NetworkImage(src);
+    } else if (src.startsWith("assets")) {
+      return AssetImage(src);
+    }
+    return null;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.textDirection != null || widget.scaler != null) {
+      style = widget.style.resolveWith(
+        selected: widget.selected,
+        textDirection: widget.textDirection,
+        scaler: widget.scaler,
+      );
+    } else if (widget.selected != null) {
+      style = widget.style.copyWith(selected: widget.selected);
+    } else {
+      style = widget.style;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant PaywallDecoratedBox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.textDirection != oldWidget.textDirection) {
+      style = widget.style.resolveWith(
+        selected: widget.selected,
+        textDirection: widget.textDirection,
+        scaler: widget.scaler,
+      );
+    } else if (widget.selected != oldWidget.selected) {
+      style = widget.style.copyWith(selected: widget.selected);
+    } else if (widget.style != oldWidget.style) {
+      style = widget.style;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final duration = Duration(milliseconds: style.duration ?? 0);
 
     final alignment = style.alignment;
@@ -38,6 +80,7 @@ class InAppPurchasePaywallDecoratedBox extends StatelessWidget {
 
     Widget child = AnimatedContainer(
       duration: duration,
+      constraints: style.constraints,
       decoration: BoxDecoration(
         color: style.backgroundColor,
         borderRadius: style.borderRadius,
@@ -60,9 +103,9 @@ class InAppPurchasePaywallDecoratedBox extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       height: style.height,
       width: style.width,
-      child: this.child,
+      child: widget.child,
     );
-    final opacity = style.opacity ?? 0;
+    final opacity = style.opacity ?? 0.0;
     if (opacity > 0) {
       if (duration != Duration.zero) {
         child = AnimatedOpacity(
@@ -134,16 +177,5 @@ class InAppPurchasePaywallDecoratedBox extends StatelessWidget {
       );
     }
     return child;
-  }
-
-  ImageProvider? get _image {
-    final src = style.image ?? '';
-    if (src.isEmpty) return null;
-    if (src.startsWith("https")) {
-      return NetworkImage(src);
-    } else if (src.startsWith("assets")) {
-      return AssetImage(src);
-    }
-    return null;
   }
 }

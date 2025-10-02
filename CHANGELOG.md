@@ -1,3 +1,7 @@
+## 2.1.0
+
+* Reuse and reduction code
+
 ## 2.0.26
 
 * Localization supported

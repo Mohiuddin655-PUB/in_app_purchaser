@@ -11,7 +11,7 @@ abstract class InAppPurchaseConfigDelegate {
   ///  return format.format(price);
   ///}
   /// ```
-  String? convertPrice(Locale locale, String currencyCode, double price);
+  String? formatPrice(Locale locale, String currencyCode, double price);
 
   String? localize(Locale locale, String? key);
 }

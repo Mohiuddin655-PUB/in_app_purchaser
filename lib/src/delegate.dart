@@ -1,11 +1,8 @@
 import 'offering.dart';
-import 'paywall.dart';
 import 'purchase_result.dart';
 
 abstract class InAppPurchaseDelegate {
   const InAppPurchaseDelegate();
-
-  bool get isDarkTheme => false;
 
   Set<String> get placements => {"default"};
 
@@ -22,10 +19,6 @@ abstract class InAppPurchaseDelegate {
   Future<void> logout();
 
   Future<InAppPurchaseOffering> offering(String placement);
-
-  InAppPurchasePaywall paywall(InAppPurchaseOffering offering) {
-    return InAppPurchasePaywall.fromOffering(offering, isDarkTheme);
-  }
 
   T parseConfig<T extends Object?>(Object? value, T defaultValue) {
     return value is T ? value : defaultValue;

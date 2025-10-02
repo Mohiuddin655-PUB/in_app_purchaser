@@ -4,10 +4,9 @@ import '../src/paywall.dart';
 import '../src/purchaser.dart';
 
 class InAppPurchasePaywallBuilder extends StatelessWidget {
-  final InAppPurchasePaywall? initial;
+  final Paywall? initial;
   final String placement;
-  final Widget Function(BuildContext context, InAppPurchasePaywall? paywall)
-      builder;
+  final Widget Function(BuildContext context, Paywall? paywall) builder;
 
   const InAppPurchasePaywallBuilder({
     super.key,
@@ -23,7 +22,7 @@ class InAppPurchasePaywallBuilder extends StatelessWidget {
       builder: (context, child) {
         return builder(
           context,
-          InAppPurchaser.paywall(placement) ?? initial?.copyWith(),
+          InAppPurchaser.paywall(placement) ?? initial,
         );
       },
     );

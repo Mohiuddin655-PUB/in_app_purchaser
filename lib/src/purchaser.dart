@@ -205,13 +205,40 @@ class InAppPurchaser extends ChangeNotifier {
 
   Locale get locale => _locale ?? Locale("en", "US");
 
-  static void setLocale(Locale? locale, {bool notifiable = true}) {
+  static void changeLocale(Locale? locale, {bool notifiable = true}) {
     i._locale = locale;
+    if (i._paywalls.isNotEmpty) {
+      i._paywalls = i._paywalls.map((k, v) {
+        return MapEntry(k, v.localized(locale ?? i.locale));
+      });
+    }
     if (notifiable) i.notify();
   }
 
   /// --------------------------------------------------------------------------
   /// LOCALIZATION END
+  /// --------------------------------------------------------------------------
+
+  /// --------------------------------------------------------------------------
+  /// THEME START
+  /// --------------------------------------------------------------------------
+
+  bool? _dark;
+
+  bool get dark => _dark ?? false;
+
+  static void changeTheme(bool? dark, {bool notifiable = true}) {
+    i._dark = dark;
+    if (i._paywalls.isNotEmpty) {
+      i._paywalls = i._paywalls.map((k, v) {
+        return MapEntry(k, v.themed(dark ?? i.dark));
+      });
+    }
+    if (notifiable) i.notify();
+  }
+
+  /// --------------------------------------------------------------------------
+  /// THEME END
   /// --------------------------------------------------------------------------
 
   /// --------------------------------------------------------------------------
@@ -389,6 +416,7 @@ class InAppPurchaser extends ChangeNotifier {
   /// --------------------------------------------------------------------------
 
   final Map<String, InAppPurchaseOffering> _offerings = {};
+  Map<String, Paywall> _paywalls = {};
   final Map<String, ValueNotifier<InAppPurchaseState>> fetchingStates = {};
 
   Future<void> _fetch(String key, String placement) async {
@@ -403,6 +431,7 @@ class InAppPurchaser extends ChangeNotifier {
         return;
       }
       _offerings[placement] = result;
+      _paywalls[placement] = Paywall.fromOffering(result, dark);
       _emitters[key] = 10;
       _log("offering fetched");
       state.value = InAppPurchaseState.done;
@@ -431,10 +460,8 @@ class InAppPurchaser extends ChangeNotifier {
     return i._delegate.parseConfig(value, defaultValue);
   }
 
-  static InAppPurchasePaywall? paywall([String? placement]) {
-    final offer = offering(placement);
-    if (offer == null) return null;
-    return i._delegate.paywall(offer);
+  static Paywall? paywall([String? placement]) {
+    return i._paywalls[placement ?? i.placement];
   }
 
   static InAppPurchaseProduct? productAt(int index, [String? placement]) {
@@ -455,7 +482,7 @@ class InAppPurchaser extends ChangeNotifier {
     );
   }
 
-  static void changeDefaultPlacement(String placement) {
+  static void changePlacement(String placement) {
     i.placement = placement;
     if (!i._offerings.containsKey(placement)) {
       fetch(placement);
