@@ -16,10 +16,12 @@ class PaywallStyle {
   final PaywallState<Border?>? borderState;
   final PaywallState<BorderRadius?>? borderRadiusState;
   final PaywallState<List<BoxShadow>?>? boxShadowState;
+  final PaywallState<bool?>? centerState;
   final PaywallState<Color?>? colorState;
   final PaywallState<BoxConstraints?>? constraintsState;
   final PaywallState<Alignment?>? contentAlignmentState;
   final PaywallState<int?>? durationState;
+  final PaywallState<bool?>? fittedState;
   final PaywallState<int?>? flexState;
   final PaywallState<Color?>? foregroundColorState;
   final PaywallState<LinearGradient?>? foregroundGradientState;
@@ -49,6 +51,7 @@ class PaywallStyle {
   final PaywallState<EdgeInsets?>? marginState;
   final PaywallState<int?>? maxLinesState;
   final PaywallState<double?>? opacityState;
+  final PaywallState<bool?>? overflowState;
   final PaywallState<EdgeInsets?>? paddingState;
   final PaywallState<PaywallPosition?>? positionState;
   final PaywallState<double?>? scaleState;
@@ -72,6 +75,8 @@ class PaywallStyle {
 
   List<BoxShadow>? get boxShadow => boxShadowState?.of(selected);
 
+  bool? get center => centerState?.of(selected);
+
   Color? get color => colorState?.of(selected);
 
   BoxConstraints? get constraints => constraintsState?.of(selected);
@@ -79,6 +84,8 @@ class PaywallStyle {
   Alignment? get contentAlignment => contentAlignmentState?.of(selected);
 
   int? get duration => durationState?.of(selected);
+
+  bool? get fitted => fittedState?.of(selected);
 
   int? get flex => flexState?.of(selected);
 
@@ -150,6 +157,8 @@ class PaywallStyle {
 
   double? get opacity => opacityState?.of(selected);
 
+  bool? get overflow => overflowState?.of(selected);
+
   EdgeInsets? get padding => paddingState?.of(selected);
 
   PaywallPosition? get position => positionState?.of(selected);
@@ -175,10 +184,12 @@ class PaywallStyle {
     this.borderState,
     this.borderRadiusState,
     this.boxShadowState,
+    this.centerState,
     this.colorState,
     this.constraintsState,
     this.contentAlignmentState,
     this.durationState,
+    this.fittedState,
     this.flexState,
     this.foregroundColorState,
     this.foregroundGradientState,
@@ -206,6 +217,7 @@ class PaywallStyle {
     this.marginState,
     this.maxLinesState,
     this.opacityState,
+    this.overflowState,
     this.paddingState,
     this.positionState,
     this.scaleState,
@@ -225,11 +237,13 @@ class PaywallStyle {
       "border": borderState?.toJson(StyleParser.borderToJson),
       "borderRadius": borderRadiusState?.toJson(StyleParser.borderRadiusToJson),
       "boxShadow": boxShadowState?.toJson(StyleParser.boxShadowToJson),
+      "center": centerState?.toJson((e) => e),
       "color": colorState?.toJson(StyleParser.colorToHex),
       "constraints": constraintsState?.toJson(StyleParser.boxConstraintsToJson),
       "contentAlignment":
           contentAlignmentState?.toJson(StyleParser.alignmentToJson),
       "duration": durationState?.toJson((e) => e),
+      "fitted": fittedState?.toJson((e) => e),
       "flex": flexState?.toJson((e) => e),
       "foregroundColor": foregroundColorState?.toJson(StyleParser.colorToHex),
       "foregroundGradient":
@@ -268,6 +282,7 @@ class PaywallStyle {
       "margin": marginState?.toJson(StyleParser.edgeInsetsToJson),
       "maxLines": maxLinesState?.toJson((e) => e),
       "opacity": opacityState?.toJson((e) => e),
+      "overflow": overflowState?.toJson((e) => e),
       "padding": paddingState?.toJson(StyleParser.edgeInsetsToJson),
       "position": positionState?.toJson((e) => e?.dictionary),
       "scale": scaleState?.toJson((e) => e),
@@ -312,6 +327,10 @@ class PaywallStyle {
         return StyleParser.parseList(
             v, (e) => StyleParser.parseBoxShadow(e, dark));
       }),
+      centerState: PaywallState.parse(
+        source['center'],
+        StyleParser.parseBool,
+      ),
       colorState: PaywallState.parse(
         source['color'],
         (value) => StyleParser.parseThemedColor(value, dark),
@@ -327,6 +346,10 @@ class PaywallStyle {
       durationState: PaywallState.parse(
         source['duration'],
         StyleParser.parseInt,
+      ),
+      fittedState: PaywallState.parse(
+        source['fitted'],
+        StyleParser.parseBool,
       ),
       flexState: PaywallState.parse(
         source['flex'],
@@ -436,6 +459,10 @@ class PaywallStyle {
         source['opacity'],
         StyleParser.parseDouble,
       ),
+      overflowState: PaywallState.parse(
+        source['overflow'],
+        StyleParser.parseBool,
+      ),
       paddingState: PaywallState.parse(
         source['padding'],
         StyleParser.parseEdgeInsets,
@@ -480,10 +507,12 @@ class PaywallStyle {
     PaywallState<Border?>? borderState,
     PaywallState<BorderRadius?>? borderRadiusState,
     PaywallState<List<BoxShadow>?>? boxShadowState,
+    PaywallState<bool?>? centerState,
     PaywallState<Color?>? colorState,
     PaywallState<BoxConstraints?>? constraintsState,
     PaywallState<Alignment?>? contentAlignmentState,
     PaywallState<int?>? durationState,
+    PaywallState<bool?>? fittedState,
     PaywallState<int?>? flexState,
     PaywallState<Color?>? foregroundColorState,
     PaywallState<LinearGradient?>? foregroundGradientState,
@@ -511,6 +540,7 @@ class PaywallStyle {
     PaywallState<EdgeInsets?>? marginState,
     PaywallState<int?>? maxLinesState,
     PaywallState<double?>? opacityState,
+    PaywallState<bool?>? overflowState,
     PaywallState<EdgeInsets?>? paddingState,
     PaywallState<PaywallPosition?>? positionState,
     PaywallState<double?>? scaleState,
@@ -529,11 +559,13 @@ class PaywallStyle {
       borderState: borderState ?? this.borderState,
       borderRadiusState: borderRadiusState ?? this.borderRadiusState,
       boxShadowState: boxShadowState ?? this.boxShadowState,
+      centerState: centerState ?? this.centerState,
       colorState: colorState ?? this.colorState,
       constraintsState: constraintsState ?? this.constraintsState,
       contentAlignmentState:
           contentAlignmentState ?? this.contentAlignmentState,
       durationState: durationState ?? this.durationState,
+      fittedState: fittedState ?? this.fittedState,
       flexState: flexState ?? this.flexState,
       foregroundColorState: foregroundColorState ?? this.foregroundColorState,
       foregroundGradientState:
@@ -573,6 +605,7 @@ class PaywallStyle {
       marginState: marginState ?? this.marginState,
       maxLinesState: maxLinesState ?? this.maxLinesState,
       opacityState: opacityState ?? this.opacityState,
+      overflowState: overflowState ?? this.overflowState,
       paddingState: paddingState ?? this.paddingState,
       positionState: positionState ?? this.positionState,
       scaleState: scaleState ?? this.scaleState,
@@ -752,10 +785,12 @@ class PaywallStyle {
       borderState,
       borderRadiusState,
       boxShadowState,
+      centerState,
       colorState,
       constraintsState,
       contentAlignmentState,
       durationState,
+      fittedState,
       flexState,
       foregroundColorState,
       foregroundGradientState,
@@ -783,6 +818,7 @@ class PaywallStyle {
       marginState,
       maxLinesState,
       opacityState,
+      overflowState,
       paddingState,
       positionState,
       scaleState,
@@ -809,10 +845,12 @@ class PaywallStyle {
         borderState == other.borderState &&
         borderRadiusState == other.borderRadiusState &&
         boxShadowState == other.boxShadowState &&
+        centerState == other.centerState &&
         colorState == other.colorState &&
         constraintsState == other.constraintsState &&
         contentAlignmentState == other.contentAlignmentState &&
         durationState == other.durationState &&
+        fittedState == other.fittedState &&
         flexState == other.flexState &&
         foregroundColorState == other.foregroundColorState &&
         foregroundGradientState == other.foregroundGradientState &&
@@ -840,6 +878,7 @@ class PaywallStyle {
         marginState == other.marginState &&
         maxLinesState == other.maxLinesState &&
         opacityState == other.opacityState &&
+        overflowState == other.overflowState &&
         paddingState == other.paddingState &&
         positionState == other.positionState &&
         scaleState == other.scaleState &&

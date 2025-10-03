@@ -160,6 +160,16 @@ class PaywallDecoratedBox extends StatelessWidget {
         child: child,
       );
     }
+    if (s.center ?? false) {
+      child = Center(child: child);
+    }
+    if (s.overflow ?? false) {
+      child = OverflowBox(child: child);
+    }
+    final flex = s.flex ?? 0;
+    if (flex > 0) {
+      child = Expanded(flex: flex, child: child);
+    }
     if (position != null) {
       if (duration != Duration.zero) {
         child = AnimatedPositioned(

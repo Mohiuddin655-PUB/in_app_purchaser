@@ -1,3 +1,7 @@
+## 2.1.4
+
+* Improve PaywallDecoratedBox with [center, fitted, flex, overflow] configs
+
 ## 2.1.3
 
 * Create PaywallTextButtonContent
