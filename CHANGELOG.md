@@ -1,3 +1,7 @@
+## 2.1.2
+
+* PaywallProduct configs delegate improved
+
 ## 2.1.1
 
 * PaywallProduct dictionary improved
