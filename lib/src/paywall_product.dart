@@ -283,6 +283,7 @@ class PaywallProduct {
     required bool dark,
   }) {
     final parser = InAppPurchaser.parseConfig;
+    final delegate = InAppPurchaser.i.configDelegate;
 
     final priceOriginal = product.price;
     final localizedPrice = product.priceString;
@@ -295,14 +296,14 @@ class PaywallProduct {
 
     String formatPrice(double value) {
       final code = currencyCode ?? currencySymbol ?? '';
-      if (InAppPurchaser.i.configDelegate != null) {
-        final formatted = InAppPurchaser.i.configDelegate!.formatPrice(
+      if (delegate != null) {
+        final formatted = delegate.formatPrice(
           InAppPurchaser.i.locale,
           code,
           value,
         );
         if (formatted != null) {
-          return formatted.replaceAll(RegExp(r'([.]*0+)$'), '');
+          return delegate.formatZeros(formatted);
         }
       }
       String str = value.toStringAsFixed(2);
@@ -313,6 +314,7 @@ class PaywallProduct {
     double? formatNumber(double? b, double? r, double? c) {
       if (b == null || r == null || c == null) return null;
       final x = (r / b) * c;
+      if (delegate != null) return delegate.prettyPrice(x);
       return (x.roundToDouble() + 0.99 - 1).abs();
     }
 

@@ -23,14 +23,14 @@ class PaywallLocalizedContent<T> {
     this.values = const {},
   ]);
 
-  const PaywallLocalizedContent.empty() : this(null);
+  const PaywallLocalizedContent.none() : this(null);
 
   static PaywallLocalizedContent<T>? parse<T>(Object? source) {
     if (source is T) {
       return PaywallLocalizedContent(source);
     }
     if (source is! Map || source.isEmpty) {
-      return PaywallLocalizedContent.empty();
+      return PaywallLocalizedContent.none();
     }
     final en = source['en'];
     final entries = source.entries.map((e) {
