@@ -50,9 +50,9 @@ class PaywallProduct {
   final PaywallStyle? titleStyle;
 
   const PaywallProduct({
-    required this.selected,
     required this.product,
-    required this.configs,
+    this.selected = false,
+    this.configs = const {},
     this.price,
     this.usdPrice,
     this.unit,
@@ -229,17 +229,35 @@ class PaywallProduct {
     addObject("unit", unit);
 
     // STRINGS
-    addObject("badgeText", badgeTextState?.toJson((e) => e));
-    addObject("bottomText", bottomTextState?.toJson((e) => e));
-    addObject("buttonText", buttonTextState?.toJson((e) => e));
-    addObject("descriptionText", descriptionTextState?.toJson((e) => e));
-    addObject("leftBottomText", leftBottomTextState?.toJson((e) => e));
-    addObject("leftMiddleText", leftMiddleTextState?.toJson((e) => e));
-    addObject("leftTopText", leftTopTextState?.toJson((e) => e));
-    addObject("rightBottomText", rightBottomTextState?.toJson((e) => e));
-    addObject("rightMiddleText", rightMiddleTextState?.toJson((e) => e));
-    addObject("rightTopText", rightTopTextState?.toJson((e) => e));
-    addObject("titleText", titleTextState?.toJson((e) => e));
+    addObject("badgeText", badgeTextState?.toJson((e) => e?.toJson((e) => e)));
+    addObject("bottomText", bottomTextState?.toJson((e) {
+      return e?.toJson((e) => e);
+    }));
+    addObject("buttonText", buttonTextState?.toJson((e) {
+      return e?.toJson((e) => e);
+    }));
+    addObject("descriptionText", descriptionTextState?.toJson((e) {
+      return e?.toJson((e) => e);
+    }));
+    addObject("leftBottomText", leftBottomTextState?.toJson((e) {
+      return e?.toJson((e) => e);
+    }));
+    addObject("leftMiddleText", leftMiddleTextState?.toJson((e) {
+      return e?.toJson((e) => e);
+    }));
+    addObject("leftTopText", leftTopTextState?.toJson((e) {
+      return e?.toJson((e) => e);
+    }));
+    addObject("rightBottomText", rightBottomTextState?.toJson((e) {
+      return e?.toJson((e) => e);
+    }));
+    addObject("rightMiddleText", rightMiddleTextState?.toJson((e) {
+      return e?.toJson((e) => e);
+    }));
+    addObject("rightTopText", rightTopTextState?.toJson((e) {
+      return e?.toJson((e) => e);
+    }));
+    addObject("titleText", titleTextState?.toJson((e) => e?.toJson((e) => e)));
 
     // STYLES
     addDictionary("badgeStyle", badgeStyle?.dictionary);

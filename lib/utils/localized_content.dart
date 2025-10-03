@@ -82,7 +82,7 @@ class PaywallLocalizedContent<T> {
     );
   }
 
-  Object? toDictionary(Object? Function(T? value) callback) {
+  Object? toJson(Object? Function(T? value) callback) {
     final value = callback(this.value);
     final entries = values.entries.map((e) {
       final value = callback(e.value);

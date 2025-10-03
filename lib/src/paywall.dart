@@ -105,11 +105,11 @@ class Paywall {
     addObject("designType", designType);
     addObject("safeArea", safeArea);
     addObject("skipMode", skipMode);
-    addObject("hero", hero?.toDictionary((e) => e));
-    addObject("image", image?.toDictionary((e) => e));
-    addObject("title", title?.toDictionary((e) => e));
-    addObject("subtitle", subtitle?.toDictionary((e) => e));
-    addObject("features", features?.toDictionary((e) {
+    addObject("hero", hero?.toJson((e) => e));
+    addObject("image", image?.toJson((e) => e));
+    addObject("title", title?.toJson((e) => e));
+    addObject("subtitle", subtitle?.toJson((e) => e));
+    addObject("features", features?.toJson((e) {
       if (e == null || e.isEmpty) return null;
       return e;
     }));
@@ -170,7 +170,7 @@ class Paywall {
       defaultMode: false,
       id: placement,
       products: mProducts,
-      configs: configs..remove("products"),
+      configs: Map.from(configs)..remove("products"),
       initialIndex: parser(configs["initialIndex"], null),
       designType: parser(configs["designType"], null),
       safeArea: parser(configs["safeArea"], null),

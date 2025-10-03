@@ -61,9 +61,9 @@ class InAppPurchaseOffering {
         configs = const {};
 
   const InAppPurchaseOffering({
-    required this.id,
-    required this.products,
-    required this.configs,
+    this.id = '',
+    this.products = const [],
+    this.configs = const {},
   });
 
   @override

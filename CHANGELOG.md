@@ -1,3 +1,7 @@
+## 2.1.1
+
+* PaywallProduct dictionary improved
+
 ## 2.1.0
 
 * Reuse and reduction code
