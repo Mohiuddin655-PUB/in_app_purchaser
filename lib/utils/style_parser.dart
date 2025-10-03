@@ -77,12 +77,6 @@ abstract final class StyleParser {
     return source is String && source.isNotEmpty ? source : null;
   }
 
-  static String? colorToHex(Color? color, {bool withHash = true}) {
-    if (color == null) return null;
-    final hex = color.toARGB32().toRadixString(16).padLeft(8, '0');
-    return withHash ? '#$hex' : '0x$hex';
-  }
-
   static Color? parseColor(String source) {
     source = source.toLowerCase();
     if (source.startsWith('#') || source.startsWith("0x")) {
@@ -352,5 +346,166 @@ abstract final class StyleParser {
       width: parseDouble(source['width']),
       height: parseDouble(source['height']),
     );
+  }
+
+  // JSON
+  static String? colorToHex(Color? color, {bool withHash = true}) {
+    if (color == null) return null;
+    final hex = color.toARGB32().toRadixString(16).padLeft(8, '0');
+    return withHash ? '#$hex' : '0x$hex';
+  }
+
+  static Map<String, dynamic>? alignmentToJson(Alignment? source) {
+    if (source == null) return null;
+    final x = {
+      if (source.x != 0) "x": source.x,
+      if (source.y != 0) "y": source.y
+    };
+    if (x.isEmpty) return null;
+    return x;
+  }
+
+  static String? enumToJson(Enum? e) => e?.name;
+
+  static Map<String, dynamic>? borderToJson(Border? source) {
+    if (source == null) return null;
+    final x = {
+      if (source.left != BorderSide.none) "left": source.left,
+      if (source.right != BorderSide.none) "right": source.right,
+      if (source.top != BorderSide.none) "top": source.top,
+      if (source.bottom != BorderSide.none) "bottom": source.bottom
+    }.map((k, v) {
+      return MapEntry(k, {
+        "color": StyleParser.colorToHex(v.color),
+        "width": v.width,
+        "style": v.style.name,
+        "strokeAlign": v.strokeAlign,
+      });
+    });
+    if (x.isEmpty) return null;
+    return x;
+  }
+
+  static Map<String, dynamic>? borderRadiusToJson(BorderRadius? e) {
+    if (e == null) return null;
+    final x = {
+      if (e.topLeft != Radius.zero) "topLeft": e.topLeft,
+      if (e.topRight != Radius.zero) "topRight": e.topRight,
+      if (e.bottomLeft != Radius.zero) "bottomLeft": e.bottomLeft,
+      if (e.bottomRight != Radius.zero) "bottomRight": e.bottomRight,
+    }.map((k, v) => MapEntry(k, (v.x + v.y) / 2));
+    if (x.isEmpty) return null;
+    return x;
+  }
+
+  static List<Map<String, dynamic>>? boxShadowToJson(List<BoxShadow>? source) {
+    if (source == null || source.isEmpty) return null;
+    return source
+        .map((bs) {
+          return {
+            if (bs.color != Colors.black)
+              "color": StyleParser.colorToHex(bs.color),
+            if (bs.offset != Offset.zero)
+              "offset": {"dx": bs.offset.dx, "dy": bs.offset.dy},
+            if (bs.blurRadius > 0) "blurRadius": bs.blurRadius,
+            if (bs.blurStyle != BlurStyle.normal)
+              "blurStyle": enumToJson(bs.blurStyle),
+            if (bs.spreadRadius > 0) "spreadRadius": bs.spreadRadius,
+          };
+        })
+        .where((e) => e.isNotEmpty)
+        .toList();
+  }
+
+  static Map<String, dynamic>? boxConstraintsToJson(BoxConstraints? e) {
+    if (e == null) return null;
+    final x = {
+      if (e.minWidth > 0) "minWidth": e.minWidth,
+      if (e.maxWidth != double.infinity) "maxWidth": e.maxWidth,
+      if (e.minHeight > 0) "minHeight": e.minHeight,
+      if (e.maxHeight != double.infinity) "maxHeight": e.maxHeight,
+    };
+    if (x.isEmpty) return null;
+    return x;
+  }
+
+  static Map<String, dynamic>? gradientToJson(Gradient? e) {
+    if (e is LinearGradient) {
+      final begin = e.begin;
+      final end = e.end;
+      final transform = e.transform;
+      final x = {
+        if (begin != Alignment.centerLeft && begin is Alignment)
+          "begin": alignmentToJson(begin),
+        if (end != Alignment.centerRight && end is Alignment)
+          "end": alignmentToJson(end),
+        if (e.tileMode != TileMode.clamp) "tileMode": enumToJson(e.tileMode),
+        if (e.colors.length > 1)
+          "colors": e.colors.map(StyleParser.colorToHex).toList(),
+        if (e.colors.length == e.stops?.length) "stops": e.stops,
+        if (transform is GradientRotation)
+          "transform": {"radians": transform.radians, "type": "rotation"},
+      };
+      if (x.isEmpty) return null;
+      return x;
+    }
+    return null;
+  }
+
+  static Map<String, dynamic>? edgeInsetsToJson(EdgeInsets? e) {
+    if (e == null) return null;
+    final x = {
+      if (e.left > 0) "left": e.left,
+      if (e.right > 0) "right": e.right,
+      if (e.top > 0) "top": e.top,
+      if (e.bottom > 0) "bottom": e.bottom,
+    };
+    if (x.isEmpty) return null;
+    return x;
+  }
+
+  static Map<String, dynamic>? offsetToJson(Offset? e) {
+    if (e == null) return null;
+    final x = {if (e.dx != 0) "dx": e.dx, if (e.dy != 0) "dy": e.dy};
+    if (x.isEmpty) return null;
+    return x;
+  }
+
+  static Map<String, dynamic>? textStyleToJson(TextStyle? e) {
+    if (e == null) return null;
+    final entries = {
+      "backgroundColor": colorToHex(e.backgroundColor),
+      "color": colorToHex(e.color),
+      "decorationThickness": e.decorationThickness,
+      "decorationStyle": enumToJson(e.decorationStyle),
+      "decorationColor": colorToHex(e.decorationColor),
+      "decoration": e.decoration?.toString(),
+      "debugLabel": e.debugLabel,
+      "fontSize": e.fontSize,
+      "fontWeight": e.fontWeight?.value,
+      "fontFamily": e.fontFamily,
+      "fontStyle": enumToJson(e.fontStyle),
+      "fontFamilyFallback": e.fontFamilyFallback,
+      "fontFeatures": e.fontFeatures?.map((e) => e.value).toList(),
+      "fontVariations": e.fontVariations
+          ?.map((e) => {"value": e.value, "axis": e.axis})
+          .toList(),
+      "height": e.height,
+      "letterSpacing": e.letterSpacing,
+      "leadingDistribution": enumToJson(e.leadingDistribution),
+      "locale": e.locale?.toString(),
+      "overflow": enumToJson(e.overflow),
+      "shadows": e.shadows
+          ?.map((e) => {
+                "color": colorToHex(e.color),
+                "offset": offsetToJson(e.offset),
+                "blurRadius": e.blurRadius,
+              })
+          .toList(),
+      "textBaseline": enumToJson(e.textBaseline),
+      "wordSpacing": e.wordSpacing,
+    }.entries.where((e) => e.value != null);
+    if (entries.isEmpty) return null;
+    return Map.fromEntries(entries);
   }
 }

@@ -18,12 +18,17 @@ class PaywallLocalizedContent<T> {
 
   bool get isNotEmpty => !isEmpty;
 
-  const PaywallLocalizedContent(
+  const PaywallLocalizedContent._(
     this.value, [
     this.values = const {},
   ]);
 
-  const PaywallLocalizedContent.none() : this(null);
+  const PaywallLocalizedContent(T value) : this._(value);
+
+  PaywallLocalizedContent.localized(Map<String, T> value)
+      : this._(value['en'], value);
+
+  const PaywallLocalizedContent.none() : this._(null);
 
   static PaywallLocalizedContent<T>? parse<T>(Object? source) {
     if (source is T) {
@@ -41,7 +46,7 @@ class PaywallLocalizedContent<T> {
       return MapEntry(key, value);
     }).whereType<MapEntry<String, T>>();
     if (en is! T && entries.isEmpty) return null;
-    return PaywallLocalizedContent(
+    return PaywallLocalizedContent._(
       en is T ? en : null,
       Map.fromEntries(entries),
     );
@@ -66,7 +71,7 @@ class PaywallLocalizedContent<T> {
   }
 
   PaywallLocalizedContent<T> resolveWith(T Function(T value) callback) {
-    return PaywallLocalizedContent(
+    return PaywallLocalizedContent._(
       value == null ? null : callback(value as T),
       values.isEmpty ? values : values.map((k, v) => MapEntry(k, callback(v))),
     );
@@ -76,7 +81,7 @@ class PaywallLocalizedContent<T> {
     T? value,
     Map<String, T>? values,
   }) {
-    return PaywallLocalizedContent(
+    return PaywallLocalizedContent._(
       value ?? this.value,
       values ?? this.values,
     );

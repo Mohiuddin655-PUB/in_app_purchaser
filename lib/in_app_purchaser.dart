@@ -12,6 +12,7 @@ export 'utils/position.dart';
 export 'utils/state.dart';
 export 'utils/style.dart';
 export 'utils/style_parser.dart';
+export 'utils/text_button.dart';
 export 'utils/typedefs.dart';
 export 'widgets/decorated_box.dart';
 export 'widgets/layout.dart';

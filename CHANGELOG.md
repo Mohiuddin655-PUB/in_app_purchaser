@@ -1,3 +1,11 @@
+## 2.1.3
+
+* Create PaywallTextButtonContent
+* Add blurStyle and textButtons in paywall
+* Improve StyleParser to convert to json data
+* Improve PaywallDecoratedBox
+* Improve PaywallLocalizedContent to create instance raw or localized
+
 ## 2.1.2
 
 * PaywallProduct configs delegate improved

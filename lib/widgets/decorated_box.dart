@@ -10,6 +10,7 @@ class PaywallDecoratedBox extends StatelessWidget {
   final bool? selected;
   final PaywallStyle? style;
   final PaywallScaler? scaler;
+  final Size? screenSize;
   final TextDirection? textDirection;
   final Widget child;
 
@@ -20,6 +21,7 @@ class PaywallDecoratedBox extends StatelessWidget {
     this.style,
     this.textDirection,
     this.scaler,
+    this.screenSize,
     required this.child,
   });
 
@@ -50,20 +52,32 @@ class PaywallDecoratedBox extends StatelessWidget {
   Widget _build(BuildContext context, PaywallStyle s) {
     final duration = Duration(milliseconds: s.duration ?? 0);
 
+    final isBackgroundImage = (s.image ?? '').isNotEmpty;
+    final blur = s.blur ?? 0;
+
     final alignment = s.alignment;
     final position = s.position;
+
+    double? heightOrWidth(int type) {
+      final a = type == 0 ? s.height : s.width;
+      final b = type == 0 ? s.heightPercentage : s.widthPercentage;
+      if (a != null) return a;
+      if (b == null) return null;
+      final c = screenSize ?? MediaQuery.sizeOf(context);
+      return (type == 0 ? c.height : c.width) * b;
+    }
 
     Widget child = AnimatedContainer(
       duration: duration,
       constraints: s.constraints,
       decoration: BoxDecoration(
         color: s.backgroundColor,
-        borderRadius: s.borderRadius,
+        borderRadius: blur > 0 ? null : s.borderRadius,
         boxShadow: s.boxShadow,
         border: s.border,
         gradient: s.gradient,
         backgroundBlendMode: s.blendMode,
-        image: (s.image ?? '').isNotEmpty
+        image: isBackgroundImage
             ? DecorationImage(
                 image: _image(s.image)!,
                 fit: BoxFit.cover,
@@ -72,12 +86,18 @@ class PaywallDecoratedBox extends StatelessWidget {
               )
             : null,
       ),
+      foregroundDecoration: isBackgroundImage
+          ? null
+          : BoxDecoration(
+              color: s.foregroundColor,
+              gradient: s.foregroundGradient,
+            ),
       padding: s.padding,
       margin: s.margin,
       alignment: s.contentAlignment,
       clipBehavior: Clip.antiAlias,
-      height: s.height,
-      width: s.width,
+      height: heightOrWidth(0),
+      width: heightOrWidth(1),
       child: this.child,
     );
     final opacity = s.opacity ?? 0.0;
@@ -110,14 +130,34 @@ class PaywallDecoratedBox extends StatelessWidget {
         );
       }
     }
-    final blur = s.blur;
-    if (blur != null && blur > 0) {
-      child = ClipRect(
-        clipBehavior: Clip.antiAlias,
-        child: BackdropFilter(
+    if (blur > 0) {
+      if (isBackgroundImage) {
+        child = Stack(
+          children: [
+            child,
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: s.foregroundColor,
+                    gradient: s.foregroundGradient,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      } else {
+        child = BackdropFilter(
           filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
           child: child,
-        ),
+        );
+      }
+      child = ClipRRect(
+        clipBehavior: Clip.antiAlias,
+        borderRadius: s.borderRadius ?? BorderRadius.zero,
+        child: child,
       );
     }
     if (position != null) {

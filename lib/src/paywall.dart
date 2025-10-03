@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../utils/localized_content.dart';
 import '../utils/style.dart';
+import '../utils/text_button.dart';
 import '../utils/typedefs.dart';
 import 'offering.dart';
 import 'paywall_product.dart';
@@ -26,9 +27,11 @@ class Paywall {
   final PaywallLocalizedContent<String?>? title;
   final PaywallLocalizedContent<String?>? subtitle;
   final PaywallLocalizedContent<List?>? features;
+  final List<PaywallTextButtonContent>? textButtons;
 
   final PaywallStyle? style;
   final PaywallStyle? heroStyle;
+  final PaywallStyle? blurStyle;
 
   final PaywallStyle? headerStyle;
   final PaywallStyle? bodyStyle;
@@ -58,8 +61,10 @@ class Paywall {
     this.title,
     this.subtitle,
     this.features,
+    this.textButtons,
     this.style,
     this.heroStyle,
+    this.blurStyle,
     this.headerStyle,
     this.bodyStyle,
     this.footerStyle,
@@ -114,8 +119,14 @@ class Paywall {
       return e;
     }));
 
+    addList(
+      "textButtons",
+      textButtons?.map((e) => e.dictionary).where((e) => e.isNotEmpty).toList(),
+    );
+
     addDictionary("style", style?.dictionary);
     addDictionary("heroStyle", heroStyle?.dictionary);
+    addDictionary("blurStyle", blurStyle?.dictionary);
 
     addDictionary("headerStyle", headerStyle?.dictionary);
     addDictionary("bodyStyle", bodyStyle?.dictionary);
@@ -166,6 +177,11 @@ class Paywall {
       );
     });
 
+    final textButtons = parser<List?>(configs["textButtons"], null)
+        ?.map(PaywallTextButtonContent.parse)
+        .whereType<PaywallTextButtonContent>()
+        .toList();
+
     return Paywall(
       defaultMode: false,
       id: placement,
@@ -180,8 +196,10 @@ class Paywall {
       title: PaywallLocalizedContent.parse(configs['title']),
       subtitle: PaywallLocalizedContent.parse(configs['subtitle']),
       features: PaywallLocalizedContent.parse(configs['features']),
+      textButtons: (textButtons ?? []).isEmpty ? null : textButtons,
       style: PaywallStyle.parse(configs["style"], dark),
       heroStyle: PaywallStyle.parse(configs["heroStyle"], dark),
+      blurStyle: PaywallStyle.parse(configs["blurStyle"], dark),
       headerStyle: PaywallStyle.parse(configs["headerStyle"], dark),
       bodyStyle: PaywallStyle.parse(configs["bodyStyle"], dark),
       footerStyle: PaywallStyle.parse(configs["footerStyle"], dark),
@@ -203,6 +221,7 @@ class Paywall {
       title: title?.localized(locale),
       subtitle: subtitle?.localized(locale),
       features: features?.localized(locale),
+      textButtons: textButtons?.map((e) => e.localized(locale)).toList(),
       products: products.map((e) => e.localized(locale)).toList(),
     );
   }
@@ -212,6 +231,7 @@ class Paywall {
     return copyWith(
       style: PaywallStyle.parse(configs["style"], dark),
       heroStyle: PaywallStyle.parse(configs["heroStyle"], dark),
+      blurStyle: PaywallStyle.parse(configs["blurStyle"], dark),
       headerStyle: PaywallStyle.parse(configs["headerStyle"], dark),
       bodyStyle: PaywallStyle.parse(configs["bodyStyle"], dark),
       footerStyle: PaywallStyle.parse(configs["footerStyle"], dark),
@@ -241,8 +261,10 @@ class Paywall {
     PaywallLocalizedContent<String?>? title,
     PaywallLocalizedContent<String?>? subtitle,
     PaywallLocalizedContent<List?>? features,
+    List<PaywallTextButtonContent>? textButtons,
     PaywallStyle? style,
     PaywallStyle? heroStyle,
+    PaywallStyle? blurStyle,
     PaywallStyle? headerStyle,
     PaywallStyle? bodyStyle,
     PaywallStyle? footerStyle,
@@ -269,8 +291,10 @@ class Paywall {
       title: title ?? this.title,
       subtitle: subtitle ?? this.subtitle,
       features: features ?? this.features,
+      textButtons: textButtons ?? this.textButtons,
       style: style ?? this.style,
       heroStyle: heroStyle ?? this.heroStyle,
+      blurStyle: blurStyle ?? this.blurStyle,
       headerStyle: headerStyle ?? this.headerStyle,
       bodyStyle: bodyStyle ?? this.bodyStyle,
       footerStyle: footerStyle ?? this.footerStyle,
@@ -304,6 +328,11 @@ class Paywall {
         textDirection: textDirection,
       ),
       heroStyle: heroStyle?.resolveWith(
+        selected: selected,
+        scaler: scaler,
+        textDirection: textDirection,
+      ),
+      blurStyle: blurStyle?.resolveWith(
         selected: selected,
         scaler: scaler,
         textDirection: textDirection,
@@ -382,6 +411,7 @@ class Paywall {
       features,
       style,
       heroStyle,
+      blurStyle,
       headerStyle,
       bodyStyle,
       footerStyle,
@@ -394,6 +424,7 @@ class Paywall {
       textButtonStyle,
       textButtonsStyle,
       _equality.hash(configs),
+      _equality.hash(textButtons),
       _equality.hash(products),
     ]);
   }
@@ -417,6 +448,7 @@ class Paywall {
         features == other.features &&
         style == other.style &&
         heroStyle == other.heroStyle &&
+        blurStyle == other.blurStyle &&
         headerStyle == other.headerStyle &&
         bodyStyle == other.bodyStyle &&
         footerStyle == other.footerStyle &&
@@ -429,6 +461,7 @@ class Paywall {
         textButtonStyle == other.textButtonStyle &&
         textButtonsStyle == other.textButtonsStyle &&
         _equality.equals(configs, other.configs) &&
+        _equality.equals(textButtons, other.textButtons) &&
         _equality.equals(products, other.products);
   }
 

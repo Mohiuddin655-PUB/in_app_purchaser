@@ -21,8 +21,11 @@ class PaywallStyle {
   final PaywallState<Alignment?>? contentAlignmentState;
   final PaywallState<int?>? durationState;
   final PaywallState<int?>? flexState;
+  final PaywallState<Color?>? foregroundColorState;
+  final PaywallState<LinearGradient?>? foregroundGradientState;
   final PaywallState<LinearGradient?>? gradientState;
   final PaywallState<double?>? heightState;
+  final PaywallState<double?>? heightPercentageState;
   final PaywallState<String?>? imageState;
   final PaywallState<double?>? imageOpacityState;
   final PaywallState<double?>? imageScaleState;
@@ -53,6 +56,7 @@ class PaywallStyle {
   final PaywallState<TextAlign?>? textAlignState;
   final PaywallState<TextStyle?>? textStyleState;
   final PaywallState<double?>? widthState;
+  final PaywallState<double?>? widthPercentageState;
 
   Alignment? get alignment => alignmentState?.of(selected);
 
@@ -78,9 +82,17 @@ class PaywallStyle {
 
   int? get flex => flexState?.of(selected);
 
+  Color? get foregroundColor => foregroundColorState?.of(selected);
+
+  LinearGradient? get foregroundGradient {
+    return foregroundGradientState?.of(selected);
+  }
+
   LinearGradient? get gradient => gradientState?.of(selected);
 
   double? get height => heightState?.of(selected);
+
+  double? get heightPercentage => heightPercentageState?.of(selected);
 
   String? get image => imageState?.of(selected);
 
@@ -152,6 +164,8 @@ class PaywallStyle {
 
   double? get width => widthState?.of(selected);
 
+  double? get widthPercentage => widthPercentageState?.of(selected);
+
   const PaywallStyle({
     this.selected = false,
     this.alignmentState,
@@ -166,8 +180,11 @@ class PaywallStyle {
     this.contentAlignmentState,
     this.durationState,
     this.flexState,
+    this.foregroundColorState,
+    this.foregroundGradientState,
     this.gradientState,
     this.heightState,
+    this.heightPercentageState,
     this.imageState,
     this.imageOpacityState,
     this.imageScaleState,
@@ -196,204 +213,69 @@ class PaywallStyle {
     this.textAlignState,
     this.textStyleState,
     this.widthState,
+    this.widthPercentageState,
   });
 
   Map<String, dynamic> get dictionary {
     final entries = {
-      "alignment": alignmentState?.toJson((e) {
-        if (e == null) return null;
-        return {"x": e.x, "y": e.y};
-      }),
+      "alignment": alignmentState?.toJson(StyleParser.alignmentToJson),
       "backgroundColor": backgroundColorState?.toJson(StyleParser.colorToHex),
-      "blendMode": blendModeState?.toJson((e) => e?.name),
+      "blendMode": blendModeState?.toJson(StyleParser.enumToJson),
       "blur": blurState?.toJson((e) => e),
-      "border": borderState?.toJson((e) {
-        if (e == null) return null;
-        Object? convert(BorderSide value) {
-          final b = value;
-          if (b == BorderSide.none) return null;
-          return {
-            "color": StyleParser.colorToHex(b.color),
-            "width": b.width,
-            "style": b.style.name,
-            "strokeAlign": b.strokeAlign,
-          };
-        }
-
-        final x = {
-          "left": e.left,
-          "right": e.right,
-          "top": e.top,
-          "bottom": e.bottom
-        }.map((key, value) {
-          return MapEntry(key, convert(value));
-        })
-          ..removeWhere((k, value) {
-            return value == null;
-          });
-        if (x.isEmpty) return null;
-        return x;
-      }),
-      "borderRadius": borderRadiusState?.toJson((e) {
-        if (e == null) return null;
-        double? convert(Radius e) {
-          if (e == Radius.zero) return null;
-          return (e.x + e.y) / 2;
-        }
-
-        final x = {
-          "topLeft": convert(e.topLeft),
-          "topRight": convert(e.topRight),
-          "bottomLeft": convert(e.bottomLeft),
-          "bottomRight": convert(e.bottomRight)
-        }..removeWhere((k, value) {
-            return value == null;
-          });
-        if (x.isEmpty) return null;
-        return x;
-      }),
-      "boxShadow": boxShadowState?.toJson((e) {
-        if (e == null || e.isEmpty) return null;
-        return e.map((bs) {
-          {
-            return {
-              "color": StyleParser.colorToHex(bs.color),
-              "offset": {"dx": bs.offset.dx, "dy": bs.offset.dy},
-              "blurRadius": bs.blurRadius,
-              "blurStyle": bs.blurStyle.name,
-              "spreadRadius": bs.spreadRadius,
-            };
-          }
-        }).toList();
-      }),
+      "border": borderState?.toJson(StyleParser.borderToJson),
+      "borderRadius": borderRadiusState?.toJson(StyleParser.borderRadiusToJson),
+      "boxShadow": boxShadowState?.toJson(StyleParser.boxShadowToJson),
       "color": colorState?.toJson(StyleParser.colorToHex),
-      "constraints": constraintsState?.toJson((e) {
-        if (e == null) return null;
-        final constraints = {
-          if (e.minWidth > 0) "minWidth": e.minWidth,
-          if (e.maxWidth != double.infinity) "maxWidth": e.maxWidth,
-          if (e.minHeight > 0) "minHeight": e.minHeight,
-          if (e.maxHeight != double.infinity) "maxHeight": e.maxHeight,
-        };
-        if (constraints.isEmpty) return null;
-        return constraints;
-      }),
-      "contentAlignment": contentAlignmentState?.toJson((e) {
-        if (e == null) return null;
-        return {"x": e.x, "y": e.y};
-      }),
+      "constraints": constraintsState?.toJson(StyleParser.boxConstraintsToJson),
+      "contentAlignment":
+          contentAlignmentState?.toJson(StyleParser.alignmentToJson),
       "duration": durationState?.toJson((e) => e),
       "flex": flexState?.toJson((e) => e),
-      "gradient": gradientState?.toJson((e) {
-        if (e == null) return null;
-        final begin = e.begin;
-        final end = e.end;
-        final transform = e.transform;
-        return {
-          if (begin is Alignment) "begin": {"x": begin.x, "y": begin.y},
-          if (end is Alignment) "end": {"x": end.x, "y": end.y},
-          "tileMode": e.tileMode.name,
-          "colors": e.colors.map(StyleParser.colorToHex).toList(),
-          "stops": e.stops,
-          if (transform is GradientRotation)
-            "transform": {"radians": transform.radians, "type": "rotation"},
-        };
-      }),
+      "foregroundColor": foregroundColorState?.toJson(StyleParser.colorToHex),
+      "foregroundGradient":
+          foregroundGradientState?.toJson(StyleParser.gradientToJson),
+      "gradient": gradientState?.toJson(StyleParser.gradientToJson),
       "height": heightState?.toJson(StyleParser.safeEncodableDouble),
+      "heightPercentage": heightPercentageState?.toJson((e) => e),
       "image": imageState?.toJson((e) => e),
       "imageOpacity": imageOpacityState?.toJson((e) => e),
       "imageScale": imageScaleState?.toJson((e) => e),
-      "layout": layoutState?.toJson((e) => e?.name),
-      "layoutAlignment": layoutAlignmentState?.toJson((e) {
-        if (e == null) return null;
-        return {"x": e.x, "y": e.y};
-      }),
-      "layoutClipBehavior": layoutClipBehaviorState?.toJson((e) => e?.name),
-      "layoutCrossAxisAlignment": layoutCrossAxisAlignmentState?.toJson((e) {
-        return e?.name;
-      }),
-      "layoutDirection": layoutDirectionState?.toJson((e) => e?.name),
-      "layoutMainAxisAlignment": layoutMainAxisAlignmentState?.toJson((e) {
-        return e?.name;
-      }),
-      "layoutMainAxisSize": layoutMainAxisSizeState?.toJson((e) => e?.name),
+      "layout": layoutState?.toJson(StyleParser.enumToJson),
+      "layoutAlignment":
+          layoutAlignmentState?.toJson(StyleParser.alignmentToJson),
+      "layoutClipBehavior":
+          layoutClipBehaviorState?.toJson(StyleParser.enumToJson),
+      "layoutCrossAxisAlignment":
+          layoutCrossAxisAlignmentState?.toJson(StyleParser.enumToJson),
+      "layoutDirection": layoutDirectionState?.toJson(StyleParser.enumToJson),
+      "layoutMainAxisAlignment":
+          layoutMainAxisAlignmentState?.toJson(StyleParser.enumToJson),
+      "layoutMainAxisSize":
+          layoutMainAxisSizeState?.toJson(StyleParser.enumToJson),
       "layoutRunSpacing": layoutRunSpacingState?.toJson((e) => e),
       "layoutSpacing": layoutSpacingState?.toJson((e) => e),
-      "layoutStackFit": layoutStackFitState?.toJson((e) => e?.name),
-      "layoutTextBaseline": layoutTextBaselineState?.toJson((e) => e?.name),
-      "layoutVerticalDirection": layoutVerticalDirectionState?.toJson((e) {
-        return e?.name;
-      }),
-      "layoutWrapAlignment": layoutWrapAlignmentState?.toJson((e) => e?.name),
-      "layoutWrapRunAlignment": layoutWrapRunAlignmentState?.toJson((e) {
-        return e?.name;
-      }),
-      "layoutWrapCrossAlignment": layoutWrapCrossAlignmentState?.toJson((e) {
-        return e?.name;
-      }),
-      "margin": marginState?.toJson((e) {
-        if (e == null) return null;
-        return {
-          "left": e.left,
-          "right": e.right,
-          "top": e.top,
-          "bottom": e.bottom,
-        };
-      }),
+      "layoutStackFit": layoutStackFitState?.toJson(StyleParser.enumToJson),
+      "layoutTextBaseline":
+          layoutTextBaselineState?.toJson(StyleParser.enumToJson),
+      "layoutVerticalDirection":
+          layoutVerticalDirectionState?.toJson(StyleParser.enumToJson),
+      "layoutWrapAlignment":
+          layoutWrapAlignmentState?.toJson(StyleParser.enumToJson),
+      "layoutWrapRunAlignment":
+          layoutWrapRunAlignmentState?.toJson(StyleParser.enumToJson),
+      "layoutWrapCrossAlignment":
+          layoutWrapCrossAlignmentState?.toJson(StyleParser.enumToJson),
+      "margin": marginState?.toJson(StyleParser.edgeInsetsToJson),
       "maxLines": maxLinesState?.toJson((e) => e),
       "opacity": opacityState?.toJson((e) => e),
-      "padding": paddingState?.toJson((e) {
-        if (e == null) return null;
-        return {
-          "left": e.left,
-          "right": e.right,
-          "top": e.top,
-          "bottom": e.bottom,
-        };
-      }),
+      "padding": paddingState?.toJson(StyleParser.edgeInsetsToJson),
       "position": positionState?.toJson((e) => e?.dictionary),
       "scale": scaleState?.toJson((e) => e),
       "size": sizeState?.toJson((e) => e),
-      "textAlign": textAlignState?.toJson((e) => e?.name),
-      "textStyle": textStyleState?.toJson((e) {
-        if (e == null) return null;
-        TextDecoration.underline.toString();
-        final entries = {
-          "backgroundColor": StyleParser.colorToHex(e.backgroundColor),
-          "color": StyleParser.colorToHex(e.color),
-          "decorationThickness": e.decorationThickness,
-          "decorationStyle": e.decorationStyle?.name,
-          "decorationColor": StyleParser.colorToHex(e.decorationColor),
-          "decoration": e.decoration?.toString(),
-          "debugLabel": e.debugLabel,
-          "fontSize": e.fontSize,
-          "fontWeight": e.fontWeight?.value,
-          "fontFamily": e.fontFamily,
-          "fontStyle": e.fontStyle?.name,
-          "fontFamilyFallback": e.fontFamilyFallback,
-          "fontFeatures": e.fontFeatures?.map((e) => e.value).toList(),
-          "fontVariations": e.fontVariations
-              ?.map((e) => {"value": e.value, "axis": e.axis})
-              .toList(),
-          "height": e.height,
-          if (!e.inherit) "inherit": e.inherit,
-          "letterSpacing": e.letterSpacing,
-          "leadingDistribution": e.leadingDistribution?.name,
-          "locale": e.locale?.toString(),
-          "overflow": e.overflow?.name,
-          "shadows": e.shadows
-              ?.map((e) => {
-                    "color": StyleParser.colorToHex(e.color),
-                    "offset": {"dx": e.offset.dx, "dy": e.offset.dy},
-                    "blurRadius": e.blurRadius,
-                  })
-              .toList(),
-          "textBaseline": e.textBaseline?.name,
-          "wordSpacing": e.wordSpacing,
-        }.entries.where((e) => e.value != null);
-        return Map.fromEntries(entries);
-      }),
+      "textAlign": textAlignState?.toJson(StyleParser.enumToJson),
+      "textStyle": textStyleState?.toJson(StyleParser.textStyleToJson),
       "width": widthState?.toJson(StyleParser.safeEncodableDouble),
+      "widthPercentage": widthPercentageState?.toJson((e) => e),
     }.entries.where((e) => e.value != null);
     return Map.fromEntries(entries);
   }
@@ -450,12 +332,24 @@ class PaywallStyle {
         source['flex'],
         StyleParser.parseInt,
       ),
+      foregroundColorState: PaywallState.parse(
+        source['foregroundColor'],
+        (value) => StyleParser.parseThemedColor(value, dark),
+      ),
+      foregroundGradientState: PaywallState.parse(
+        source['foregroundGradient'],
+        (value) => StyleParser.parseGradient(value, dark),
+      ),
       gradientState: PaywallState.parse(
         source['gradient'],
         (value) => StyleParser.parseGradient(value, dark),
       ),
       heightState: PaywallState.parse(
         source['height'],
+        StyleParser.parseDouble,
+      ),
+      heightPercentageState: PaywallState.parse(
+        source['heightPercentage'],
         StyleParser.parseDouble,
       ),
       imageState: PaywallState.parse(
@@ -570,6 +464,10 @@ class PaywallStyle {
         source['width'],
         StyleParser.parseDouble,
       ),
+      widthPercentageState: PaywallState.parse(
+        source['widthPercentage'],
+        StyleParser.parseDouble,
+      ),
     );
   }
 
@@ -587,8 +485,11 @@ class PaywallStyle {
     PaywallState<Alignment?>? contentAlignmentState,
     PaywallState<int?>? durationState,
     PaywallState<int?>? flexState,
+    PaywallState<Color?>? foregroundColorState,
+    PaywallState<LinearGradient?>? foregroundGradientState,
     PaywallState<LinearGradient?>? gradientState,
     PaywallState<double?>? heightState,
+    PaywallState<double?>? heightPercentageState,
     PaywallState<String?>? imageState,
     PaywallState<double?>? imageOpacityState,
     PaywallState<double?>? imageScaleState,
@@ -617,6 +518,7 @@ class PaywallStyle {
     PaywallState<TextAlign?>? textAlignState,
     PaywallState<TextStyle?>? textStyleState,
     PaywallState<double?>? widthState,
+    PaywallState<double?>? widthPercentageState,
   }) {
     return PaywallStyle(
       selected: selected ?? this.selected,
@@ -633,8 +535,13 @@ class PaywallStyle {
           contentAlignmentState ?? this.contentAlignmentState,
       durationState: durationState ?? this.durationState,
       flexState: flexState ?? this.flexState,
+      foregroundColorState: foregroundColorState ?? this.foregroundColorState,
+      foregroundGradientState:
+          foregroundGradientState ?? this.foregroundGradientState,
       gradientState: gradientState ?? this.gradientState,
       heightState: heightState ?? this.heightState,
+      heightPercentageState:
+          heightPercentageState ?? this.heightPercentageState,
       imageState: imageState ?? this.imageState,
       imageOpacityState: imageOpacityState ?? this.imageOpacityState,
       imageScaleState: imageScaleState ?? this.imageScaleState,
@@ -673,6 +580,7 @@ class PaywallStyle {
       textAlignState: textAlignState ?? this.textAlignState,
       textStyleState: textStyleState ?? this.textStyleState,
       widthState: widthState ?? this.widthState,
+      widthPercentageState: widthPercentageState ?? this.widthPercentageState,
     );
   }
 
@@ -770,6 +678,19 @@ class PaywallStyle {
           textDirection: textDirection,
         );
       }),
+      foregroundGradientState: foregroundGradientState?.resolveWith((e) {
+        if (e == null || e.colors.length < 2) return null;
+        final begin = e.begin;
+        final end = e.end;
+        return LinearGradient(
+          begin: begin is Alignment ? resolveAlignment(begin) ?? begin : begin,
+          end: end is Alignment ? resolveAlignment(end) ?? end : end,
+          colors: e.colors,
+          stops: e.stops,
+          tileMode: e.tileMode,
+          transform: e.transform,
+        );
+      }),
       gradientState: gradientState?.resolveWith((e) {
         if (e == null || e.colors.length < 2) return null;
         final begin = e.begin;
@@ -836,8 +757,11 @@ class PaywallStyle {
       contentAlignmentState,
       durationState,
       flexState,
+      foregroundColorState,
+      foregroundGradientState,
       gradientState,
       heightState,
+      heightPercentageState,
       imageState,
       imageOpacityState,
       imageScaleState,
@@ -866,6 +790,7 @@ class PaywallStyle {
       textAlignState,
       textStyleState,
       widthState,
+      widthPercentageState,
     ]);
   }
 
@@ -889,8 +814,11 @@ class PaywallStyle {
         contentAlignmentState == other.contentAlignmentState &&
         durationState == other.durationState &&
         flexState == other.flexState &&
+        foregroundColorState == other.foregroundColorState &&
+        foregroundGradientState == other.foregroundGradientState &&
         gradientState == other.gradientState &&
         heightState == other.heightState &&
+        heightPercentageState == other.heightPercentageState &&
         imageState == other.imageState &&
         imageOpacityState == other.imageOpacityState &&
         imageScaleState == other.imageScaleState &&
@@ -918,7 +846,8 @@ class PaywallStyle {
         sizeState == other.sizeState &&
         textAlignState == other.textAlignState &&
         textStyleState == other.textStyleState &&
-        widthState == other.widthState;
+        widthState == other.widthState &&
+        widthPercentageState == other.widthPercentageState;
   }
 
   @override
