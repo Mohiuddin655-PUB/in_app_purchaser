@@ -276,6 +276,7 @@ class PaywallProduct {
     required InAppPurchaseProduct product,
     required Map configs,
     required bool dark,
+    bool? stringifyAll,
   }) {
     final parser = InAppPurchaser.parseConfig;
 
@@ -288,6 +289,7 @@ class PaywallProduct {
     ) {
       if (value == null || value.isEmpty) return value;
       return value.stringify(
+        all: stringifyAll,
         usdPrice: usdPrice,
         price: price,
         unit: unit ?? 1,
@@ -450,7 +452,11 @@ class PaywallProduct {
     );
   }
 
-  PaywallProduct localized(Locale locale, {bool? stringify}) {
+  PaywallProduct localized(
+    Locale locale, {
+    bool? stringify,
+    bool? stringifyAll,
+  }) {
     PaywallLocalizedContent<String?>? resolver(
       PaywallLocalizedContent<String?>? value,
     ) {
@@ -458,6 +464,7 @@ class PaywallProduct {
       value = value.localized(locale);
       if (!(stringify ?? true)) return value;
       return value.stringify(
+        all: stringifyAll,
         usdPrice: usdPrice,
         price: price,
         unit: unit ?? 1,
@@ -482,12 +489,13 @@ class PaywallProduct {
     );
   }
 
-  PaywallProduct stringify() {
+  PaywallProduct stringify({bool? stringifyAll}) {
     PaywallLocalizedContent<String?>? resolver(
       PaywallLocalizedContent<String?>? value,
     ) {
       if (value == null || value.isEmpty) return value;
       return value.stringify(
+        all: stringifyAll,
         usdPrice: usdPrice,
         price: price,
         unit: unit ?? 1,

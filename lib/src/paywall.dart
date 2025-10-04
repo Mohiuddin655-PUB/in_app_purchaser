@@ -149,12 +149,17 @@ class Paywall {
     return map;
   }
 
-  factory Paywall.fromOffering(InAppPurchaseOffering offering, bool dark) {
+  factory Paywall.fromOffering(
+    InAppPurchaseOffering offering, {
+    bool? dark,
+    bool? stringifyAll,
+  }) {
     return Paywall.parse(
       placement: offering.id,
       configs: offering.configs,
       packages: offering.products,
-      dark: dark,
+      dark: dark ?? false,
+      stringifyAll: stringifyAll,
     );
   }
 
@@ -163,6 +168,7 @@ class Paywall {
     required Map<String, dynamic> configs,
     required List<InAppPurchaseProduct> packages,
     bool dark = false,
+    bool? stringifyAll,
   }) {
     final parser = InAppPurchaser.parseConfig;
 
@@ -174,6 +180,7 @@ class Paywall {
         product: packages[index],
         configs: productConfigs is Map ? productConfigs : {},
         dark: dark,
+        stringifyAll: stringifyAll,
       );
     });
 
@@ -214,7 +221,11 @@ class Paywall {
     );
   }
 
-  Paywall localized(Locale locale, {bool? stringify}) {
+  Paywall localized(
+    Locale locale, {
+    bool? stringify,
+    bool? stringifyAll,
+  }) {
     return copyWith(
       hero: hero?.localized(locale),
       image: image?.localized(locale),
@@ -222,9 +233,13 @@ class Paywall {
       subtitle: subtitle?.localized(locale),
       features: features?.localized(locale),
       textButtons: textButtons?.map((e) => e.localized(locale)).toList(),
-      products: products
-          .map((e) => e.localized(locale, stringify: stringify))
-          .toList(),
+      products: products.map((e) {
+        return e.localized(
+          locale,
+          stringify: stringify,
+          stringifyAll: stringifyAll,
+        );
+      }).toList(),
     );
   }
 

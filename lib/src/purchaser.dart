@@ -209,13 +209,18 @@ class InAppPurchaser extends ChangeNotifier {
     Locale? locale, {
     bool notifiable = true,
     bool? stringify,
+    bool? stringifyAll,
   }) {
     i._locale = locale;
     if (i._paywalls.isNotEmpty) {
       i._paywalls = i._paywalls.map((k, v) {
         return MapEntry(
           k,
-          v.localized(locale ?? i.locale, stringify: stringify),
+          v.localized(
+            locale ?? i.locale,
+            stringify: stringify,
+            stringifyAll: stringifyAll,
+          ),
         );
       });
     }
@@ -438,7 +443,7 @@ class InAppPurchaser extends ChangeNotifier {
         return;
       }
       _offerings[placement] = result;
-      _paywalls[placement] = Paywall.fromOffering(result, dark);
+      _paywalls[placement] = Paywall.fromOffering(result, dark: dark);
       _emitters[key] = 10;
       _log("offering fetched");
       state.value = InAppPurchaseState.done;

@@ -1,3 +1,7 @@
+## 2.1.6
+
+* Stringify improved
+
 ## 2.1.5
 
 * Stringify support both side

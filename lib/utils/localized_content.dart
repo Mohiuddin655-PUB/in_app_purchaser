@@ -128,11 +128,19 @@ class PaywallLocalizedContent<T> {
 }
 
 extension PaywallLocalizedStringExtension on PaywallLocalizedContent<String?> {
-  PaywallLocalizedContent<String?> replaceAll(Pattern from, String replace) {
-    return resolveWith((value) => value?.replaceAll(from, replace));
+  PaywallLocalizedContent<String?> replaceAll(
+    Pattern from,
+    String replace, {
+    bool? all,
+  }) {
+    if (all ?? false) {
+      return resolveWith((value) => value?.replaceAll(from, replace));
+    }
+    return copyWith(value: value?.replaceAll(from, replace));
   }
 
   PaywallLocalizedContent<String?> stringify({
+    bool? all,
     required double? usdPrice,
     required double? price,
     required int unit,
@@ -165,12 +173,28 @@ extension PaywallLocalizedStringExtension on PaywallLocalizedContent<String?> {
       return (x.roundToDouble() + 0.99 - 1).abs();
     }
 
-    final mPrice =
-        formatNumber(usdPrice, discountPrice, price) ?? discountPrice;
-    final mFormatedPrice = discountPrice / unit;
-    return replaceAll(kDiscountPrice, formatPrice(discountPrice, currencyCode))
-        .replaceAll(kFormatedPrice, formatPrice(mFormatedPrice, currencyCode))
-        .replaceAll(kPrice, formatPrice(mPrice, currencyCode))
-        .replaceAll(kLocalizedPrice, localizedPrice);
+    return replaceAll(
+      all: all,
+      kDiscountPrice,
+      formatPrice(discountPrice, currencyCode),
+    )
+        .replaceAll(
+          all: all,
+          kFormatedPrice,
+          formatPrice(discountPrice / unit, currencyCode),
+        )
+        .replaceAll(
+          all: all,
+          kPrice,
+          formatPrice(
+            formatNumber(usdPrice, discountPrice, price) ?? discountPrice,
+            currencyCode,
+          ),
+        )
+        .replaceAll(
+          all: all,
+          kLocalizedPrice,
+          localizedPrice,
+        );
   }
 }
