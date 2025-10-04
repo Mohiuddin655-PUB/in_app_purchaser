@@ -7,11 +7,6 @@ import '../utils/typedefs.dart';
 import 'offering.dart';
 import 'purchaser.dart';
 
-const kDiscountPrice = "{DISCOUNT_PRICE}";
-const kPrice = "{PRICE}";
-const kFormatedPrice = "{FORMATED_PRICE}";
-const kLocalizedPrice = "{LOCALIZED_PRICE}";
-
 class PaywallProduct {
   final bool selected;
   final InAppPurchaseProduct product;
@@ -283,55 +278,23 @@ class PaywallProduct {
     required bool dark,
   }) {
     final parser = InAppPurchaser.parseConfig;
-    final delegate = InAppPurchaser.i.configDelegate;
-
-    final priceOriginal = product.price;
-    final localizedPrice = product.priceString;
-    final currencyCode = product.currencyCode ?? product.currencySymbol;
-    final currencySymbol = product.currencySymbol ?? product.currencyCode;
 
     double? price = parser(configs['price'], null);
     double? usdPrice = parser(configs['usdPrice'], null);
     int? unit = parser(configs['unit'], null);
 
-    String formatPrice(double value) {
-      final code = currencyCode ?? currencySymbol ?? '';
-      if (delegate != null) {
-        final formatted = delegate.formatPrice(
-          InAppPurchaser.i.locale,
-          code,
-          value,
-        );
-        if (formatted != null) {
-          return delegate.formatZeros(formatted);
-        }
-      }
-      String str = value.toStringAsFixed(2);
-      str = str.replaceAll(RegExp(r'([.]*0+)$'), '');
-      return "$code $str";
-    }
-
-    double? formatNumber(double? b, double? r, double? c) {
-      if (b == null || r == null || c == null) return null;
-      final x = (r / b) * c;
-      if (delegate != null) return delegate.prettyPrice(x);
-      return (x.roundToDouble() + 0.99 - 1).abs();
-    }
-
     PaywallLocalizedContent<String?>? stringify(
       PaywallLocalizedContent<String?>? value,
     ) {
       if (value == null || value.isEmpty) return value;
-      final mDiscountPrice = priceOriginal ?? 0;
-      final mPrice =
-          formatNumber(usdPrice, mDiscountPrice, price) ?? mDiscountPrice;
-      final mFormatedPrice = mDiscountPrice / (unit ?? 1);
-
-      return value
-          .replaceAll(kDiscountPrice, formatPrice(mDiscountPrice))
-          .replaceAll(kFormatedPrice, formatPrice(mFormatedPrice))
-          .replaceAll(kPrice, formatPrice(mPrice))
-          .replaceAll(kLocalizedPrice, localizedPrice ?? '');
+      return value.stringify(
+        usdPrice: usdPrice,
+        price: price,
+        unit: unit ?? 1,
+        discountPrice: product.price ?? 0.00,
+        localizedPrice: product.priceString ?? 'USD 0.00',
+        currencyCode: product.currencyCode ?? "USD",
+      );
     }
 
     return PaywallProduct(
@@ -487,28 +450,65 @@ class PaywallProduct {
     );
   }
 
-  PaywallProduct localized(Locale locale) {
+  PaywallProduct localized(Locale locale, {bool? stringify}) {
+    PaywallLocalizedContent<String?>? resolver(
+      PaywallLocalizedContent<String?>? value,
+    ) {
+      if (value == null || value.isEmpty) return value;
+      value = value.localized(locale);
+      if (!(stringify ?? true)) return value;
+      return value.stringify(
+        usdPrice: usdPrice,
+        price: price,
+        unit: unit ?? 1,
+        discountPrice: product.price ?? 0.00,
+        localizedPrice: product.priceString ?? 'USD 0.00',
+        currencyCode: product.currencyCode ?? "USD",
+      );
+    }
+
     return copyWith(
-      badgeTextState: badgeTextState?.resolveWith((e) => e?.localized(locale)),
-      bottomTextState:
-          bottomTextState?.resolveWith((e) => e?.localized(locale)),
-      buttonTextState:
-          buttonTextState?.resolveWith((e) => e?.localized(locale)),
-      descriptionTextState:
-          descriptionTextState?.resolveWith((e) => e?.localized(locale)),
-      leftBottomTextState:
-          leftBottomTextState?.resolveWith((e) => e?.localized(locale)),
-      leftMiddleTextState:
-          leftMiddleTextState?.resolveWith((e) => e?.localized(locale)),
-      leftTopTextState:
-          leftTopTextState?.resolveWith((e) => e?.localized(locale)),
-      rightBottomTextState:
-          rightBottomTextState?.resolveWith((e) => e?.localized(locale)),
-      rightMiddleTextState:
-          rightMiddleTextState?.resolveWith((e) => e?.localized(locale)),
-      rightTopTextState:
-          rightTopTextState?.resolveWith((e) => e?.localized(locale)),
-      titleTextState: titleTextState?.resolveWith((e) => e?.localized(locale)),
+      badgeTextState: badgeTextState?.resolveWith(resolver),
+      bottomTextState: bottomTextState?.resolveWith(resolver),
+      buttonTextState: buttonTextState?.resolveWith(resolver),
+      descriptionTextState: descriptionTextState?.resolveWith(resolver),
+      leftBottomTextState: leftBottomTextState?.resolveWith(resolver),
+      leftMiddleTextState: leftMiddleTextState?.resolveWith(resolver),
+      leftTopTextState: leftTopTextState?.resolveWith(resolver),
+      rightBottomTextState: rightBottomTextState?.resolveWith(resolver),
+      rightMiddleTextState: rightMiddleTextState?.resolveWith(resolver),
+      rightTopTextState: rightTopTextState?.resolveWith(resolver),
+      titleTextState: titleTextState?.resolveWith(resolver),
+    );
+  }
+
+  PaywallProduct stringify() {
+    PaywallLocalizedContent<String?>? resolver(
+      PaywallLocalizedContent<String?>? value,
+    ) {
+      if (value == null || value.isEmpty) return value;
+      return value.stringify(
+        usdPrice: usdPrice,
+        price: price,
+        unit: unit ?? 1,
+        discountPrice: product.price ?? 0.00,
+        localizedPrice: product.priceString ?? 'USD 0.00',
+        currencyCode: product.currencyCode ?? "USD",
+      );
+    }
+
+    return copyWith(
+      badgeTextState: badgeTextState?.resolveWith(resolver),
+      bottomTextState: bottomTextState?.resolveWith(resolver),
+      buttonTextState: buttonTextState?.resolveWith(resolver),
+      descriptionTextState: descriptionTextState?.resolveWith(resolver),
+      leftBottomTextState: leftBottomTextState?.resolveWith(resolver),
+      leftMiddleTextState: leftMiddleTextState?.resolveWith(resolver),
+      leftTopTextState: leftTopTextState?.resolveWith(resolver),
+      rightBottomTextState: rightBottomTextState?.resolveWith(resolver),
+      rightMiddleTextState: rightMiddleTextState?.resolveWith(resolver),
+      rightTopTextState: rightTopTextState?.resolveWith(resolver),
+      titleTextState: titleTextState?.resolveWith(resolver),
     );
   }
 

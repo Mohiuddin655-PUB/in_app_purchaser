@@ -4,6 +4,11 @@ import 'package:collection/collection.dart';
 
 import '../src/purchaser.dart';
 
+const kDiscountPrice = "{DISCOUNT_PRICE}";
+const kPrice = "{PRICE}";
+const kFormatedPrice = "{FORMATED_PRICE}";
+const kLocalizedPrice = "{LOCALIZED_PRICE}";
+
 const _equality = DeepCollectionEquality();
 
 typedef PaywallLocalizeCallback = String Function(Locale locale, String value);
@@ -125,5 +130,47 @@ class PaywallLocalizedContent<T> {
 extension PaywallLocalizedStringExtension on PaywallLocalizedContent<String?> {
   PaywallLocalizedContent<String?> replaceAll(Pattern from, String replace) {
     return resolveWith((value) => value?.replaceAll(from, replace));
+  }
+
+  PaywallLocalizedContent<String?> stringify({
+    required double? usdPrice,
+    required double? price,
+    required int unit,
+    required double discountPrice,
+    required String localizedPrice,
+    required String currencyCode,
+  }) {
+    if (isEmpty) return this;
+    final delegate = InAppPurchaser.i.configDelegate;
+    String formatPrice(double value, String currencyCode) {
+      if (delegate != null) {
+        final formatted = delegate.formatPrice(
+          InAppPurchaser.i.locale,
+          currencyCode,
+          value,
+        );
+        if (formatted != null) {
+          return delegate.formatZeros(formatted);
+        }
+      }
+      String str = value.toStringAsFixed(2);
+      str = str.replaceAll(RegExp(r'([.]*0+)$'), '');
+      return "$currencyCode $str";
+    }
+
+    double? formatNumber(double? b, double? r, double? c) {
+      if (b == null || r == null || c == null) return null;
+      final x = (r / b) * c;
+      if (delegate != null) return delegate.prettyPrice(x);
+      return (x.roundToDouble() + 0.99 - 1).abs();
+    }
+
+    final mPrice =
+        formatNumber(usdPrice, discountPrice, price) ?? discountPrice;
+    final mFormatedPrice = discountPrice / unit;
+    return replaceAll(kDiscountPrice, formatPrice(discountPrice, currencyCode))
+        .replaceAll(kFormatedPrice, formatPrice(mFormatedPrice, currencyCode))
+        .replaceAll(kPrice, formatPrice(mPrice, currencyCode))
+        .replaceAll(kLocalizedPrice, localizedPrice);
   }
 }

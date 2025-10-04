@@ -214,7 +214,7 @@ class Paywall {
     );
   }
 
-  Paywall localized(Locale locale) {
+  Paywall localized(Locale locale, {bool? stringify}) {
     return copyWith(
       hero: hero?.localized(locale),
       image: image?.localized(locale),
@@ -222,7 +222,9 @@ class Paywall {
       subtitle: subtitle?.localized(locale),
       features: features?.localized(locale),
       textButtons: textButtons?.map((e) => e.localized(locale)).toList(),
-      products: products.map((e) => e.localized(locale)).toList(),
+      products: products
+          .map((e) => e.localized(locale, stringify: stringify))
+          .toList(),
     );
   }
 

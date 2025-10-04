@@ -7,6 +7,7 @@ export 'src/paywall.dart';
 export 'src/paywall_product.dart';
 export 'src/purchase_result.dart';
 export 'src/purchaser.dart';
+export 'utils/locales.dart';
 export 'utils/localized_content.dart';
 export 'utils/position.dart';
 export 'utils/state.dart';

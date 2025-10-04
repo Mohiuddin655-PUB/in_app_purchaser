@@ -205,11 +205,18 @@ class InAppPurchaser extends ChangeNotifier {
 
   Locale get locale => _locale ?? Locale("en", "US");
 
-  static void changeLocale(Locale? locale, {bool notifiable = true}) {
+  static void changeLocale(
+    Locale? locale, {
+    bool notifiable = true,
+    bool? stringify,
+  }) {
     i._locale = locale;
     if (i._paywalls.isNotEmpty) {
       i._paywalls = i._paywalls.map((k, v) {
-        return MapEntry(k, v.localized(locale ?? i.locale));
+        return MapEntry(
+          k,
+          v.localized(locale ?? i.locale, stringify: stringify),
+        );
       });
     }
     if (notifiable) i.notify();

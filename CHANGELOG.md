@@ -1,3 +1,7 @@
+## 2.1.5
+
+* Stringify support both side
+
 ## 2.1.4
 
 * Improve PaywallDecoratedBox with [center, fitted, flex, overflow] configs
