@@ -17,16 +17,19 @@ class Paywall {
   final bool defaultMode;
   final List<PaywallProduct> products;
 
-  final int? initialIndex;
-  final String? designType;
-  final bool? skipMode;
-  final bool? safeArea;
+  final int initialIndex;
+  final String designType;
+  final bool skipMode;
+  final bool safeArea;
+  final bool textButtonsAsTop;
 
   final PaywallLocalizedContent<String?>? hero;
   final PaywallLocalizedContent<String?>? image;
   final PaywallLocalizedContent<String?>? title;
   final PaywallLocalizedContent<String?>? subtitle;
   final PaywallLocalizedContent<List?>? features;
+  final PaywallLocalizedContent<String?>? closeButton;
+  final PaywallLocalizedContent<String?>? restoreButton;
   final List<PaywallTextButtonContent>? textButtons;
 
   final PaywallStyle? style;
@@ -44,6 +47,7 @@ class Paywall {
   final PaywallStyle? featuresStyle;
 
   final PaywallStyle? closeButtonStyle;
+  final PaywallStyle? restoreButtonStyle;
   final PaywallStyle? textButtonStyle;
   final PaywallStyle? textButtonsStyle;
 
@@ -52,15 +56,18 @@ class Paywall {
     this.products = const [],
     this.configs = const {},
     this.defaultMode = true,
-    this.initialIndex,
-    this.designType,
-    this.safeArea,
-    this.skipMode,
+    this.initialIndex = 0,
+    this.designType = 'v1',
+    this.safeArea = false,
+    this.skipMode = false,
+    this.textButtonsAsTop = false,
     this.hero,
     this.image,
     this.title,
     this.subtitle,
     this.features,
+    this.closeButton,
+    this.restoreButton,
     this.textButtons,
     this.style,
     this.heroStyle,
@@ -74,6 +81,7 @@ class Paywall {
     this.featureStyle,
     this.featuresStyle,
     this.closeButtonStyle,
+    this.restoreButtonStyle,
     this.textButtonStyle,
     this.textButtonsStyle,
   });
@@ -85,6 +93,10 @@ class Paywall {
   String? get titleLocalized => title?.value;
 
   String? get subtitleLocalized => subtitle?.value;
+
+  String? get closeButtonLocalized => closeButton?.value;
+
+  String? get restoreButtonLocalized => restoreButton?.value;
 
   List? get featuresLocalized => features?.value;
 
@@ -106,14 +118,18 @@ class Paywall {
       map[key] = value;
     }
 
-    addObject("initialIndex", initialIndex);
-    addObject("designType", designType);
-    addObject("safeArea", safeArea);
-    addObject("skipMode", skipMode);
+    if (initialIndex > 0) addObject("initialIndex", initialIndex);
+    if (designType != 'v1') addObject("designType", designType);
+    if (safeArea) addObject("safeArea", true);
+    if (skipMode) addObject("skipMode", true);
+    if (textButtonsAsTop) addObject("textButtonsAsTop", true);
+
     addObject("hero", hero?.toJson((e) => e));
     addObject("image", image?.toJson((e) => e));
     addObject("title", title?.toJson((e) => e));
     addObject("subtitle", subtitle?.toJson((e) => e));
+    addObject("closeButton", closeButton?.toJson((e) => e));
+    addObject("restoreButton", restoreButton?.toJson((e) => e));
     addObject("features", features?.toJson((e) {
       if (e == null || e.isEmpty) return null;
       return e;
@@ -139,6 +155,7 @@ class Paywall {
     addDictionary("featuresStyle", featuresStyle?.dictionary);
 
     addDictionary("closeButtonStyle", closeButtonStyle?.dictionary);
+    addDictionary("restoreButtonStyle", restoreButtonStyle?.dictionary);
     addDictionary("textButtonStyle", textButtonStyle?.dictionary);
     addDictionary("textButtonsStyle", textButtonsStyle?.dictionary);
 
@@ -147,6 +164,22 @@ class Paywall {
       products.map((e) => e.dictionary).where((e) => e.isNotEmpty).toList(),
     );
     return map;
+  }
+
+  factory Paywall.fromConfigs(
+    Map<String, dynamic> configs, {
+    String placement = 'default',
+    List<InAppPurchaseProduct>? products,
+    bool? dark,
+    bool? stringifyAll,
+  }) {
+    return Paywall.parse(
+      placement: placement,
+      configs: configs,
+      packages: products ?? [],
+      dark: dark ?? false,
+      stringifyAll: stringifyAll,
+    );
   }
 
   factory Paywall.fromOffering(
@@ -194,14 +227,17 @@ class Paywall {
       id: placement,
       products: mProducts,
       configs: Map.from(configs)..remove("products"),
-      initialIndex: parser(configs["initialIndex"], null),
-      designType: parser(configs["designType"], null),
-      safeArea: parser(configs["safeArea"], null),
-      skipMode: parser(configs["skipMode"], null),
+      initialIndex: parser(configs["initialIndex"], 0),
+      designType: parser(configs["designType"], 'v1'),
+      safeArea: parser(configs["safeArea"], false),
+      skipMode: parser(configs["skipMode"], false),
+      textButtonsAsTop: parser(configs["textButtonsAsTop"], false),
       hero: PaywallLocalizedContent.parse(configs['hero']),
       image: PaywallLocalizedContent.parse(configs['image']),
       title: PaywallLocalizedContent.parse(configs['title']),
       subtitle: PaywallLocalizedContent.parse(configs['subtitle']),
+      closeButton: PaywallLocalizedContent.parse(configs['closeButton']),
+      restoreButton: PaywallLocalizedContent.parse(configs['restoreButton']),
       features: PaywallLocalizedContent.parse(configs['features']),
       textButtons: (textButtons ?? []).isEmpty ? null : textButtons,
       style: PaywallStyle.parse(configs["style"], dark),
@@ -216,6 +252,8 @@ class Paywall {
       featureStyle: PaywallStyle.parse(configs["featureStyle"], dark),
       featuresStyle: PaywallStyle.parse(configs["featuresStyle"], dark),
       closeButtonStyle: PaywallStyle.parse(configs["closeButtonStyle"], dark),
+      restoreButtonStyle:
+          PaywallStyle.parse(configs["restoreButtonStyle"], dark),
       textButtonStyle: PaywallStyle.parse(configs["textButtonStyle"], dark),
       textButtonsStyle: PaywallStyle.parse(configs["textButtonsStyle"], dark),
     );
@@ -231,6 +269,8 @@ class Paywall {
       image: image?.localized(locale),
       title: title?.localized(locale),
       subtitle: subtitle?.localized(locale),
+      closeButton: closeButton?.localized(locale),
+      restoreButton: restoreButton?.localized(locale),
       features: features?.localized(locale),
       textButtons: textButtons?.map((e) => e.localized(locale)).toList(),
       products: products.map((e) {
@@ -258,6 +298,8 @@ class Paywall {
       featureStyle: PaywallStyle.parse(configs["featureStyle"], dark),
       featuresStyle: PaywallStyle.parse(configs["featuresStyle"], dark),
       closeButtonStyle: PaywallStyle.parse(configs["closeButtonStyle"], dark),
+      restoreButtonStyle:
+          PaywallStyle.parse(configs["restoreButtonStyle"], dark),
       textButtonStyle: PaywallStyle.parse(configs["textButtonStyle"], dark),
       textButtonsStyle: PaywallStyle.parse(configs["textButtonsStyle"], dark),
       products: products.map((e) => e.themed(dark)).toList(),
@@ -273,10 +315,13 @@ class Paywall {
     bool? skipMode,
     bool? safeArea,
     bool? defaultMode,
+    bool? textButtonsAsTop,
     PaywallLocalizedContent<String?>? hero,
     PaywallLocalizedContent<String?>? image,
     PaywallLocalizedContent<String?>? title,
     PaywallLocalizedContent<String?>? subtitle,
+    PaywallLocalizedContent<String?>? closeButton,
+    PaywallLocalizedContent<String?>? restoreButton,
     PaywallLocalizedContent<List?>? features,
     List<PaywallTextButtonContent>? textButtons,
     PaywallStyle? style,
@@ -291,6 +336,7 @@ class Paywall {
     PaywallStyle? featureStyle,
     PaywallStyle? featuresStyle,
     PaywallStyle? closeButtonStyle,
+    PaywallStyle? restoreButtonStyle,
     PaywallStyle? textButtonStyle,
     PaywallStyle? textButtonsStyle,
   }) {
@@ -303,10 +349,13 @@ class Paywall {
       skipMode: skipMode ?? this.skipMode,
       safeArea: safeArea ?? this.safeArea,
       defaultMode: defaultMode ?? this.defaultMode,
+      textButtonsAsTop: textButtonsAsTop ?? this.textButtonsAsTop,
       hero: hero ?? this.hero,
       image: image ?? this.image,
       title: title ?? this.title,
       subtitle: subtitle ?? this.subtitle,
+      closeButton: closeButton ?? this.closeButton,
+      restoreButton: restoreButton ?? this.restoreButton,
       features: features ?? this.features,
       textButtons: textButtons ?? this.textButtons,
       style: style ?? this.style,
@@ -321,6 +370,7 @@ class Paywall {
       featureStyle: featureStyle ?? this.featureStyle,
       featuresStyle: featuresStyle ?? this.featuresStyle,
       closeButtonStyle: closeButtonStyle ?? this.closeButtonStyle,
+      restoreButtonStyle: restoreButtonStyle ?? this.restoreButtonStyle,
       textButtonStyle: textButtonStyle ?? this.textButtonStyle,
       textButtonsStyle: textButtonsStyle ?? this.textButtonsStyle,
     );
@@ -394,6 +444,11 @@ class Paywall {
         scaler: scaler,
         textDirection: textDirection,
       ),
+      restoreButtonStyle: restoreButtonStyle?.resolveWith(
+        selected: selected,
+        scaler: scaler,
+        textDirection: textDirection,
+      ),
       closeButtonStyle: closeButtonStyle?.resolveWith(
         selected: selected,
         scaler: scaler,
@@ -421,10 +476,13 @@ class Paywall {
       safeArea,
       skipMode,
       defaultMode,
+      textButtonsAsTop,
       hero,
       image,
       title,
       subtitle,
+      closeButton,
+      restoreButton,
       features,
       style,
       heroStyle,
@@ -438,6 +496,7 @@ class Paywall {
       featureStyle,
       featuresStyle,
       closeButtonStyle,
+      restoreButtonStyle,
       textButtonStyle,
       textButtonsStyle,
       _equality.hash(configs),
@@ -458,6 +517,7 @@ class Paywall {
         safeArea == other.safeArea &&
         skipMode == other.skipMode &&
         defaultMode == other.defaultMode &&
+        textButtonsAsTop == other.textButtonsAsTop &&
         hero == other.hero &&
         image == other.image &&
         title == other.title &&
@@ -472,9 +532,12 @@ class Paywall {
         imageStyle == other.imageStyle &&
         titleStyle == other.titleStyle &&
         subtitleStyle == other.subtitleStyle &&
+        closeButton == other.closeButton &&
+        restoreButton == other.restoreButton &&
         featureStyle == other.featureStyle &&
         featuresStyle == other.featuresStyle &&
         closeButtonStyle == other.closeButtonStyle &&
+        restoreButtonStyle == other.restoreButtonStyle &&
         textButtonStyle == other.textButtonStyle &&
         textButtonsStyle == other.textButtonsStyle &&
         _equality.equals(configs, other.configs) &&

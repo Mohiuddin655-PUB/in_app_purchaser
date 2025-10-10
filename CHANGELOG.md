@@ -1,3 +1,7 @@
+## 2.1.10
+
+* Paywall improved
+
 ## 2.1.9
 
 * PaywallPosition improved
