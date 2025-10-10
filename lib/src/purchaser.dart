@@ -47,17 +47,42 @@ class InAppPurchaser extends ChangeNotifier {
   /// --------------------------------------------------------------------------
 
   final bool logEnabled;
+  final bool logThrowEnabled;
 
   final InAppPurchaseDelegate _delegate;
   final InAppPurchaseConfigDelegate? configDelegate;
 
   bool initialized = false;
+  bool _enabled = true;
+  String? uid;
+  Locale? _locale;
+  bool? _dark;
+  bool _premiumDefault = false;
+  List<String> _features = [];
+  Map<String, List<int>> _ignorableIndexes = {};
+  List<String> _ignorableUsers = [];
 
   InAppPurchaser._({
     required InAppPurchaseDelegate delegate,
     required this.logEnabled,
+    this.logThrowEnabled = false,
     this.configDelegate,
-  }) : _delegate = delegate;
+    this.uid,
+    bool enabled = true,
+    bool premium = false,
+    Locale? locale,
+    bool? dark,
+    List<String>? features,
+    Map<String, List<int>>? ignorableIndexes,
+    List<String>? ignorableUsers,
+  })  : _delegate = delegate,
+        _locale = locale,
+        _dark = dark,
+        _enabled = enabled,
+        _premiumDefault = premium,
+        _features = features ?? [],
+        _ignorableIndexes = ignorableIndexes ?? {},
+        _ignorableUsers = ignorableUsers ?? [];
 
   static InAppPurchaser? _i;
 
@@ -67,11 +92,29 @@ class InAppPurchaser extends ChangeNotifier {
     required InAppPurchaseDelegate delegate,
     InAppPurchaseConfigDelegate? configDelegate,
     bool logEnabled = true,
+    bool logThrowEnabled = false,
+    String? uid,
+    bool enabled = true,
+    bool premium = false,
+    Locale? locale,
+    bool? dark,
+    List<String>? features,
+    Map<String, List<int>>? ignorableIndexes,
+    List<String>? ignorableUsers,
   }) async {
     _i = InAppPurchaser._(
       delegate: delegate,
       configDelegate: configDelegate,
       logEnabled: logEnabled,
+      logThrowEnabled: logThrowEnabled,
+      uid: uid,
+      enabled: enabled,
+      premium: premium,
+      locale: locale,
+      dark: dark,
+      features: features,
+      ignorableIndexes: ignorableIndexes,
+      ignorableUsers: ignorableUsers,
     );
     await i.configure();
   }
@@ -93,8 +136,7 @@ class InAppPurchaser extends ChangeNotifier {
     try {
       _log("initializing...");
       initState.value = InAppPurchaseState.running;
-      await _delegate.init();
-      await _delegate.init();
+      await _delegate.init(uid);
       _sub?.cancel();
       _sub = _delegate.stream.listen(_listen);
       _emit("initProfile", initProfile);
@@ -109,6 +151,7 @@ class InAppPurchaser extends ChangeNotifier {
     } catch (e) {
       _log(e, "initialization error");
       initState.value = InAppPurchaseState.failed;
+      if (logThrowEnabled) throw "initialization error [$e]";
     }
   }
 
@@ -128,6 +171,7 @@ class InAppPurchaser extends ChangeNotifier {
     } catch (e) {
       _log(e, "profile initialization error");
       profileState.value = InAppPurchaseState.failed;
+      if (logThrowEnabled) throw "profile initialization error [$e]";
     }
   }
 
@@ -146,6 +190,7 @@ class InAppPurchaser extends ChangeNotifier {
     } catch (e) {
       _log(e, "adjust sdk initialization error");
       adjustSdkState.value = InAppPurchaseState.failed;
+      if (logThrowEnabled) throw "adjust sdk initialization error [$e]";
     }
   }
 
@@ -164,6 +209,7 @@ class InAppPurchaser extends ChangeNotifier {
     } catch (e) {
       _log(e, "facebook sdk initialization error");
       facebookSdkState.value = InAppPurchaseState.failed;
+      if (logThrowEnabled) throw "facebook sdk initialization error [$e]";
     }
   }
 
@@ -201,8 +247,6 @@ class InAppPurchaser extends ChangeNotifier {
   /// LOCALIZATION START
   /// --------------------------------------------------------------------------
 
-  Locale? _locale;
-
   Locale get locale => _locale ?? Locale("en", "US");
 
   static void changeLocale(
@@ -235,8 +279,6 @@ class InAppPurchaser extends ChangeNotifier {
   /// THEME START
   /// --------------------------------------------------------------------------
 
-  bool? _dark;
-
   bool get dark => _dark ?? false;
 
   static void changeTheme(bool? dark, {bool notifiable = true}) {
@@ -257,19 +299,7 @@ class InAppPurchaser extends ChangeNotifier {
   /// PREMIUM CHECKER START
   /// --------------------------------------------------------------------------
 
-  String? _uid;
-
   bool _premium = false;
-
-  bool _enabled = true;
-
-  bool _premiumDefault = false;
-
-  Set<String> _ignorableUsers = {};
-
-  Set<String> _features = {};
-
-  Map<String, Set<int>> _ignorableIndexes = {};
 
   InAppPurchaseProfile? profile;
 
@@ -284,6 +314,7 @@ class InAppPurchaser extends ChangeNotifier {
       _log(isPremium, "checked");
     } catch (e) {
       _log(e, "checking error");
+      if (logThrowEnabled) throw "checking error [$e]";
     }
   }
 
@@ -294,7 +325,7 @@ class InAppPurchaser extends ChangeNotifier {
 
   bool get premium => isPremium;
 
-  static bool get isPremium => isPremiumUser(i._uid);
+  static bool get isPremium => isPremiumUser(i.uid);
 
   static bool isPremiumUser([String? uid]) {
     if (!i._enabled) return true;
@@ -309,8 +340,8 @@ class InAppPurchaser extends ChangeNotifier {
     int? ignoreIndex,
     String? uid,
   ]) {
-    if (isPremiumUser(uid ?? i._uid)) return false;
-    if ((i._ignorableIndexes[feature] ?? {}).contains(ignoreIndex)) {
+    if (isPremiumUser(uid ?? i.uid)) return false;
+    if ((i._ignorableIndexes[feature] ?? []).contains(ignoreIndex)) {
       return false;
     }
     return i._features.contains(feature);
@@ -331,23 +362,23 @@ class InAppPurchaser extends ChangeNotifier {
   }
 
   static void setUid(String? uid, {bool notifiable = true}) {
-    i._uid = uid;
+    i.uid = uid;
     if (notifiable) i.notify();
   }
 
-  static void setFeatures(Set<String> features, {bool notifiable = true}) {
+  static void setFeatures(List<String> features, {bool notifiable = true}) {
     i._features = features;
     if (notifiable) i.notify();
   }
 
-  static void setIgnorableUsers(Set<String> uids, {bool notifiable = true}) {
+  static void setIgnorableUsers(List<String> uids, {bool notifiable = true}) {
     i._ignorableUsers = uids;
     if (notifiable) i.notify();
   }
 
   static void setIgnorableFeatureIndexes(
     String feature,
-    Set<int> indexes, {
+    List<int> indexes, {
     bool notifiable = true,
   }) {
     if (indexes.isEmpty) {
@@ -359,7 +390,7 @@ class InAppPurchaser extends ChangeNotifier {
   }
 
   static void setIgnorableMappedFeatureIndexes(
-    Map<String, Set<int>> indexes, {
+    Map<String, List<int>> indexes, {
     bool notifiable = true,
   }) {
     i._ignorableIndexes = indexes;
@@ -382,12 +413,13 @@ class InAppPurchaser extends ChangeNotifier {
       await i._delegate.login(uid);
       i._premiumDefault = isDefaultPremium;
       i._premium = await check();
-      i._uid = uid;
+      i.uid = uid;
       i._log("loggedIn");
       loginState.value = InAppPurchaseState.done;
     } catch (e) {
       i._log("logging_failed");
       loginState.value = InAppPurchaseState.failed;
+      if (i.logThrowEnabled) throw "logging_failed [$e]";
     }
     i.notify();
   }
@@ -404,12 +436,13 @@ class InAppPurchaser extends ChangeNotifier {
       i.profile = null;
       i._premiumDefault = false;
       i._premium = false;
-      i._uid = null;
+      i.uid = null;
       i._log("loggedOut");
       logoutState.value = InAppPurchaseState.done;
     } catch (e) {
       i._log("logged_out_failed");
       logoutState.value = InAppPurchaseState.failed;
+      if (i.logThrowEnabled) throw "logged_out_failed [$e]";
     }
     i.notify();
   }
@@ -450,6 +483,7 @@ class InAppPurchaser extends ChangeNotifier {
     } catch (e) {
       _log(e, "offering error");
       state.value = InAppPurchaseState.failed;
+      if (logThrowEnabled) throw "offering error [$e]";
     }
   }
 
@@ -559,6 +593,7 @@ class InAppPurchaser extends ChangeNotifier {
     } catch (e) {
       i._log(e, "purchasing error");
       purchasingState.value = InAppPurchaseState.failed;
+      if (i.logThrowEnabled) throw "purchasing error [$e]";
       return InAppPurchaseResultFailed();
     }
   }
@@ -612,6 +647,7 @@ class InAppPurchaser extends ChangeNotifier {
     } catch (e) {
       i._log(e, "restoring error");
       if (!silent) restoringState.value = InAppPurchaseState.failed;
+      if (i.logThrowEnabled) throw "restoring error [$e]";
       return null;
     }
   }

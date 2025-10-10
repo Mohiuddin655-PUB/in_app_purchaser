@@ -21,5 +21,5 @@ abstract class InAppPurchaseConfigDelegate {
     return (value.roundToDouble() + 0.99 - 1).abs();
   }
 
-  String? localize(Locale locale, String? key);
+  String localize(Locale locale, String raw) => raw;
 }

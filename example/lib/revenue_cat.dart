@@ -11,9 +11,9 @@ class RevenueCatInAppPurchaseDelegate extends InAppPurchaseDelegate {
   Set<String> get placements => {"default"};
 
   @override
-  Future<void> init() async {
+  Future<void> init(String? uid) async {
     await Purchases.configure(
-      PurchasesConfiguration("API_KEY")..appUserID = "USER_ID",
+      PurchasesConfiguration("API_KEY")..appUserID = uid,
     );
     await Purchases.collectDeviceIdentifiers();
   }

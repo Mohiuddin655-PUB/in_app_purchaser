@@ -8,7 +8,7 @@ abstract class InAppPurchaseDelegate {
 
   Stream<InAppPurchaseProfile> get stream;
 
-  Future<void> init();
+  Future<void> init(String? uid);
 
   Future<void> initAdjustSdk();
 

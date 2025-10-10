@@ -13,7 +13,7 @@ class AdaptyInAppPurchaseDelegate extends InAppPurchaseDelegate {
   Set<String> get placements => {"default"};
 
   @override
-  Future<void> init() async {
+  Future<void> init(String? uid) async {
     await instance.setLogLevel(AdaptyLogLevel.debug);
 
     bool isActivated = kDebugMode ? await instance.isActivated() : false;

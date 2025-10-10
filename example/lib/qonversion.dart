@@ -10,7 +10,7 @@ class QonversionInAppPurchaseDelegate extends InAppPurchaseDelegate {
   Set<String> get placements => {"default"};
 
   @override
-  Future<void> init() async {
+  Future<void> init(String? uid) async {
     final config = QonversionConfigBuilder(
       "API_KEY",
       QLaunchMode.subscriptionManagement,

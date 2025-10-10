@@ -1,3 +1,7 @@
+## 2.1.7
+
+* Initialization improved
+
 ## 2.1.6
 
 * Stringify improved

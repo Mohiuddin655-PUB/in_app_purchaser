@@ -69,7 +69,7 @@ class PaywallLocalizedContent<T> {
         return e;
       }
 
-      final y = lt(value);
+      final y = lt(value ?? values['en']);
       if (y is T) x = y;
     }
     return copyWith(value: x);
