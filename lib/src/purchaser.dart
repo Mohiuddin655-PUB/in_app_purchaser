@@ -65,6 +65,7 @@ class InAppPurchaser extends ChangeNotifier {
 
   final bool logEnabled;
   final bool logThrowEnabled;
+  final bool rtlSupported;
 
   final InAppPurchaseDelegate _delegate;
   final InAppPurchaseConfigDelegate? configDelegate;
@@ -84,6 +85,7 @@ class InAppPurchaser extends ChangeNotifier {
     required InAppPurchaseDelegate delegate,
     required this.logEnabled,
     this.logThrowEnabled = false,
+    this.rtlSupported = true,
     this.configDelegate,
     this.uid,
     bool enabled = true,
@@ -113,11 +115,13 @@ class InAppPurchaser extends ChangeNotifier {
     InAppPurchaseConfigDelegate? configDelegate,
     bool logEnabled = true,
     bool logThrowEnabled = false,
+    bool rtlSupported = true,
     String? uid,
     bool enabled = true,
     bool premium = false,
     Locale? locale,
     bool? dark,
+    List<String>? rtlLanguages,
     List<String>? features,
     Map<String, List<int>>? ignorableIndexes,
     List<String>? ignorableUsers,
@@ -127,6 +131,8 @@ class InAppPurchaser extends ChangeNotifier {
       configDelegate: configDelegate,
       logEnabled: logEnabled,
       logThrowEnabled: logThrowEnabled,
+      rtlSupported: rtlSupported,
+      rtlLanguages: rtlLanguages,
       uid: uid,
       enabled: enabled,
       premium: premium,
@@ -270,8 +276,7 @@ class InAppPurchaser extends ChangeNotifier {
   Locale get locale => _locale ?? Locale("en", "US");
 
   static TextDirection get textDirection {
-    final locale = i.locale;
-    if (i._rltLanguages.contains(locale.languageCode)) {
+    if (i.rtlSupported && i._rltLanguages.contains(i.locale.languageCode)) {
       return TextDirection.rtl;
     }
     return TextDirection.ltr;
