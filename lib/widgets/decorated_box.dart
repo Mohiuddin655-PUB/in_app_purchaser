@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../src/purchaser.dart';
 import '../utils/style.dart';
 import '../utils/typedefs.dart';
 
@@ -12,6 +13,7 @@ class PaywallDecoratedBox extends StatelessWidget {
   final PaywallScaler? scaler;
   final Size? screenSize;
   final TextDirection? textDirection;
+  final bool useDefaultTextDirection;
   final Widget child;
 
   const PaywallDecoratedBox({
@@ -22,15 +24,16 @@ class PaywallDecoratedBox extends StatelessWidget {
     this.textDirection,
     this.scaler,
     this.screenSize,
+    this.useDefaultTextDirection = true,
     required this.child,
   });
 
   PaywallStyle? get _style {
     if (!primary) return style;
-    if (textDirection != null || scaler != null) {
+    if (textDirection != null || scaler != null || useDefaultTextDirection) {
       return style?.resolveWith(
         selected: selected,
-        textDirection: textDirection,
+        textDirection: textDirection ?? InAppPurchaser.textDirection,
         scaler: scaler,
       );
     }
@@ -166,9 +169,13 @@ class PaywallDecoratedBox extends StatelessWidget {
     if (s.overflow ?? false) {
       child = OverflowBox(child: child);
     }
+    final expanded = s.expanded ?? 0;
+    if (expanded > 0) {
+      child = Expanded(flex: expanded, child: child);
+    }
     final flex = s.flex ?? 0;
     if (flex > 0) {
-      child = Expanded(flex: flex, child: child);
+      child = Flexible(flex: flex, child: child);
     }
     if (position != null) {
       if (duration != Duration.zero) {

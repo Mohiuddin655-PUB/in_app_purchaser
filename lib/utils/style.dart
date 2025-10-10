@@ -22,6 +22,7 @@ class PaywallStyle {
   final PaywallState<Alignment?>? contentAlignmentState;
   final PaywallState<int?>? durationState;
   final PaywallState<bool?>? fittedState;
+  final PaywallState<int?>? expandedState;
   final PaywallState<int?>? flexState;
   final PaywallState<Color?>? foregroundColorState;
   final PaywallState<LinearGradient?>? foregroundGradientState;
@@ -84,6 +85,8 @@ class PaywallStyle {
   Alignment? get contentAlignment => contentAlignmentState?.of(selected);
 
   int? get duration => durationState?.of(selected);
+
+  int? get expanded => expandedState?.of(selected);
 
   bool? get fitted => fittedState?.of(selected);
 
@@ -189,6 +192,7 @@ class PaywallStyle {
     this.constraintsState,
     this.contentAlignmentState,
     this.durationState,
+    this.expandedState,
     this.fittedState,
     this.flexState,
     this.foregroundColorState,
@@ -243,6 +247,7 @@ class PaywallStyle {
       "contentAlignment":
           contentAlignmentState?.toJson(StyleParser.alignmentToJson),
       "duration": durationState?.toJson((e) => e),
+      "expanded": expandedState?.toJson((e) => e),
       "fitted": fittedState?.toJson((e) => e),
       "flex": flexState?.toJson((e) => e),
       "foregroundColor": foregroundColorState?.toJson(StyleParser.colorToHex),
@@ -345,6 +350,10 @@ class PaywallStyle {
       ),
       durationState: PaywallState.parse(
         source['duration'],
+        StyleParser.parseInt,
+      ),
+      expandedState: PaywallState.parse(
+        source['expanded'],
         StyleParser.parseInt,
       ),
       fittedState: PaywallState.parse(
@@ -511,6 +520,7 @@ class PaywallStyle {
     PaywallState<Color?>? colorState,
     PaywallState<BoxConstraints?>? constraintsState,
     PaywallState<Alignment?>? contentAlignmentState,
+    PaywallState<int?>? expandedState,
     PaywallState<int?>? durationState,
     PaywallState<bool?>? fittedState,
     PaywallState<int?>? flexState,
@@ -564,6 +574,7 @@ class PaywallStyle {
       constraintsState: constraintsState ?? this.constraintsState,
       contentAlignmentState:
           contentAlignmentState ?? this.contentAlignmentState,
+      expandedState: expandedState ?? this.expandedState,
       durationState: durationState ?? this.durationState,
       fittedState: fittedState ?? this.fittedState,
       flexState: flexState ?? this.flexState,
@@ -789,6 +800,7 @@ class PaywallStyle {
       colorState,
       constraintsState,
       contentAlignmentState,
+      expandedState,
       durationState,
       fittedState,
       flexState,
@@ -849,6 +861,7 @@ class PaywallStyle {
         colorState == other.colorState &&
         constraintsState == other.constraintsState &&
         contentAlignmentState == other.contentAlignmentState &&
+        expandedState == other.expandedState &&
         durationState == other.durationState &&
         fittedState == other.fittedState &&
         flexState == other.flexState &&

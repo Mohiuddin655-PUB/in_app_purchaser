@@ -13,6 +13,23 @@ import 'purchase_result.dart';
 
 const _kLogger = "IN_APP_PURCHASER";
 
+const kPurchaserRtlLocales = [
+  "ar",
+  "arc",
+  "dv",
+  "fa",
+  "ha",
+  "he",
+  "khw",
+  "ks",
+  "ku",
+  "ps",
+  "sd",
+  "ug",
+  "ur",
+  "yi"
+];
+
 enum InAppPurchaseState {
   none,
   running,
@@ -51,6 +68,7 @@ class InAppPurchaser extends ChangeNotifier {
 
   final InAppPurchaseDelegate _delegate;
   final InAppPurchaseConfigDelegate? configDelegate;
+  final List<String> _rltLanguages;
 
   bool initialized = false;
   bool _enabled = true;
@@ -75,11 +93,13 @@ class InAppPurchaser extends ChangeNotifier {
     List<String>? features,
     Map<String, List<int>>? ignorableIndexes,
     List<String>? ignorableUsers,
+    List<String>? rtlLanguages,
   })  : _delegate = delegate,
         _locale = locale,
         _dark = dark,
         _enabled = enabled,
         _premiumDefault = premium,
+        _rltLanguages = rtlLanguages ?? kPurchaserRtlLocales,
         _features = features ?? [],
         _ignorableIndexes = ignorableIndexes ?? {},
         _ignorableUsers = ignorableUsers ?? [];
@@ -248,6 +268,14 @@ class InAppPurchaser extends ChangeNotifier {
   /// --------------------------------------------------------------------------
 
   Locale get locale => _locale ?? Locale("en", "US");
+
+  static TextDirection get textDirection {
+    final locale = i.locale;
+    if (i._rltLanguages.contains(locale.languageCode)) {
+      return TextDirection.rtl;
+    }
+    return TextDirection.ltr;
+  }
 
   static void changeLocale(
     Locale? locale, {

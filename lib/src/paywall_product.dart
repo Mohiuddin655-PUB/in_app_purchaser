@@ -41,6 +41,7 @@ class PaywallProduct {
   final PaywallStyle? rightBottomStyle;
   final PaywallStyle? rightMiddleStyle;
   final PaywallStyle? rightTopStyle;
+  final PaywallStyle? packageStyle;
   final PaywallStyle? style;
   final PaywallStyle? titleStyle;
 
@@ -76,6 +77,7 @@ class PaywallProduct {
     this.rightBottomStyle,
     this.rightMiddleStyle,
     this.rightTopStyle,
+    this.packageStyle,
     this.style,
     this.titleStyle,
   });
@@ -157,10 +159,6 @@ class PaywallProduct {
     return descriptionStyle?.copyWith(selected: selected);
   }
 
-  PaywallStyle? get selectedStyle {
-    return style?.copyWith(selected: selected);
-  }
-
   PaywallStyle? get selectedBadgeStyle {
     return badgeStyle?.copyWith(selected: selected);
   }
@@ -203,6 +201,14 @@ class PaywallProduct {
 
   PaywallStyle? get selectedBottomStyle {
     return bottomStyle?.copyWith(selected: selected);
+  }
+
+  PaywallStyle? get selectedPackageStyle {
+    return packageStyle?.copyWith(selected: selected);
+  }
+
+  PaywallStyle? get selectedStyle {
+    return style?.copyWith(selected: selected);
   }
 
   // DICTIONARY
@@ -267,6 +273,7 @@ class PaywallProduct {
     addDictionary("rightBottomStyle", rightBottomStyle?.dictionary);
     addDictionary("rightMiddleStyle", rightMiddleStyle?.dictionary);
     addDictionary("rightTopStyle", rightTopStyle?.dictionary);
+    addDictionary("packageStyle", packageStyle?.dictionary);
     addDictionary("style", style?.dictionary);
     addDictionary("titleStyle", titleStyle?.dictionary);
     return map;
@@ -375,6 +382,7 @@ class PaywallProduct {
       rightBottomStyle: PaywallStyle.parse(configs["rightBottomStyle"], dark),
       rightMiddleStyle: PaywallStyle.parse(configs["rightMiddleStyle"], dark),
       rightTopStyle: PaywallStyle.parse(configs["rightTopStyle"], dark),
+      packageStyle: PaywallStyle.parse(configs['packageStyle'], dark),
       style: PaywallStyle.parse(configs['style'], dark),
       titleStyle: PaywallStyle.parse(configs["titleStyle"], dark),
     );
@@ -412,6 +420,7 @@ class PaywallProduct {
     PaywallStyle? rightBottomStyle,
     PaywallStyle? rightMiddleStyle,
     PaywallStyle? rightTopStyle,
+    PaywallStyle? packageStyle,
     PaywallStyle? style,
     PaywallStyle? titleStyle,
   }) {
@@ -447,6 +456,7 @@ class PaywallProduct {
       rightBottomStyle: rightBottomStyle ?? this.rightBottomStyle,
       rightMiddleStyle: rightMiddleStyle ?? this.rightMiddleStyle,
       rightTopStyle: rightTopStyle ?? this.rightTopStyle,
+      packageStyle: packageStyle ?? this.packageStyle,
       style: style ?? this.style,
       titleStyle: titleStyle ?? this.titleStyle,
     );
@@ -536,6 +546,7 @@ class PaywallProduct {
       rightBottomStyle: PaywallStyle.parse(configs["rightBottomStyle"], dark),
       rightMiddleStyle: PaywallStyle.parse(configs["rightMiddleStyle"], dark),
       rightTopStyle: PaywallStyle.parse(configs["rightTopStyle"], dark),
+      packageStyle: PaywallStyle.parse(configs['packageStyle'], dark),
       style: PaywallStyle.parse(configs['style'], dark),
       titleStyle: PaywallStyle.parse(configs["titleStyle"], dark),
     );
@@ -607,6 +618,11 @@ class PaywallProduct {
         scaler: scaler,
         textDirection: textDirection,
       ),
+      packageStyle: packageStyle?.resolveWith(
+        selected: selected,
+        scaler: scaler,
+        textDirection: textDirection,
+      ),
       style: style?.resolveWith(
         selected: selected,
         scaler: scaler,
@@ -652,6 +668,7 @@ class PaywallProduct {
       rightBottomStyle,
       rightMiddleStyle,
       rightTopStyle,
+      packageStyle,
       style,
       titleStyle,
     ]);
@@ -692,6 +709,7 @@ class PaywallProduct {
         rightBottomStyle == other.rightBottomStyle &&
         rightMiddleStyle == other.rightMiddleStyle &&
         rightTopStyle == other.rightTopStyle &&
+        packageStyle == other.packageStyle &&
         style == other.style &&
         titleStyle == other.titleStyle;
   }

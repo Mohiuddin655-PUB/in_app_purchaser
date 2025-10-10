@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../src/purchaser.dart';
 import '../utils/style.dart';
 import '../utils/typedefs.dart';
 import 'decorated_box.dart';
@@ -12,6 +13,7 @@ class PaywallLayout extends StatelessWidget {
   final PaywallStyle? style;
   final PaywallScaler? scaler;
   final TextDirection? textDirection;
+  final bool useDefaultTextDirection;
   final List<Widget> children;
 
   const PaywallLayout({
@@ -23,24 +25,14 @@ class PaywallLayout extends StatelessWidget {
     this.scaler,
     this.style,
     this.textDirection,
+    this.useDefaultTextDirection = true,
     required this.children,
   });
 
-  PaywallStyle? get _style {
-    if (!primary) return style;
-    if (textDirection != null || scaler != null) {
-      return style?.resolveWith(
-        selected: selected,
-        textDirection: textDirection,
-        scaler: scaler,
-      );
-    }
-    if (selected != null) return style?.copyWith(selected: selected);
-    return style;
-  }
-
   Widget _build(BuildContext context, PaywallStyle s) {
-    switch (s.layout!) {
+    final textDirection = this.textDirection ??
+        (useDefaultTextDirection ? InAppPurchaser.textDirection : null);
+    switch (s.layout ?? PaywallLayoutType.flex) {
       case PaywallLayoutType.flex:
         return Flex(
           clipBehavior: s.layoutClipBehavior ?? Clip.none,
@@ -81,6 +73,19 @@ class PaywallLayout extends StatelessWidget {
           children: children,
         );
     }
+  }
+
+  PaywallStyle? get _style {
+    if (!primary) return style;
+    if (textDirection != null || scaler != null || useDefaultTextDirection) {
+      return style?.resolveWith(
+        selected: selected,
+        textDirection: textDirection ?? InAppPurchaser.textDirection,
+        scaler: scaler,
+      );
+    }
+    if (selected != null) return style?.copyWith(selected: selected);
+    return style;
   }
 
   @override
