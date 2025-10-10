@@ -52,7 +52,7 @@ class PaywallPosition {
       return textDirection == TextDirection.rtl ? b : a;
     }
 
-    return copyWith(
+    return PaywallPosition(
       top: dp(top),
       bottom: dp(bottom),
       left: dp(td(left, right)),

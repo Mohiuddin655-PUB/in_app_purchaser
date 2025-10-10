@@ -1,3 +1,7 @@
+## 2.1.9
+
+* PaywallPosition improved
+
 ## 2.1.8
 
 * TextDirectionality support
