@@ -73,6 +73,7 @@ class InAppPurchaser extends ChangeNotifier {
 
   bool initialized = false;
   bool _enabled = true;
+  String? defaultPlacement;
   String? uid;
   Locale? _locale;
   bool? _dark;
@@ -87,6 +88,7 @@ class InAppPurchaser extends ChangeNotifier {
     this.logThrowEnabled = false,
     this.rtlSupported = true,
     this.configDelegate,
+    this.defaultPlacement,
     this.uid,
     bool enabled = true,
     bool premium = false,
@@ -117,6 +119,7 @@ class InAppPurchaser extends ChangeNotifier {
     bool logThrowEnabled = false,
     bool rtlSupported = true,
     String? uid,
+    String? defaultPlacement,
     bool enabled = true,
     bool premium = false,
     Locale? locale,
@@ -133,6 +136,7 @@ class InAppPurchaser extends ChangeNotifier {
       logThrowEnabled: logThrowEnabled,
       rtlSupported: rtlSupported,
       rtlLanguages: rtlLanguages,
+      defaultPlacement: defaultPlacement,
       uid: uid,
       enabled: enabled,
       premium: premium,
@@ -520,16 +524,24 @@ class InAppPurchaser extends ChangeNotifier {
     }
   }
 
-  static Future<void> fetch(String placement) {
+  static Future<void> fetch(String placement, {bool notifiable = true}) async {
     final key = "_fetch:$placement";
-    return i._emit(key, () => i._fetch(key, placement));
+    await i._emit(key, () => i._fetch(key, placement));
+    if (notifiable) i.notify();
   }
 
-  static Future<void> fetchAll() async {
-    await Future.wait(i._delegate.placements.map(fetch));
+  static Future<void> fetchAll({bool notifiable = true}) async {
+    await Future.wait(i._delegate.placements.map((e) {
+      return fetch(e, notifiable: false);
+    }));
+    if (notifiable) i.notify();
   }
 
-  late String placement = _delegate.placements.first;
+  String? _placement;
+
+  String get placement {
+    return _placement ?? defaultPlacement ?? _delegate.placements.first;
+  }
 
   static InAppPurchaseOffering? offering([String? placement]) {
     return i._offerings[placement ?? i.placement];
@@ -561,12 +573,12 @@ class InAppPurchaser extends ChangeNotifier {
     );
   }
 
-  static void changePlacement(String placement) {
-    i.placement = placement;
+  static void changePlacement(String placement, {bool notifiable = true}) {
+    i._placement = placement;
     if (!i._offerings.containsKey(placement)) {
-      fetch(placement);
+      fetch(placement, notifiable: notifiable);
     }
-    i.notify();
+    if (notifiable) i.notify();
   }
 
   void _disposeOffering() {
@@ -636,8 +648,8 @@ class InAppPurchaser extends ChangeNotifier {
     String? placement,
   }) async {
     i._log("purchasing_at[$index]");
-    placement ??= i._delegate.placements.firstOrNull;
-    if (placement == null || placement.isEmpty) {
+    placement ??= i.placement;
+    if (placement.isEmpty) {
       i._log("purchasing_failed: invalid placement");
       purchasingState.value = InAppPurchaseState.invalid;
       return InAppPurchaseResultInvalid();

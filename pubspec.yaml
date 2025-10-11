@@ -1,6 +1,6 @@
 name: in_app_purchaser
 description: "It simplifies the integration of in-app purchase services, handles subscription lifecycle events, provides revenue analytics, and ensures a smooth user experience across iOS and Android."
-version: 2.1.10
+version: 2.1.11
 repository: https://github.com/Mohiuddin655-PUB/in_app_purchaser.git
 
 environment:

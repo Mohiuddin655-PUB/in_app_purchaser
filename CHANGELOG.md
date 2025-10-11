@@ -1,3 +1,7 @@
+## 2.1.11
+
+* Paywall and Purchaser improved
+
 ## 2.1.10
 
 * Paywall improved

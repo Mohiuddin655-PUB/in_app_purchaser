@@ -23,6 +23,8 @@ class Paywall {
   final bool safeArea;
   final bool textButtonsAsTop;
 
+  final Duration countdown;
+
   final PaywallLocalizedContent<String?>? hero;
   final PaywallLocalizedContent<String?>? image;
   final PaywallLocalizedContent<String?>? title;
@@ -51,6 +53,9 @@ class Paywall {
   final PaywallStyle? textButtonStyle;
   final PaywallStyle? textButtonsStyle;
 
+  final PaywallStyle? countdownBodyStyle;
+  final List<PaywallStyle>? countdownStyles;
+
   const Paywall({
     this.id = '',
     this.products = const [],
@@ -61,6 +66,7 @@ class Paywall {
     this.safeArea = false,
     this.skipMode = false,
     this.textButtonsAsTop = false,
+    this.countdown = Duration.zero,
     this.hero,
     this.image,
     this.title,
@@ -84,6 +90,8 @@ class Paywall {
     this.restoreButtonStyle,
     this.textButtonStyle,
     this.textButtonsStyle,
+    this.countdownBodyStyle,
+    this.countdownStyles,
   });
 
   String? get heroLocalized => hero?.value;
@@ -124,6 +132,8 @@ class Paywall {
     if (skipMode) addObject("skipMode", true);
     if (textButtonsAsTop) addObject("textButtonsAsTop", true);
 
+    if (countdown != Duration.zero) addObject("countdown", countdown.inSeconds);
+
     addObject("hero", hero?.toJson((e) => e));
     addObject("image", image?.toJson((e) => e));
     addObject("title", title?.toJson((e) => e));
@@ -159,6 +169,15 @@ class Paywall {
     addDictionary("textButtonStyle", textButtonStyle?.dictionary);
     addDictionary("textButtonsStyle", textButtonsStyle?.dictionary);
 
+    addDictionary("countdownBodyStyle", countdownBodyStyle?.dictionary);
+    addList(
+      "countdownStyles",
+      countdownStyles
+          ?.map((e) => e.dictionary)
+          .where((e) => e.isNotEmpty)
+          .toList(),
+    );
+
     addList(
       "products",
       products.map((e) => e.dictionary).where((e) => e.isNotEmpty).toList(),
@@ -167,8 +186,8 @@ class Paywall {
   }
 
   factory Paywall.fromConfigs(
+    String placement,
     Map<String, dynamic> configs, {
-    String placement = 'default',
     List<InAppPurchaseProduct>? products,
     bool? dark,
     bool? stringifyAll,
@@ -222,6 +241,11 @@ class Paywall {
         .whereType<PaywallTextButtonContent>()
         .toList();
 
+    final countdownStyles = parser<List?>(configs["countdownStyles"], null)
+        ?.map((e) => PaywallStyle.parse(e, dark))
+        .whereType<PaywallStyle>()
+        .toList();
+
     return Paywall(
       defaultMode: false,
       id: placement,
@@ -232,6 +256,7 @@ class Paywall {
       safeArea: parser(configs["safeArea"], false),
       skipMode: parser(configs["skipMode"], false),
       textButtonsAsTop: parser(configs["textButtonsAsTop"], false),
+      countdown: Duration(seconds: parser(configs["countdown"], 0)),
       hero: PaywallLocalizedContent.parse(configs['hero']),
       image: PaywallLocalizedContent.parse(configs['image']),
       title: PaywallLocalizedContent.parse(configs['title']),
@@ -240,6 +265,11 @@ class Paywall {
       restoreButton: PaywallLocalizedContent.parse(configs['restoreButton']),
       features: PaywallLocalizedContent.parse(configs['features']),
       textButtons: (textButtons ?? []).isEmpty ? null : textButtons,
+      countdownBodyStyle: PaywallStyle.parse(
+        configs["countdownBodyStyle"],
+        dark,
+      ),
+      countdownStyles: (countdownStyles ?? []).isEmpty ? null : countdownStyles,
       style: PaywallStyle.parse(configs["style"], dark),
       heroStyle: PaywallStyle.parse(configs["heroStyle"], dark),
       blurStyle: PaywallStyle.parse(configs["blurStyle"], dark),
@@ -285,7 +315,20 @@ class Paywall {
 
   Paywall themed(bool dark) {
     if (configs.isEmpty) return this;
+
+    final countdownStyles =
+        InAppPurchaser.parseConfig<List?>(configs["countdownStyles"], null)
+            ?.map((e) => PaywallStyle.parse(e, dark))
+            .whereType<PaywallStyle>()
+            .toList();
+
     return copyWith(
+      products: products.map((e) => e.themed(dark)).toList(),
+      countdownBodyStyle: PaywallStyle.parse(
+        configs["countdownBodyStyle"],
+        dark,
+      ),
+      countdownStyles: (countdownStyles ?? []).isEmpty ? null : countdownStyles,
       style: PaywallStyle.parse(configs["style"], dark),
       heroStyle: PaywallStyle.parse(configs["heroStyle"], dark),
       blurStyle: PaywallStyle.parse(configs["blurStyle"], dark),
@@ -302,7 +345,6 @@ class Paywall {
           PaywallStyle.parse(configs["restoreButtonStyle"], dark),
       textButtonStyle: PaywallStyle.parse(configs["textButtonStyle"], dark),
       textButtonsStyle: PaywallStyle.parse(configs["textButtonsStyle"], dark),
-      products: products.map((e) => e.themed(dark)).toList(),
     );
   }
 
@@ -316,6 +358,7 @@ class Paywall {
     bool? safeArea,
     bool? defaultMode,
     bool? textButtonsAsTop,
+    Duration? countdown,
     PaywallLocalizedContent<String?>? hero,
     PaywallLocalizedContent<String?>? image,
     PaywallLocalizedContent<String?>? title,
@@ -324,6 +367,8 @@ class Paywall {
     PaywallLocalizedContent<String?>? restoreButton,
     PaywallLocalizedContent<List?>? features,
     List<PaywallTextButtonContent>? textButtons,
+    PaywallStyle? countdownBodyStyle,
+    List<PaywallStyle>? countdownStyles,
     PaywallStyle? style,
     PaywallStyle? heroStyle,
     PaywallStyle? blurStyle,
@@ -350,6 +395,7 @@ class Paywall {
       safeArea: safeArea ?? this.safeArea,
       defaultMode: defaultMode ?? this.defaultMode,
       textButtonsAsTop: textButtonsAsTop ?? this.textButtonsAsTop,
+      countdown: countdown ?? this.countdown,
       hero: hero ?? this.hero,
       image: image ?? this.image,
       title: title ?? this.title,
@@ -358,6 +404,8 @@ class Paywall {
       restoreButton: restoreButton ?? this.restoreButton,
       features: features ?? this.features,
       textButtons: textButtons ?? this.textButtons,
+      countdownBodyStyle: countdownBodyStyle ?? this.countdownBodyStyle,
+      countdownStyles: countdownStyles ?? this.countdownStyles,
       style: style ?? this.style,
       heroStyle: heroStyle ?? this.heroStyle,
       blurStyle: blurStyle ?? this.blurStyle,
@@ -389,6 +437,18 @@ class Paywall {
           textDirection: textDirection,
         );
       }).toList(),
+      countdownStyles: countdownStyles?.map((e) {
+        return e.resolveWith(
+          selected: selected,
+          scaler: scaler,
+          textDirection: textDirection,
+        );
+      }).toList(),
+      countdownBodyStyle: countdownBodyStyle?.resolveWith(
+        selected: selected,
+        scaler: scaler,
+        textDirection: textDirection,
+      ),
       style: style?.resolveWith(
         selected: selected,
         scaler: scaler,
@@ -477,6 +537,7 @@ class Paywall {
       skipMode,
       defaultMode,
       textButtonsAsTop,
+      countdown,
       hero,
       image,
       title,
@@ -499,8 +560,10 @@ class Paywall {
       restoreButtonStyle,
       textButtonStyle,
       textButtonsStyle,
+      countdownBodyStyle,
       _equality.hash(configs),
       _equality.hash(textButtons),
+      _equality.hash(countdownStyles),
       _equality.hash(products),
     ]);
   }
@@ -518,6 +581,7 @@ class Paywall {
         skipMode == other.skipMode &&
         defaultMode == other.defaultMode &&
         textButtonsAsTop == other.textButtonsAsTop &&
+        countdown == other.countdown &&
         hero == other.hero &&
         image == other.image &&
         title == other.title &&
@@ -540,8 +604,10 @@ class Paywall {
         restoreButtonStyle == other.restoreButtonStyle &&
         textButtonStyle == other.textButtonStyle &&
         textButtonsStyle == other.textButtonsStyle &&
+        countdownBodyStyle == other.countdownBodyStyle &&
         _equality.equals(configs, other.configs) &&
         _equality.equals(textButtons, other.textButtons) &&
+        _equality.equals(countdownStyles, other.countdownStyles) &&
         _equality.equals(products, other.products);
   }
 
