@@ -1,3 +1,7 @@
+## 2.1.13
+
+* Improve Paywall Widgets
+
 ## 2.1.12
 
 * Paywall initialization status supported

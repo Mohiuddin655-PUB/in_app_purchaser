@@ -71,8 +71,6 @@ class InAppPurchaser extends ChangeNotifier {
   final InAppPurchaseConfigDelegate? configDelegate;
   final List<String> _rltLanguages;
 
-  static bool initialized = false;
-
   bool _enabled = true;
   String? defaultPlacement;
   String? uid;
@@ -109,9 +107,13 @@ class InAppPurchaser extends ChangeNotifier {
         _ignorableIndexes = ignorableIndexes ?? {},
         _ignorableUsers = ignorableUsers ?? [];
 
-  static InAppPurchaser? _i;
+  static InAppPurchaser? iOrNull;
 
-  static InAppPurchaser get i => _i!;
+  static InAppPurchaser get i => iOrNull!;
+
+  static ValueNotifier<bool> initialization = ValueNotifier(false);
+
+  static bool get initialized => initialization.value;
 
   static Future<void> init({
     required InAppPurchaseDelegate delegate,
@@ -130,7 +132,7 @@ class InAppPurchaser extends ChangeNotifier {
     Map<String, List<int>>? ignorableIndexes,
     List<String>? ignorableUsers,
   }) async {
-    _i = InAppPurchaser._(
+    iOrNull = InAppPurchaser._(
       delegate: delegate,
       configDelegate: configDelegate,
       logEnabled: logEnabled,
@@ -178,7 +180,7 @@ class InAppPurchaser extends ChangeNotifier {
       _log("initialized!");
       initState.value = InAppPurchaseState.done;
       fetchAll();
-      initialized = true;
+      initialization.value = true;
     } catch (e) {
       _log(e, "initialization error");
       initState.value = InAppPurchaseState.failed;
@@ -340,7 +342,12 @@ class InAppPurchaser extends ChangeNotifier {
   /// PREMIUM CHECKER START
   /// --------------------------------------------------------------------------
 
-  bool _premium = false;
+  final _premium = ValueNotifier(false);
+
+  static ValueNotifier<bool> get premiumStatus {
+    if (!initialized) return ValueNotifier(false);
+    return i._premium;
+  }
 
   InAppPurchaseProfile? profile;
 
@@ -351,7 +358,7 @@ class InAppPurchaser extends ChangeNotifier {
         _log("nullable!", "checking error");
         return;
       }
-      _premium = await check(data);
+      _premium.value = await check(data);
       _log(isPremium, "checked");
     } catch (e) {
       _log(e, "checking error");
@@ -372,7 +379,7 @@ class InAppPurchaser extends ChangeNotifier {
     if (!initialized) return false;
     if (!i._enabled) return true;
     if (i._premiumDefault) return true;
-    if (i._premium) return true;
+    if (i._premium.value) return true;
     if ((uid ?? '').isNotEmpty && i._ignorableUsers.contains(uid)) return true;
     return false;
   }
@@ -467,7 +474,7 @@ class InAppPurchaser extends ChangeNotifier {
       _loginState.value = InAppPurchaseState.running;
       await i._delegate.login(uid);
       i._premiumDefault = isDefaultPremium;
-      i._premium = await check();
+      i._premium.value = await check();
       i.uid = uid;
       i._log("loggedIn");
       _loginState.value = InAppPurchaseState.done;
@@ -496,7 +503,7 @@ class InAppPurchaser extends ChangeNotifier {
       await i._delegate.logout();
       i.profile = null;
       i._premiumDefault = false;
-      i._premium = false;
+      i._premium.value = false;
       i.uid = null;
       i._log("loggedOut");
       _logoutState.value = InAppPurchaseState.done;
@@ -568,6 +575,8 @@ class InAppPurchaser extends ChangeNotifier {
   String get placement {
     return _placement ?? defaultPlacement ?? _delegate.placements.first;
   }
+
+  static String? get placementId => iOrNull?.placement;
 
   static InAppPurchaseOffering? offering([String? placement]) {
     if (!initialized) return null;

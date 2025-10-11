@@ -79,11 +79,11 @@ class _PaywallPageState extends State<PaywallPage> {
     return ListenableBuilder(
       listenable: InAppPurchaser.i,
       builder: (context, child) {
-        return InAppPurchasePaywallBuilder(
+        return PaywallBuilder(
+          initial: Paywall(),
           placement: "default",
           builder: (context, paywall) {
-            if (paywall == null) return SizedBox();
-            final hasSkipPaywall = paywall.skipMode ?? false;
+            final hasSkipPaywall = paywall.skipMode;
             return WillPopScope(
               onWillPop: !widget.isBackMode || !hasSkipPaywall
                   ? () async => false
