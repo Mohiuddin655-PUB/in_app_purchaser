@@ -1,3 +1,7 @@
+## 2.1.12
+
+* Paywall initialization status supported
+
 ## 2.1.11
 
 * Paywall and Purchaser improved
