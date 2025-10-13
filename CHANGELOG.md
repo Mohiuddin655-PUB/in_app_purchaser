@@ -1,3 +1,7 @@
+## 2.1.16
+
+* Improve PaywallLockBuilder
+
 ## 2.1.15
 
 * Feature formating support

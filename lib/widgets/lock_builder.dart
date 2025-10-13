@@ -13,7 +13,7 @@ class PaywallLockBuilder extends StatefulWidget {
     super.key,
     this.initial = false,
     this.index,
-    required this.feature,
+    this.feature,
     this.uid,
     required this.builder,
   });

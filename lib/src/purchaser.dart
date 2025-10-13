@@ -368,7 +368,7 @@ class InAppPurchaser extends ChangeNotifier {
     if (!i._enabled) return true;
     if (i._premiumDefault) return true;
     if (premiumStatus.value) return true;
-    if ((uid ?? '').isNotEmpty && i._ignorableUsers.contains(uid)) return true;
+    if (i._ignorableUsers.contains(uid ?? i.uid)) return true;
     return false;
   }
 
