@@ -11,7 +11,7 @@ class PaywallLockBuilder extends StatefulWidget {
 
   const PaywallLockBuilder({
     super.key,
-    this.initial = false,
+    this.initial = true,
     this.index,
     this.feature,
     this.uid,

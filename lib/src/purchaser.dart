@@ -88,7 +88,7 @@ class InAppPurchaser extends ChangeNotifier {
     this.rtlSupported = true,
     this.configDelegate,
     this.defaultPlacement,
-    this.uid,
+    String? uid,
     bool enabled = true,
     bool premium = false,
     Locale? locale,
@@ -98,6 +98,7 @@ class InAppPurchaser extends ChangeNotifier {
     List<String>? ignorableUsers,
     List<String>? rtlLanguages,
   })  : _delegate = delegate,
+        uid = (uid ?? '').isEmpty ? null : uid,
         _locale = locale,
         _dark = dark,
         _enabled = enabled,
@@ -361,14 +362,17 @@ class InAppPurchaser extends ChangeNotifier {
 
   bool get premium => isPremium;
 
-  static bool get isPremium => isPremiumUser(i.uid);
+  static bool get isPremium => isPremiumUser();
 
   static bool isPremiumUser([String? uid]) {
     if (iOrNull == null) return false;
     if (!i._enabled) return true;
     if (i._premiumDefault) return true;
     if (premiumStatus.value) return true;
-    if (i._ignorableUsers.contains(uid ?? i.uid)) return true;
+    if ((uid ?? i.uid ?? '').isNotEmpty &&
+        i._ignorableUsers.contains(uid ?? i.uid)) {
+      return true;
+    }
     return false;
   }
 
@@ -404,6 +408,7 @@ class InAppPurchaser extends ChangeNotifier {
 
   static void setUid(String? uid, {bool notifiable = true}) {
     if (iOrNull == null) return;
+    if ((uid ?? '').isEmpty) return;
     i.uid = uid;
     if (notifiable) i.notify();
   }
@@ -463,7 +468,7 @@ class InAppPurchaser extends ChangeNotifier {
   static final loginState = ValueNotifier(InAppPurchaseState.none);
 
   static Future<void> login(String uid, {bool isDefaultPremium = false}) async {
-    if (iOrNull == null) return;
+    if (iOrNull == null || uid.isEmpty) return;
     try {
       i._log("logging...");
       loginState.value = InAppPurchaseState.running;

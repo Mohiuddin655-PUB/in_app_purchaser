@@ -1,3 +1,7 @@
+## 2.1.17
+
+* Uid empty check
+
 ## 2.1.16
 
 * Improve PaywallLockBuilder
