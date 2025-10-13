@@ -1,9 +1,11 @@
 import 'dart:ui';
 
 abstract class InAppPurchaseConfigDelegate {
+  String formatFeature(String feature) => feature;
+
   /// Convert USD amount to local currency with sign
   /// ```dart
-  ///String convertPrice(Locale locale, String currencyCode, double price) {
+  ///String formatPrice(Locale locale, String currencyCode, double price) {
   ///  final format = NumberFormat.simpleCurrency(
   ///    locale: locale.toString(),
   ///    name: currencyCode,

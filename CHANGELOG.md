@@ -1,3 +1,8 @@
+## 2.1.15
+
+* Feature formating support
+* Improve InAppPurchaser and widgets
+
 ## 2.1.14
 
 * Improve InAppPurchaser and widgets

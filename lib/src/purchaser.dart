@@ -103,8 +103,14 @@ class InAppPurchaser extends ChangeNotifier {
         _enabled = enabled,
         _premiumDefault = premium,
         _rltLanguages = rtlLanguages ?? kPurchaserRtlLocales,
-        _features = features ?? [],
-        _ignorableIndexes = ignorableIndexes ?? {},
+        _features = configDelegate != null && features != null
+            ? features.map(configDelegate.formatFeature).toList()
+            : features ?? [],
+        _ignorableIndexes = configDelegate != null && ignorableIndexes != null
+            ? ignorableIndexes.map((k, v) {
+                return MapEntry(configDelegate.formatFeature(k), v);
+              })
+            : ignorableIndexes ?? {},
         _ignorableUsers = ignorableUsers ?? [];
 
   static InAppPurchaser? iOrNull;
@@ -372,11 +378,12 @@ class InAppPurchaser extends ChangeNotifier {
     String? uid,
   ]) {
     if (iOrNull == null) return false;
+    final f = i.configDelegate?.formatFeature(feature) ?? feature;
     if (isPremiumUser(uid ?? i.uid)) return false;
-    if ((i._ignorableIndexes[feature] ?? []).contains(ignoreIndex)) {
+    if ((i._ignorableIndexes[f] ?? []).contains(ignoreIndex)) {
       return false;
     }
-    return i._features.contains(feature);
+    return i._features.contains(f);
   }
 
   static Future<bool> check([InAppPurchaseProfile? data]) async {
@@ -403,7 +410,11 @@ class InAppPurchaser extends ChangeNotifier {
 
   static void setFeatures(List<String> features, {bool notifiable = true}) {
     if (iOrNull == null) return;
-    i._features = features;
+    if (i.configDelegate == null) {
+      i._features = features;
+    } else {
+      i._features = features.map(i.configDelegate!.formatFeature).toList();
+    }
     if (notifiable) i.notify();
   }
 
@@ -419,10 +430,11 @@ class InAppPurchaser extends ChangeNotifier {
     bool notifiable = true,
   }) {
     if (iOrNull == null) return;
+    final f = i.configDelegate?.formatFeature(feature) ?? feature;
     if (indexes.isEmpty) {
-      i._ignorableIndexes.remove(feature);
+      i._ignorableIndexes.remove(f);
     } else {
-      i._ignorableIndexes[feature] = indexes;
+      i._ignorableIndexes[f] = indexes;
     }
     if (notifiable) i.notify();
   }
@@ -432,7 +444,13 @@ class InAppPurchaser extends ChangeNotifier {
     bool notifiable = true,
   }) {
     if (iOrNull == null) return;
-    i._ignorableIndexes = indexes;
+    if (i.configDelegate != null) {
+      i._ignorableIndexes = indexes.map((k, v) {
+        return MapEntry(i.configDelegate!.formatFeature(k), v);
+      });
+    } else {
+      i._ignorableIndexes = indexes;
+    }
     if (notifiable) i.notify();
   }
 

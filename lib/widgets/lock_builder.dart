@@ -5,7 +5,7 @@ import '../src/purchaser.dart';
 class PaywallLockBuilder extends StatefulWidget {
   final bool initial;
   final int? index;
-  final String feature;
+  final String? feature;
   final String? uid;
   final Widget Function(BuildContext context, bool lock) builder;
 
@@ -28,11 +28,16 @@ class _PaywallLockBuilderState extends State<PaywallLockBuilder> {
   late bool lock = widget.initial;
 
   void _check([bool notify = true]) {
-    final x = InAppPurchaser.isPremiumFeature(
-      widget.feature,
-      widget.index,
-      widget.uid,
-    );
+    bool x = lock;
+    if (widget.feature == null) {
+      x = !InAppPurchaser.isPremiumUser(widget.uid);
+    } else {
+      x = InAppPurchaser.isPremiumFeature(
+        widget.feature!,
+        widget.index,
+        widget.uid,
+      );
+    }
     if (x == lock) return;
     if (notify) setState(() => lock = x);
   }
