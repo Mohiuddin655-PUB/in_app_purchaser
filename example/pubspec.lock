@@ -110,7 +110,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "2.1.16"
+    version: "2.1.17"
   json_annotation:
     dependency: transitive
     description:
