@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../src/purchaser.dart';
 
 class PaywallLockBuilder extends StatefulWidget {
+  final bool initial;
   final int? index;
   final String feature;
   final String? uid;
@@ -10,6 +11,7 @@ class PaywallLockBuilder extends StatefulWidget {
 
   const PaywallLockBuilder({
     super.key,
+    this.initial = false,
     this.index,
     required this.feature,
     this.uid,
@@ -23,34 +25,39 @@ class PaywallLockBuilder extends StatefulWidget {
 }
 
 class _PaywallLockBuilderState extends State<PaywallLockBuilder> {
-  bool lock = true;
+  late bool lock = widget.initial;
 
-  void _listen() {
+  void _check([bool notify = true]) {
     final x = InAppPurchaser.isPremiumFeature(
       widget.feature,
       widget.index,
       widget.uid,
     );
     if (x == lock) return;
-    setState(() => lock = x);
+    if (notify) setState(() => lock = x);
   }
 
   @override
   void initState() {
     super.initState();
-    InAppPurchaser.initialization.addListener(() {
-      if (InAppPurchaser.initialized) {
-        InAppPurchaser.i.addListener(_listen);
-      }
-    });
+    InAppPurchaser.iOrNull?.addListener(_check);
+  }
+
+  @override
+  void didUpdateWidget(covariant PaywallLockBuilder oldWidget) {
+    if (widget.initial != oldWidget.initial ||
+        widget.index != oldWidget.index ||
+        widget.feature != oldWidget.feature ||
+        widget.uid != oldWidget.uid) {
+      lock = widget.initial;
+      _check(false);
+    }
+    super.didUpdateWidget(oldWidget);
   }
 
   @override
   void dispose() {
-    if (InAppPurchaser.initialized) {
-      InAppPurchaser.i.removeListener(_listen);
-    }
-    InAppPurchaser.initialization.removeListener(() {});
+    InAppPurchaser.iOrNull?.removeListener(_check);
     super.dispose();
   }
 

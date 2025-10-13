@@ -1,3 +1,7 @@
+## 2.1.14
+
+* Improve InAppPurchaser and widgets
+
 ## 2.1.13
 
 * Improve Paywall Widgets

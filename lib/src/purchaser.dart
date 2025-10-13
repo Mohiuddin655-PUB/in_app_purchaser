@@ -111,10 +111,6 @@ class InAppPurchaser extends ChangeNotifier {
 
   static InAppPurchaser get i => iOrNull!;
 
-  static ValueNotifier<bool> initialization = ValueNotifier(false);
-
-  static bool get initialized => initialization.value;
-
   static Future<void> init({
     required InAppPurchaseDelegate delegate,
     InAppPurchaseConfigDelegate? configDelegate,
@@ -159,9 +155,7 @@ class InAppPurchaser extends ChangeNotifier {
 
   void notify() => notifyListeners();
 
-  ValueNotifier<InAppPurchaseState> initState = ValueNotifier(
-    InAppPurchaseState.none,
-  );
+  static final initState = ValueNotifier(InAppPurchaseState.none);
 
   StreamSubscription? _sub;
 
@@ -170,6 +164,8 @@ class InAppPurchaser extends ChangeNotifier {
       _log("initializing...");
       initState.value = InAppPurchaseState.running;
       await _delegate.init(uid);
+      _log("initialized!");
+      initState.value = InAppPurchaseState.done;
       _sub?.cancel();
       _sub = _delegate.stream.listen(_listen);
       _emit("initProfile", initProfile);
@@ -177,20 +173,15 @@ class InAppPurchaser extends ChangeNotifier {
         _emit("initAdjust", initAdjust);
         _emit("initFacebookSdk", initFacebookSdk);
       }
-      _log("initialized!");
-      initState.value = InAppPurchaseState.done;
       fetchAll();
-      initialization.value = true;
     } catch (e) {
-      _log(e, "initialization error");
       initState.value = InAppPurchaseState.failed;
       if (logThrowEnabled) throw "initialization error [$e]";
+      _log(e, "initialization error");
     }
   }
 
-  ValueNotifier<InAppPurchaseState> profileState = ValueNotifier(
-    InAppPurchaseState.none,
-  );
+  static final profileState = ValueNotifier(InAppPurchaseState.none);
 
   Future<void> initProfile() async {
     try {
@@ -202,15 +193,13 @@ class InAppPurchaser extends ChangeNotifier {
       _log("profile initialized!");
       profileState.value = InAppPurchaseState.done;
     } catch (e) {
-      _log(e, "profile initialization error");
       profileState.value = InAppPurchaseState.failed;
       if (logThrowEnabled) throw "profile initialization error [$e]";
+      _log(e, "profile initialization error");
     }
   }
 
-  ValueNotifier<InAppPurchaseState> adjustSdkState = ValueNotifier(
-    InAppPurchaseState.none,
-  );
+  static final adjustSdkState = ValueNotifier(InAppPurchaseState.none);
 
   Future<void> initAdjust() async {
     try {
@@ -221,15 +210,13 @@ class InAppPurchaser extends ChangeNotifier {
       _log("adjust sdk initialized!");
       adjustSdkState.value = InAppPurchaseState.done;
     } catch (e) {
-      _log(e, "adjust sdk initialization error");
       adjustSdkState.value = InAppPurchaseState.failed;
       if (logThrowEnabled) throw "adjust sdk initialization error [$e]";
+      _log(e, "adjust sdk initialization error");
     }
   }
 
-  ValueNotifier<InAppPurchaseState> facebookSdkState = ValueNotifier(
-    InAppPurchaseState.none,
-  );
+  static final facebookSdkState = ValueNotifier(InAppPurchaseState.none);
 
   Future<void> initFacebookSdk() async {
     try {
@@ -240,9 +227,9 @@ class InAppPurchaser extends ChangeNotifier {
       _log("facebook sdk initialized!");
       facebookSdkState.value = InAppPurchaseState.done;
     } catch (e) {
-      _log(e, "facebook sdk initialization error");
       facebookSdkState.value = InAppPurchaseState.failed;
       if (logThrowEnabled) throw "facebook sdk initialization error [$e]";
+      _log(e, "facebook sdk initialization error");
     }
   }
 
@@ -283,7 +270,7 @@ class InAppPurchaser extends ChangeNotifier {
   Locale get locale => _locale ?? Locale("en", "US");
 
   static TextDirection get textDirection {
-    if (!initialized) return TextDirection.ltr;
+    if (iOrNull == null) return TextDirection.ltr;
     if (i.rtlSupported && i._rltLanguages.contains(i.locale.languageCode)) {
       return TextDirection.rtl;
     }
@@ -296,7 +283,7 @@ class InAppPurchaser extends ChangeNotifier {
     bool? stringify,
     bool? stringifyAll,
   }) {
-    if (!initialized) return;
+    if (iOrNull == null) return;
     i._locale = locale;
     if (i._paywalls.isNotEmpty) {
       i._paywalls = i._paywalls.map((k, v) {
@@ -324,7 +311,7 @@ class InAppPurchaser extends ChangeNotifier {
   bool get dark => _dark ?? false;
 
   static void changeTheme(bool? dark, {bool notifiable = true}) {
-    if (!initialized) return;
+    if (iOrNull == null) return;
     i._dark = dark;
     if (i._paywalls.isNotEmpty) {
       i._paywalls = i._paywalls.map((k, v) {
@@ -342,12 +329,7 @@ class InAppPurchaser extends ChangeNotifier {
   /// PREMIUM CHECKER START
   /// --------------------------------------------------------------------------
 
-  final _premium = ValueNotifier(false);
-
-  static ValueNotifier<bool> get premiumStatus {
-    if (!initialized) return ValueNotifier(false);
-    return i._premium;
-  }
+  static final premiumStatus = ValueNotifier(false);
 
   InAppPurchaseProfile? profile;
 
@@ -358,11 +340,11 @@ class InAppPurchaser extends ChangeNotifier {
         _log("nullable!", "checking error");
         return;
       }
-      _premium.value = await check(data);
+      premiumStatus.value = await check(data);
       _log(isPremium, "checked");
     } catch (e) {
-      _log(e, "checking error");
       if (logThrowEnabled) throw "checking error [$e]";
+      _log(e, "checking error");
     }
   }
 
@@ -376,10 +358,10 @@ class InAppPurchaser extends ChangeNotifier {
   static bool get isPremium => isPremiumUser(i.uid);
 
   static bool isPremiumUser([String? uid]) {
-    if (!initialized) return false;
+    if (iOrNull == null) return false;
     if (!i._enabled) return true;
     if (i._premiumDefault) return true;
-    if (i._premium.value) return true;
+    if (premiumStatus.value) return true;
     if ((uid ?? '').isNotEmpty && i._ignorableUsers.contains(uid)) return true;
     return false;
   }
@@ -389,7 +371,7 @@ class InAppPurchaser extends ChangeNotifier {
     int? ignoreIndex,
     String? uid,
   ]) {
-    if (!initialized) return false;
+    if (iOrNull == null) return false;
     if (isPremiumUser(uid ?? i.uid)) return false;
     if ((i._ignorableIndexes[feature] ?? []).contains(ignoreIndex)) {
       return false;
@@ -398,7 +380,7 @@ class InAppPurchaser extends ChangeNotifier {
   }
 
   static Future<bool> check([InAppPurchaseProfile? data]) async {
-    if (!initialized) return false;
+    if (iOrNull == null) return false;
     data ??= i.profile ??= await i._delegate.profile(null);
     final id = data.accessLevels.keys.firstOrNull;
     if (id == null || id.isEmpty) return false;
@@ -408,25 +390,25 @@ class InAppPurchaser extends ChangeNotifier {
   }
 
   static void enabled(bool value, {bool notifiable = true}) {
-    if (!initialized) return;
+    if (iOrNull == null) return;
     i._enabled = value;
     if (notifiable) i.notify();
   }
 
   static void setUid(String? uid, {bool notifiable = true}) {
-    if (!initialized) return;
+    if (iOrNull == null) return;
     i.uid = uid;
     if (notifiable) i.notify();
   }
 
   static void setFeatures(List<String> features, {bool notifiable = true}) {
-    if (!initialized) return;
+    if (iOrNull == null) return;
     i._features = features;
     if (notifiable) i.notify();
   }
 
   static void setIgnorableUsers(List<String> uids, {bool notifiable = true}) {
-    if (!initialized) return;
+    if (iOrNull == null) return;
     i._ignorableUsers = uids;
     if (notifiable) i.notify();
   }
@@ -436,7 +418,7 @@ class InAppPurchaser extends ChangeNotifier {
     List<int> indexes, {
     bool notifiable = true,
   }) {
-    if (!initialized) return;
+    if (iOrNull == null) return;
     if (indexes.isEmpty) {
       i._ignorableIndexes.remove(feature);
     } else {
@@ -449,75 +431,63 @@ class InAppPurchaser extends ChangeNotifier {
     Map<String, List<int>> indexes, {
     bool notifiable = true,
   }) {
-    if (!initialized) return;
+    if (iOrNull == null) return;
     i._ignorableIndexes = indexes;
     if (notifiable) i.notify();
   }
 
   static void setDefaultPremiumStatus(bool status, {bool notifiable = true}) {
-    if (!initialized) return;
+    if (iOrNull == null) return;
     i._premiumDefault = status;
     if (notifiable) i.notify();
   }
 
-  static final _loginState = ValueNotifier(InAppPurchaseState.none);
-
-  static ValueNotifier<InAppPurchaseState> get loginState {
-    if (!initialized) return ValueNotifier(InAppPurchaseState.none);
-    return _loginState;
-  }
+  static final loginState = ValueNotifier(InAppPurchaseState.none);
 
   static Future<void> login(String uid, {bool isDefaultPremium = false}) async {
-    if (!initialized) return;
+    if (iOrNull == null) return;
     try {
       i._log("logging...");
-      _loginState.value = InAppPurchaseState.running;
+      loginState.value = InAppPurchaseState.running;
       await i._delegate.login(uid);
       i._premiumDefault = isDefaultPremium;
-      i._premium.value = await check();
+      premiumStatus.value = await check();
       i.uid = uid;
       i._log("loggedIn");
-      _loginState.value = InAppPurchaseState.done;
+      loginState.value = InAppPurchaseState.done;
     } catch (e) {
-      i._log("logging_failed");
-      _loginState.value = InAppPurchaseState.failed;
+      loginState.value = InAppPurchaseState.failed;
       if (i.logThrowEnabled) throw "logging_failed [$e]";
+      i._log("logging_failed");
     }
     i.notify();
   }
 
-  static final _logoutState = ValueNotifier(
-    InAppPurchaseState.none,
-  );
-
-  static ValueNotifier<InAppPurchaseState> get logoutState {
-    if (!initialized) return ValueNotifier(InAppPurchaseState.none);
-    return _logoutState;
-  }
+  static final logoutState = ValueNotifier(InAppPurchaseState.none);
 
   static Future<void> logout() async {
-    if (!initialized) return;
+    if (iOrNull == null) return;
     try {
       i._log("logging_out...");
-      _logoutState.value = InAppPurchaseState.running;
+      logoutState.value = InAppPurchaseState.running;
       await i._delegate.logout();
       i.profile = null;
       i._premiumDefault = false;
-      i._premium.value = false;
+      premiumStatus.value = false;
       i.uid = null;
       i._log("loggedOut");
-      _logoutState.value = InAppPurchaseState.done;
+      logoutState.value = InAppPurchaseState.done;
     } catch (e) {
-      i._log("logged_out_failed");
-      _logoutState.value = InAppPurchaseState.failed;
+      logoutState.value = InAppPurchaseState.failed;
       if (i.logThrowEnabled) throw "logged_out_failed [$e]";
+      i._log("logged_out_failed");
     }
     i.notify();
   }
 
   void _disposePremiumChecker() {
-    _loginState.dispose();
-    _logoutState.dispose();
+    loginState.dispose();
+    logoutState.dispose();
   }
 
   /// --------------------------------------------------------------------------
@@ -532,15 +502,21 @@ class InAppPurchaser extends ChangeNotifier {
   Map<String, Paywall> _paywalls = {};
   final Map<String, ValueNotifier<InAppPurchaseState>> _fetchingStates = {};
 
-  Future<void> _fetch(String key, String placement) async {
+  Future<void> _fetch(
+    String key,
+    String placement, [
+    bool loader = false,
+  ]) async {
     final state = fetchingState(placement);
     try {
       _log("offering fetching...");
       state.value = InAppPurchaseState.running;
+      if (loader) loadingState.value = InAppPurchaseState.running;
       final result = await _delegate.offering(placement);
       if (result.isEmpty) {
         _log("Not found!", "offering error");
         state.value = InAppPurchaseState.failed;
+        if (loader) loadingState.value = InAppPurchaseState.failed;
         return;
       }
       _offerings[placement] = result;
@@ -548,29 +524,40 @@ class InAppPurchaser extends ChangeNotifier {
       _emitters[key] = 10;
       _log("offering fetched");
       state.value = InAppPurchaseState.done;
+      if (loader) loadingState.value = InAppPurchaseState.done;
     } catch (e) {
-      _log(e, "offering error");
       state.value = InAppPurchaseState.failed;
+      if (loader) loadingState.value = InAppPurchaseState.failed;
       if (logThrowEnabled) throw "offering error [$e]";
+      _log(e, "offering error");
     }
   }
 
-  static Future<void> fetch(String placement, {bool notifiable = true}) async {
-    if (!initialized) return;
+  static Future<void> fetch(
+    String placement, {
+    bool notifiable = true,
+    bool loader = false,
+  }) async {
+    if (iOrNull == null) return;
     final key = "_fetch:$placement";
-    await i._emit(key, () => i._fetch(key, placement));
+    await i._emit(key, () => i._fetch(key, placement, loader));
     if (notifiable) i.notify();
   }
 
+  static final loadingState = ValueNotifier(InAppPurchaseState.none);
+
   static Future<void> fetchAll({bool notifiable = true}) async {
-    if (!initialized) return;
+    if (iOrNull == null) return;
+    loadingState.value = InAppPurchaseState.running;
     await Future.wait(i._delegate.placements.map((e) {
       return fetch(e, notifiable: false);
     }));
+    loadingState.value = InAppPurchaseState.done;
     if (notifiable) i.notify();
   }
 
   String? _placement;
+  String? _previousPlacement;
 
   String get placement {
     return _placement ?? defaultPlacement ?? _delegate.placements.first;
@@ -579,52 +566,63 @@ class InAppPurchaser extends ChangeNotifier {
   static String? get placementId => iOrNull?.placement;
 
   static InAppPurchaseOffering? offering([String? placement]) {
-    if (!initialized) return null;
+    if (iOrNull == null) return null;
     return i._offerings[placement ?? i.placement];
   }
 
   static T parseConfig<T extends Object?>(Object? value, T defaultValue) {
-    if (!initialized) return defaultValue;
+    if (iOrNull == null) return defaultValue;
     return i._delegate.parseConfig(value, defaultValue);
   }
 
   static Paywall? paywall([String? placement]) {
-    if (!initialized) return null;
+    if (iOrNull == null) return null;
     return i._paywalls[placement ?? i.placement];
   }
 
   static InAppPurchaseProduct? productAt(int index, [String? placement]) {
-    if (!initialized) return null;
+    if (iOrNull == null) return null;
     return products(placement).elementAtOrNull(index);
   }
 
   static List<InAppPurchaseProduct> products([String? placement]) {
-    if (!initialized) return [];
+    if (iOrNull == null) return [];
     return offering(placement)?.products ?? [];
   }
 
   static ValueNotifier<InAppPurchaseState> get fetchingDefaultState {
-    if (!initialized) return ValueNotifier(InAppPurchaseState.none);
+    if (iOrNull == null) return ValueNotifier(InAppPurchaseState.none);
     return fetchingState(i.placement);
   }
 
-  static ValueNotifier<InAppPurchaseState> fetchingState(String placement) {
-    if (!initialized) return ValueNotifier(InAppPurchaseState.none);
-    return i._fetchingStates[placement] ??= ValueNotifier(
+  static ValueNotifier<InAppPurchaseState> fetchingState([String? placement]) {
+    if (iOrNull == null) return ValueNotifier(InAppPurchaseState.none);
+    return i._fetchingStates[placement ?? i.placement] ??= ValueNotifier(
       InAppPurchaseState.none,
     );
   }
 
-  static void changePlacement(String placement, {bool notifiable = true}) {
-    if (!initialized) return;
+  static void changePlacement(String? placement, {bool notifiable = true}) {
+    if (iOrNull == null) return;
+    i._previousPlacement = i._placement;
     i._placement = placement;
-    if (!i._offerings.containsKey(placement)) {
-      fetch(placement, notifiable: notifiable);
+    if (placement != null && !i._offerings.containsKey(placement)) {
+      fetch(placement, notifiable: notifiable, loader: true);
     }
     if (notifiable) i.notify();
   }
 
+  static void switchPreviousPlacement({bool notifiable = true}) {
+    if (iOrNull == null) return;
+    changePlacement(i._previousPlacement, notifiable: notifiable);
+  }
+
+  static void switchDefaultPlacement({bool notifiable = true}) {
+    changePlacement(null, notifiable: notifiable);
+  }
+
   void _disposeOffering() {
+    loadingState.dispose();
     for (var state in _fetchingStates.values) {
       state.dispose();
     }
@@ -638,12 +636,7 @@ class InAppPurchaser extends ChangeNotifier {
   /// PURCHASE AND RESTORE START
   /// --------------------------------------------------------------------------
 
-  static final _purchasingState = ValueNotifier(InAppPurchaseState.none);
-
-  static ValueNotifier<InAppPurchaseState> get purchasingState {
-    if (!initialized) return ValueNotifier(InAppPurchaseState.none);
-    return _purchasingState;
-  }
+  static final purchasingState = ValueNotifier(InAppPurchaseState.none);
 
   static Future<InAppPurchaseResult> purchase(
     InAppPurchaseProduct product,
@@ -651,40 +644,41 @@ class InAppPurchaser extends ChangeNotifier {
     try {
       if (isPremium) {
         i._log("purchasing_failed: already purchased");
-        _purchasingState.value = InAppPurchaseState.exist;
+        purchasingState.value = InAppPurchaseState.exist;
         return InAppPurchaseResultAlreadyPurchased(
           product: product,
           profile: i.profile,
         );
       }
       i._log("purchasing...");
-      _purchasingState.value = InAppPurchaseState.running;
       if (product.raw == null) {
         i._log("purchasing_failed: nullable product");
+        purchasingState.value = InAppPurchaseState.invalid;
         return InAppPurchaseResultInvalid();
       }
+      purchasingState.value = InAppPurchaseState.running;
       final data = await i._delegate.purchase(product);
       if (data is InAppPurchaseResultSuccess) {
         await i._check(data.profile);
         i._log(isPremium, "purchased");
-        _purchasingState.value = InAppPurchaseState.done;
+        purchasingState.value = InAppPurchaseState.done;
         i.notify();
         await i._delegate.purchased(data);
       } else if (data is InAppPurchaseResultPending) {
         i._log("purchase_pending");
-        _purchasingState.value = InAppPurchaseState.pending;
+        purchasingState.value = InAppPurchaseState.pending;
       } else if (data is InAppPurchaseResultUserCancelled) {
         i._log("purchasing_cancelled");
-        _purchasingState.value = InAppPurchaseState.cancel;
+        purchasingState.value = InAppPurchaseState.cancel;
       } else {
         i._log("purchase_failed");
-        _purchasingState.value = InAppPurchaseState.failed;
+        purchasingState.value = InAppPurchaseState.failed;
       }
       return data;
     } catch (e) {
-      i._log(e, "purchasing error");
-      _purchasingState.value = InAppPurchaseState.failed;
+      purchasingState.value = InAppPurchaseState.failed;
       if (i.logThrowEnabled) throw "purchasing error [$e]";
+      i._log(e, "purchasing error");
       return InAppPurchaseResultFailed();
     }
   }
@@ -697,58 +691,53 @@ class InAppPurchaser extends ChangeNotifier {
     placement ??= i.placement;
     if (placement.isEmpty) {
       i._log("purchasing_failed: invalid placement");
-      _purchasingState.value = InAppPurchaseState.invalid;
+      purchasingState.value = InAppPurchaseState.invalid;
       return InAppPurchaseResultInvalid();
     }
     final products = offering(placement)?.products;
     if (products == null || products.isEmpty) {
       i._log("purchasing_failed: products is empty!");
-      _purchasingState.value = InAppPurchaseState.empty;
+      purchasingState.value = InAppPurchaseState.empty;
       return InAppPurchaseResultInvalid();
     }
     final product = products.elementAtOrNull(index);
     if (product == null) {
       i._log("purchasing_failed: invalid product or index");
-      _purchasingState.value = InAppPurchaseState.invalid;
+      purchasingState.value = InAppPurchaseState.invalid;
       return InAppPurchaseResultInvalid();
     }
     return purchase(product);
   }
 
-  static final _restoringState = ValueNotifier(InAppPurchaseState.none);
-
-  static ValueNotifier<InAppPurchaseState> get restoringState {
-    if (!initialized) return ValueNotifier(InAppPurchaseState.none);
-    return _restoringState;
-  }
+  static final restoringState = ValueNotifier(InAppPurchaseState.none);
 
   static Future<InAppPurchaseProfile?> restore([bool silent = false]) async {
     try {
       i._log("restoring...");
-      if (!silent) _restoringState.value = InAppPurchaseState.running;
+      if (!silent) restoringState.value = InAppPurchaseState.running;
       final data = await i._delegate.restore();
       if (data != null) await i._check(data);
       i._log(isPremium, "restored");
       if (!silent) {
         if (isPremium) {
-          _restoringState.value = InAppPurchaseState.exist;
+          restoringState.value = InAppPurchaseState.exist;
         } else {
-          _restoringState.value = InAppPurchaseState.empty;
+          restoringState.value = InAppPurchaseState.empty;
         }
       }
       i.notify();
       return data;
     } catch (e) {
-      i._log(e, "restoring error");
-      if (!silent) _restoringState.value = InAppPurchaseState.failed;
+      if (!silent) restoringState.value = InAppPurchaseState.failed;
       if (i.logThrowEnabled) throw "restoring error [$e]";
+      i._log(e, "restoring error");
       return null;
     }
   }
 
   void _disposePurchaseAndRestore() {
-    _purchasingState.dispose();
-    _restoringState.dispose();
+    purchasingState.dispose();
+    restoringState.dispose();
   }
 
   /// --------------------------------------------------------------------------
