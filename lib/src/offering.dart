@@ -3,6 +3,7 @@ class InAppPurchaseProduct {
   final String? plan;
   final String? description;
   final double? price;
+  final double? usdPrice;
   final String? priceString;
   final String? currencyCode;
   final String? currencySymbol;
@@ -14,11 +15,36 @@ class InAppPurchaseProduct {
     this.plan,
     this.description,
     this.price,
+    this.usdPrice,
     this.priceString,
     this.currencyCode,
     this.currencySymbol,
     this.raw,
   });
+
+  InAppPurchaseProduct copyWith({
+    String? id,
+    String? plan,
+    String? description,
+    double? price,
+    double? usdPrice,
+    String? priceString,
+    String? currencyCode,
+    String? currencySymbol,
+    Object? raw,
+  }) {
+    return InAppPurchaseProduct(
+      id: id ?? this.id,
+      plan: plan ?? this.plan,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      usdPrice: usdPrice ?? this.usdPrice,
+      priceString: priceString ?? this.priceString,
+      currencyCode: currencyCode ?? this.currencyCode,
+      currencySymbol: currencySymbol ?? this.currencySymbol,
+      raw: raw ?? this.raw,
+    );
+  }
 
   @override
   int get hashCode =>
@@ -26,6 +52,7 @@ class InAppPurchaseProduct {
       plan.hashCode ^
       description.hashCode ^
       price.hashCode ^
+      usdPrice.hashCode ^
       priceString.hashCode ^
       currencyCode.hashCode ^
       currencySymbol.hashCode ^
@@ -38,6 +65,7 @@ class InAppPurchaseProduct {
         other.plan == plan &&
         other.description == description &&
         other.price == price &&
+        other.usdPrice == usdPrice &&
         other.priceString == priceString &&
         other.currencyCode == currencyCode &&
         other.currencySymbol == currencySymbol &&

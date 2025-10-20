@@ -525,6 +525,8 @@ class InAppPurchaser extends ChangeNotifier {
   Map<String, Paywall> _paywalls = {};
   final Map<String, ValueNotifier<InAppPurchaseState>> _fetchingStates = {};
 
+  Map<String, Paywall> get paywalls => _paywalls;
+
   Future<void> _fetch(
     String key,
     String placement, [
@@ -662,10 +664,11 @@ class InAppPurchaser extends ChangeNotifier {
   static final purchasingState = ValueNotifier(InAppPurchaseState.none);
 
   static Future<InAppPurchaseResult> purchase(
-    InAppPurchaseProduct product,
-  ) async {
+    InAppPurchaseProduct product, {
+    bool repurchaseMode = false,
+  }) async {
     try {
-      if (isPremium) {
+      if (!repurchaseMode && isPremium) {
         i._log("purchasing_failed: already purchased");
         purchasingState.value = InAppPurchaseState.exist;
         return InAppPurchaseResultAlreadyPurchased(
@@ -709,6 +712,7 @@ class InAppPurchaser extends ChangeNotifier {
   static Future<InAppPurchaseResult> purchaseAt(
     int index, {
     String? placement,
+    bool repurchaseMode = false,
   }) async {
     i._log("purchasing_at[$index]");
     placement ??= i.placement;
@@ -717,7 +721,7 @@ class InAppPurchaser extends ChangeNotifier {
       purchasingState.value = InAppPurchaseState.invalid;
       return InAppPurchaseResultInvalid();
     }
-    final products = offering(placement)?.products;
+    final products = i.paywalls[placement]?.products;
     if (products == null || products.isEmpty) {
       i._log("purchasing_failed: products is empty!");
       purchasingState.value = InAppPurchaseState.empty;
@@ -729,7 +733,10 @@ class InAppPurchaser extends ChangeNotifier {
       purchasingState.value = InAppPurchaseState.invalid;
       return InAppPurchaseResultInvalid();
     }
-    return purchase(product);
+    return purchase(
+      product.product.copyWith(usdPrice: product.usdPrice),
+      repurchaseMode: repurchaseMode,
+    );
   }
 
   static final restoringState = ValueNotifier(InAppPurchaseState.none);

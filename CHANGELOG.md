@@ -1,3 +1,9 @@
+## 2.1.18
+
+* Repurchase mode support
+* Improve lock widget
+* Usd price support
+
 ## 2.1.17
 
 * Uid empty check

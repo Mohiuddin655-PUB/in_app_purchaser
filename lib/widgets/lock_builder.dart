@@ -29,7 +29,7 @@ class _PaywallLockBuilderState extends State<PaywallLockBuilder> {
 
   void _check([bool notify = true]) {
     bool x = lock;
-    if (widget.feature == null) {
+    if (widget.feature == null || widget.feature!.isEmpty) {
       x = !InAppPurchaser.isPremiumUser(widget.uid);
     } else {
       x = InAppPurchaser.isPremiumFeature(
@@ -45,11 +45,13 @@ class _PaywallLockBuilderState extends State<PaywallLockBuilder> {
   @override
   void initState() {
     super.initState();
+    _check(false);
     InAppPurchaser.iOrNull?.addListener(_check);
   }
 
   @override
   void didUpdateWidget(covariant PaywallLockBuilder oldWidget) {
+    super.didUpdateWidget(oldWidget);
     if (widget.initial != oldWidget.initial ||
         widget.index != oldWidget.index ||
         widget.feature != oldWidget.feature ||
@@ -57,7 +59,6 @@ class _PaywallLockBuilderState extends State<PaywallLockBuilder> {
       lock = widget.initial;
       _check(false);
     }
-    super.didUpdateWidget(oldWidget);
   }
 
   @override
