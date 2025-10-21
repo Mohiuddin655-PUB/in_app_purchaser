@@ -13,6 +13,23 @@ import 'purchase_result.dart';
 
 const _kLogger = "IN_APP_PURCHASER";
 
+const kPurchaserRtlLocales = [
+  "ar",
+  "arc",
+  "dv",
+  "fa",
+  "ha",
+  "he",
+  "khw",
+  "ks",
+  "ku",
+  "ps",
+  "sd",
+  "ug",
+  "ur",
+  "yi"
+];
+
 enum InAppPurchaseState {
   none,
   running,
@@ -52,13 +69,18 @@ class InAppPurchaser extends ChangeNotifier {
 
   final InAppPurchaseDelegate _delegate;
   final InAppPurchaseConfigDelegate? configDelegate;
+  final List<String> _rltLanguages;
 
   bool connection = false;
   bool _enabled = true;
+  String? defaultPlacement;
   String? uid;
   Locale? _locale;
   bool? _dark;
   bool _premiumDefault = false;
+  List<String> _features = [];
+  Map<String, List<int>> _ignorableIndexes = {};
+  List<String> _ignorableUsers = [];
 
   InAppPurchaser._({
     required InAppPurchaseDelegate delegate,
@@ -67,17 +89,32 @@ class InAppPurchaser extends ChangeNotifier {
     this.logThrowEnabled = false,
     this.rtlSupported = true,
     this.configDelegate,
+    this.defaultPlacement,
     String? uid,
     bool enabled = true,
     bool premium = false,
     Locale? locale,
     bool? dark,
+    List<String>? features,
+    Map<String, List<int>>? ignorableIndexes,
+    List<String>? ignorableUsers,
+    List<String>? rtlLanguages,
   })  : _delegate = delegate,
         uid = (uid ?? '').isEmpty ? null : uid,
         _locale = locale,
         _dark = dark,
         _enabled = enabled,
-        _premiumDefault = premium;
+        _premiumDefault = premium,
+        _rltLanguages = rtlLanguages ?? kPurchaserRtlLocales,
+        _features = configDelegate != null && features != null
+            ? features.map(configDelegate.formatFeature).toList()
+            : features ?? [],
+        _ignorableIndexes = configDelegate != null && ignorableIndexes != null
+            ? ignorableIndexes.map((k, v) {
+                return MapEntry(configDelegate.formatFeature(k), v);
+              })
+            : ignorableIndexes ?? {},
+        _ignorableUsers = ignorableUsers ?? [];
 
   static InAppPurchaser? iOrNull;
 
@@ -91,10 +128,15 @@ class InAppPurchaser extends ChangeNotifier {
     bool logThrowEnabled = false,
     bool rtlSupported = true,
     String? uid,
+    String? defaultPlacement,
     bool enabled = true,
     bool premium = false,
     Locale? locale,
     bool? dark,
+    List<String>? rtlLanguages,
+    List<String>? features,
+    Map<String, List<int>>? ignorableIndexes,
+    List<String>? ignorableUsers,
   }) async {
     iOrNull = InAppPurchaser._(
       delegate: delegate,
@@ -103,41 +145,18 @@ class InAppPurchaser extends ChangeNotifier {
       logEnabled: logEnabled,
       logThrowEnabled: logThrowEnabled,
       rtlSupported: rtlSupported,
+      rtlLanguages: rtlLanguages,
+      defaultPlacement: defaultPlacement,
       uid: uid,
       enabled: enabled,
       premium: premium,
       locale: locale,
       dark: dark,
+      features: features,
+      ignorableIndexes: ignorableIndexes,
+      ignorableUsers: ignorableUsers,
     );
     await i.configure();
-  }
-
-  T _config<T>(
-    T defaultValue,
-    T? Function(InAppPurchaseConfigDelegate) callback,
-  ) {
-    return _configOrNull(callback) ?? defaultValue;
-  }
-
-  T? _configOrNull<T>(T? Function(InAppPurchaseConfigDelegate) callback) {
-    if (configDelegate == null) return null;
-    return callback(configDelegate!);
-  }
-
-  List<String> get features {
-    return _config([], (delegate) => delegate.features);
-  }
-
-  List<String> get ignorableUsers {
-    return _config([], (delegate) => delegate.ignorableUsers);
-  }
-
-  Map<String, List<int>> get ignorableIndexes {
-    return _config({}, (delegate) => delegate.ignorableIndexes);
-  }
-
-  List<String> get rltLanguages {
-    return _config([], (delegate) => delegate.rltLanguages);
   }
 
   void _log(Object? msg, [String? method]) {
@@ -285,7 +304,7 @@ class InAppPurchaser extends ChangeNotifier {
 
   static TextDirection get textDirection {
     if (iOrNull == null) return TextDirection.ltr;
-    if (i.rtlSupported && i.rltLanguages.contains(i.locale.languageCode)) {
+    if (i.rtlSupported && i._rltLanguages.contains(i.locale.languageCode)) {
       return TextDirection.rtl;
     }
     return TextDirection.ltr;
@@ -380,7 +399,7 @@ class InAppPurchaser extends ChangeNotifier {
     if (i._premiumDefault) return true;
     if (premiumStatus.value) return true;
     if ((uid ?? i.uid ?? '').isNotEmpty &&
-        i.ignorableUsers.contains(uid ?? i.uid)) {
+        i._ignorableUsers.contains(uid ?? i.uid)) {
       return true;
     }
     if (!i.connection) return i.configDelegate?.offlineStatus ?? false;
@@ -395,9 +414,8 @@ class InAppPurchaser extends ChangeNotifier {
     if (iOrNull == null) return false;
     final f = i.configDelegate?.formatFeature(feature) ?? feature;
     if (isPremiumUser(uid ?? i.uid)) return false;
-    final features = i.features;
-    if (features.isEmpty || !features.contains(f)) return false;
-    if ((i.ignorableIndexes[f] ?? []).contains(ignoreIndex)) {
+    if (i._features.isEmpty || !i._features.contains(f)) return false;
+    if ((i._ignorableIndexes[f] ?? []).contains(ignoreIndex)) {
       return false;
     }
     return true;
@@ -425,6 +443,53 @@ class InAppPurchaser extends ChangeNotifier {
     if ((uid ?? '').isEmpty) return;
     i.uid = uid;
     i.configDelegate?.statusChanged(isPremium);
+    if (notifiable) i.notify();
+  }
+
+  static void setFeatures(List<String> features, {bool notifiable = true}) {
+    if (iOrNull == null) return;
+    if (i.configDelegate == null) {
+      i._features = features;
+    } else {
+      i._features = features.map(i.configDelegate!.formatFeature).toList();
+    }
+    if (notifiable) i.notify();
+  }
+
+  static void setIgnorableUsers(List<String> uids, {bool notifiable = true}) {
+    if (iOrNull == null) return;
+    i._ignorableUsers = uids;
+    i.configDelegate?.statusChanged(isPremium);
+    if (notifiable) i.notify();
+  }
+
+  static void setIgnorableFeatureIndexes(
+    String feature,
+    List<int> indexes, {
+    bool notifiable = true,
+  }) {
+    if (iOrNull == null) return;
+    final f = i.configDelegate?.formatFeature(feature) ?? feature;
+    if (indexes.isEmpty) {
+      i._ignorableIndexes.remove(f);
+    } else {
+      i._ignorableIndexes[f] = indexes;
+    }
+    if (notifiable) i.notify();
+  }
+
+  static void setIgnorableMappedFeatureIndexes(
+    Map<String, List<int>> indexes, {
+    bool notifiable = true,
+  }) {
+    if (iOrNull == null) return;
+    if (i.configDelegate != null) {
+      i._ignorableIndexes = indexes.map((k, v) {
+        return MapEntry(i.configDelegate!.formatFeature(k), v);
+      });
+    } else {
+      i._ignorableIndexes = indexes;
+    }
     if (notifiable) i.notify();
   }
 
@@ -566,9 +631,7 @@ class InAppPurchaser extends ChangeNotifier {
   String? _previousPlacement;
 
   String get placement {
-    return _placement ??
-        iOrNull?.configDelegate?.defaultPlacement ??
-        _delegate.placements.first;
+    return _placement ?? defaultPlacement ?? _delegate.placements.first;
   }
 
   static String? get placementId => iOrNull?.placement;

@@ -1,3 +1,7 @@
+## 2.2.3
+
+* Improve InAppPurchaser
+
 ## 2.2.2
 
 * Config delegate improved
