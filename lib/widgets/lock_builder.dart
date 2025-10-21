@@ -36,10 +36,8 @@ class _PaywallLockBuilderState extends State<PaywallLockBuilder> {
         widget.uid,
       );
     }
-    if (x == lock) {
-      lock = x;
-      return;
-    }
+    lock = x;
+    if (x == lock) return;
     if (notify) setState(() {});
   }
 
