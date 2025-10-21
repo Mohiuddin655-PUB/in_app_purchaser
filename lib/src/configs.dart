@@ -2,10 +2,37 @@ import 'dart:ui';
 
 import '../src/purchase_result.dart';
 
+const kPurchaserRtlLocales = [
+  "ar",
+  "arc",
+  "dv",
+  "fa",
+  "ha",
+  "he",
+  "khw",
+  "ks",
+  "ku",
+  "ps",
+  "sd",
+  "ug",
+  "ur",
+  "yi"
+];
+
 abstract class InAppPurchaseConfigDelegate {
   bool get cachedStatus => false;
 
   bool get offlineStatus => cachedStatus;
+
+  String? get defaultPlacement => null;
+
+  List<String> get features => [];
+
+  List<String> get ignorableUsers => [];
+
+  Map<String, List<int>> get ignorableIndexes => {};
+
+  List<String> get rltLanguages => kPurchaserRtlLocales;
 
   String formatFeature(String feature) => feature;
 
