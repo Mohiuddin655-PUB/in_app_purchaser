@@ -125,12 +125,7 @@ class InAppPurchaser extends ChangeNotifier {
   }
 
   List<String> get features {
-    return _config([], (delegate) {
-      final features = delegate.features;
-      return features.isNotEmpty
-          ? features.map(delegate.formatFeature).toList()
-          : features;
-    });
+    return _config([], (delegate) => delegate.features);
   }
 
   List<String> get ignorableUsers {
@@ -138,12 +133,7 @@ class InAppPurchaser extends ChangeNotifier {
   }
 
   Map<String, List<int>> get ignorableIndexes {
-    return _config({}, (delegate) {
-      final data = delegate.ignorableIndexes;
-      return data.isNotEmpty
-          ? data.map((k, v) => MapEntry(delegate.formatFeature(k), v))
-          : data;
-    });
+    return _config({}, (delegate) => delegate.ignorableIndexes);
   }
 
   List<String> get rltLanguages {
