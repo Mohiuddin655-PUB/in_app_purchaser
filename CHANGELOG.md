@@ -1,4 +1,7 @@
 ## 2.2.2
+
+* Config delegate improved
+
 ## 2.2.1
 
 * Config delegate improved
