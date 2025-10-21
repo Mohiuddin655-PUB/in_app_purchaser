@@ -402,7 +402,8 @@ class InAppPurchaser extends ChangeNotifier {
         i._ignorableUsers.contains(uid ?? i.uid)) {
       return true;
     }
-    return false;
+    if (!i.connection) return i.configDelegate?.offlineStatus ?? false;
+    return i.configDelegate?.cachedStatus ?? false;
   }
 
   static bool isPremiumFeature(

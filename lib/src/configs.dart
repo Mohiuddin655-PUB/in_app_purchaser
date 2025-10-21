@@ -3,6 +3,10 @@ import 'dart:ui';
 import '../src/purchase_result.dart';
 
 abstract class InAppPurchaseConfigDelegate {
+  bool get cachedStatus => false;
+
+  bool get offlineStatus => cachedStatus;
+
   String formatFeature(String feature) => feature;
 
   String? formatPrice(Locale locale, String currencyCode, double price) => null;

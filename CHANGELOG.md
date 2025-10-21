@@ -1,3 +1,7 @@
+## 2.2.0
+
+* Offline status and cached status supports
+
 ## 2.1.19
 
 * ConfigDelegate improved
