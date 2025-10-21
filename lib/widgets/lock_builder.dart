@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../src/purchaser.dart';
 
 class PaywallLockBuilder extends StatefulWidget {
-  final bool initial;
   final int? index;
   final String? feature;
   final String? uid;
@@ -11,7 +10,6 @@ class PaywallLockBuilder extends StatefulWidget {
 
   const PaywallLockBuilder({
     super.key,
-    this.initial = true,
     this.index,
     this.feature,
     this.uid,
@@ -25,10 +23,10 @@ class PaywallLockBuilder extends StatefulWidget {
 }
 
 class _PaywallLockBuilderState extends State<PaywallLockBuilder> {
-  late bool lock = widget.initial;
+  bool? lock;
 
   void _check([bool notify = true]) {
-    bool x = lock;
+    bool x = lock ?? false;
     if (widget.feature == null || widget.feature!.isEmpty) {
       x = !InAppPurchaser.isPremiumUser(widget.uid);
     } else {
@@ -56,11 +54,9 @@ class _PaywallLockBuilderState extends State<PaywallLockBuilder> {
   @override
   void didUpdateWidget(covariant PaywallLockBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.initial != oldWidget.initial ||
-        widget.index != oldWidget.index ||
+    if (widget.index != oldWidget.index ||
         widget.feature != oldWidget.feature ||
         widget.uid != oldWidget.uid) {
-      lock = widget.initial;
       _check(false);
     }
   }
@@ -72,5 +68,5 @@ class _PaywallLockBuilderState extends State<PaywallLockBuilder> {
   }
 
   @override
-  Widget build(BuildContext context) => widget.builder(context, lock);
+  Widget build(BuildContext context) => widget.builder(context, lock ?? false);
 }
