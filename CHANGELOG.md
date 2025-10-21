@@ -1,4 +1,4 @@
-## 2.2.4-alpha1
+## 2.2.4-alpha2
 
 * Improve lock builder widget
 
