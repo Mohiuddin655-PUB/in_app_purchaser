@@ -1,3 +1,8 @@
+## 2.1.19
+
+* ConfigDelegate improved
+* connection management support
+
 ## 2.1.18
 
 * Repurchase mode support

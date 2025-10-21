@@ -20,13 +20,7 @@ abstract class InAppPurchaseDelegate {
 
   Future<InAppPurchaseOffering> offering(String placement);
 
-  T parseConfig<T extends Object?>(Object? value, T defaultValue) {
-    return value is T ? value : defaultValue;
-  }
-
   Future<InAppPurchaseResult> purchase(InAppPurchaseProduct product);
-
-  Future<void> purchased(InAppPurchaseResultSuccess result);
 
   Future<InAppPurchaseProfile> profile(Object? raw);
 

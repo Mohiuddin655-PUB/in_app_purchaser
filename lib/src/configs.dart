@@ -1,19 +1,11 @@
 import 'dart:ui';
 
+import '../src/purchase_result.dart';
+
 abstract class InAppPurchaseConfigDelegate {
   String formatFeature(String feature) => feature;
 
-  /// Convert USD amount to local currency with sign
-  /// ```dart
-  ///String formatPrice(Locale locale, String currencyCode, double price) {
-  ///  final format = NumberFormat.simpleCurrency(
-  ///    locale: locale.toString(),
-  ///    name: currencyCode,
-  ///  );
-  ///  return format.format(price);
-  ///}
-  /// ```
-  String? formatPrice(Locale locale, String currencyCode, double price);
+  String? formatPrice(Locale locale, String currencyCode, double price) => null;
 
   String formatZeros(String value) {
     return value.replaceAll(RegExp(r'([.]*0+)$'), '');
@@ -24,4 +16,30 @@ abstract class InAppPurchaseConfigDelegate {
   }
 
   String localize(Locale locale, String raw) => raw;
+
+  T parse<T extends Object?>(Object? value, T defaultValue) {
+    return value is T ? value : defaultValue;
+  }
+
+  void loggedIn() {}
+
+  void loggedOut() {}
+
+  void localeChanged(Locale locale) {}
+
+  void paywallChanged(String id) {}
+
+  void paywallLoaded(String id) {}
+
+  void paywallsLoaded(List<String> ids) {}
+
+  void sdkLoaded(String id) {}
+
+  void statusChanged(bool status) {}
+
+  void themeChanged(bool dark) {}
+
+  void purchased(InAppPurchaseResultSuccess result) {}
+
+  void restored(InAppPurchaseProfile profile) {}
 }
