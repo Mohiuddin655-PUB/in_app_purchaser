@@ -1,3 +1,7 @@
+## 2.2.4-alpha1
+
+* Improve lock builder widget
+
 ## 2.2.3
 
 * Improve InAppPurchaser

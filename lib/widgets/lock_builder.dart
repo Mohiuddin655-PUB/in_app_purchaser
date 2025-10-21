@@ -38,14 +38,18 @@ class _PaywallLockBuilderState extends State<PaywallLockBuilder> {
         widget.uid,
       );
     }
-    if (x == lock) return;
-    if (notify) setState(() => lock = x);
+    if (x == lock) {
+      lock = x;
+      return;
+    }
+    if (notify) setState(() {});
   }
 
   @override
   void initState() {
     super.initState();
     _check(false);
+    // WidgetsBinding.instance.addPostFrameCallback((_) => _check());
     InAppPurchaser.iOrNull?.addListener(_check);
   }
 
