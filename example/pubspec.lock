@@ -5,10 +5,10 @@ packages:
     dependency: "direct main"
     description:
       name: adapty_flutter
-      sha256: faaff102e04d40adc1caf57184a12af0c781dad21d61d7caf15063dad534340b
+      sha256: "189badf225bbae95c1b6807439fb0829982a2435dff22fa2494991f42f4af1e3"
       url: "https://pub.dev"
     source: hosted
-    version: "3.11.2"
+    version: "3.11.3"
   async:
     dependency: transitive
     description:
@@ -110,7 +110,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "2.2.4-alpha2"
+    version: "2.2.4"
   json_annotation:
     dependency: transitive
     description:
@@ -171,10 +171,10 @@ packages:
     dependency: transitive
     description:
       name: meta
-      sha256: e3641ec5d63ebf0d9b41bd43201a66e3fc79a65db5f61fc181f04cd27aab950c
+      sha256: "23f08335362185a5ea2ad3a4e597f1375e78bce8a040df5c600c8d3552ef2394"
       url: "https://pub.dev"
     source: hosted
-    version: "1.16.0"
+    version: "1.17.0"
   path:
     dependency: transitive
     description:
@@ -187,10 +187,10 @@ packages:
     dependency: "direct main"
     description:
       name: purchases_flutter
-      sha256: "5c472741d1e073ac8603b1b7d7e1707870a869c927dc31d6f38a4a8658c8d335"
+      sha256: "68c617bcbdca56886b84942c8d5d65fab8b3d85c897d652c8756291dad1fd971"
       url: "https://pub.dev"
     source: hosted
-    version: "9.8.0"
+    version: "9.9.8"
   qonversion_flutter:
     dependency: "direct main"
     description:
@@ -248,10 +248,10 @@ packages:
     dependency: transitive
     description:
       name: test_api
-      sha256: "522f00f556e73044315fa4585ec3270f1808a4b186c936e612cab0b565ff1e00"
+      sha256: ab2726c1a94d3176a45960b6234466ec367179b87dd74f1611adb1f3b5fb9d55
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.6"
+    version: "0.7.7"
   vector_math:
     dependency: transitive
     description:

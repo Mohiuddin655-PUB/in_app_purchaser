@@ -1,3 +1,7 @@
+## 2.2.4
+
+* AdMode support to use premium access
+
 ## 2.2.4-alpha2
 
 * Improve lock builder widget
