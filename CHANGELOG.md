@@ -1,3 +1,5 @@
+## 2.2.4+1
+
 ## 2.2.4
 
 * AdMode support to use premium access
