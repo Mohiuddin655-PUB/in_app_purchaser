@@ -57,7 +57,7 @@ class _Support extends StatefulWidget {
 class _SupportState extends State<_Support> {
   void _listener() {
     if (widget.onStatus == null) return;
-    widget.onStatus!(context, InAppPurchaser.isPremium);
+    widget.onStatus!(context, InAppPurchaser.isPremiumWithoutAd);
   }
 
   void _init() async {
@@ -69,7 +69,7 @@ class _SupportState extends State<_Support> {
     Future.delayed(widget.initialCheckDuration, () async {
       if (widget.initialCheck) {
         await InAppPurchaser.restore(true);
-        if (InAppPurchaser.isPremium) InAppPurchaser.i.notify();
+        if (InAppPurchaser.isPremiumWithoutAd) InAppPurchaser.i.notify();
       }
     });
   }

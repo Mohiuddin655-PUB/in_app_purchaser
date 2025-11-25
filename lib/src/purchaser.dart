@@ -236,7 +236,7 @@ class InAppPurchaser extends ChangeNotifier {
       profileState.value = InAppPurchaseState.running;
       profile = await _delegate.profile(null);
       await _check(profile);
-      configDelegate?.statusChanged(isPremium);
+      configDelegate?.statusChanged(isPremiumWithoutAd);
       _emitters["initProfile"] = 10;
       _log("profile initialized!");
       profileState.value = InAppPurchaseState.done;
@@ -387,26 +387,28 @@ class InAppPurchaser extends ChangeNotifier {
 
   InAppPurchaseProfile? profile;
 
-  Future<void> _check(InAppPurchaseProfile? data) async {
+  Future<bool> _check(InAppPurchaseProfile? data) async {
     try {
       _log("checking_premium...");
       final status = data == null ? false : await check(data);
       configDelegate?.saveStoreStatus(status);
       premiumStatus.value = status;
       _log(status, "hasPremium");
+      return status;
     } catch (e) {
       if (logThrowEnabled) throw "checking_premium_error [$e]";
       _log(e, "checking_premium_error");
+      return false;
     }
   }
 
   Future<void> _listen(InAppPurchaseProfile? data) async {
     await _check(data);
-    configDelegate?.statusChanged(isPremium);
+    configDelegate?.statusChanged(isPremiumWithoutAd);
     notify();
   }
 
-  bool get premium => isPremium;
+  bool get premium => isPremiumWithoutAd;
 
   static bool get isPremium => isPremiumUser();
 
@@ -455,7 +457,7 @@ class InAppPurchaser extends ChangeNotifier {
   static void enabled(bool value, {bool notifiable = true}) {
     if (iOrNull == null) return;
     i._enabled = value;
-    i.configDelegate?.statusChanged(isPremium);
+    i.configDelegate?.statusChanged(isPremiumWithoutAd);
     if (notifiable) i.notify();
   }
 
@@ -463,7 +465,7 @@ class InAppPurchaser extends ChangeNotifier {
     if (iOrNull == null) return;
     if ((uid ?? '').isEmpty) return;
     i.uid = uid;
-    i.configDelegate?.statusChanged(isPremium);
+    i.configDelegate?.statusChanged(isPremiumWithoutAd);
     if (notifiable) i.notify();
   }
 
@@ -480,7 +482,7 @@ class InAppPurchaser extends ChangeNotifier {
   static void setIgnorableUsers(List<String> uids, {bool notifiable = true}) {
     if (iOrNull == null) return;
     i._ignorableUsers = uids;
-    i.configDelegate?.statusChanged(isPremium);
+    i.configDelegate?.statusChanged(isPremiumWithoutAd);
     if (notifiable) i.notify();
   }
 
@@ -517,7 +519,7 @@ class InAppPurchaser extends ChangeNotifier {
   static void setPremiumStatus(bool status, {bool notifiable = true}) {
     if (iOrNull == null) return;
     i._premiumDefault = status;
-    i.configDelegate?.statusChanged(isPremium);
+    i.configDelegate?.statusChanged(isPremiumWithoutAd);
     if (notifiable) i.notify();
   }
 
@@ -563,7 +565,7 @@ class InAppPurchaser extends ChangeNotifier {
       i._premiumDefault = isDefaultPremium;
       i.uid = uid;
       premiumStatus.value = await check();
-      i.configDelegate?.statusChanged(isPremium);
+      i.configDelegate?.statusChanged(isPremiumWithoutAd);
       i.configDelegate?.loggedIn();
       i._log("loggedIn");
       loginState.value = InAppPurchaseState.done;
@@ -764,13 +766,13 @@ class InAppPurchaser extends ChangeNotifier {
 
   static Future<InAppPurchaseResult> purchase(
     InAppPurchaseProduct product, {
-    bool repurchaseMode = false,
+    bool force = false,
   }) async {
     try {
-      if (!repurchaseMode && isPremium) {
+      if (!force && isPremiumWithoutAd) {
         i._log("purchasing_failed: already purchased");
         purchasingState.value = InAppPurchaseState.exist;
-        i.configDelegate?.statusChanged(isPremium);
+        i.configDelegate?.statusChanged(true);
         return InAppPurchaseResultAlreadyPurchased(
           product: product,
           profile: i.profile,
@@ -785,11 +787,11 @@ class InAppPurchaser extends ChangeNotifier {
       purchasingState.value = InAppPurchaseState.running;
       final data = await i._delegate.purchase(product);
       if (data is InAppPurchaseResultSuccess) {
-        await i._check(data.profile);
-        i._log(isPremium, "purchased");
+        final status = await i._check(data.profile);
+        i._log(status, "purchased");
         purchasingState.value = InAppPurchaseState.done;
         i.notify();
-        i.configDelegate?.statusChanged(isPremium);
+        i.configDelegate?.statusChanged(isPremiumWithoutAd);
         i.configDelegate?.purchased(data);
       } else if (data is InAppPurchaseResultPending) {
         i._log("purchase_pending");
@@ -813,7 +815,7 @@ class InAppPurchaser extends ChangeNotifier {
   static Future<InAppPurchaseResult> purchaseAt(
     int index, {
     String? placement,
-    bool repurchaseMode = false,
+    bool force = false,
   }) async {
     i._log("purchasing_at[$index]");
     placement ??= i.placement;
@@ -836,7 +838,7 @@ class InAppPurchaser extends ChangeNotifier {
     }
     return purchase(
       product.product.copyWith(usdPrice: product.usdPrice),
-      repurchaseMode: repurchaseMode,
+      force: force,
     );
   }
 
@@ -847,12 +849,12 @@ class InAppPurchaser extends ChangeNotifier {
       i._log("restoring...");
       if (!silent) restoringState.value = InAppPurchaseState.running;
       final data = await i._delegate.restore();
-      await i._check(data);
-      i.configDelegate?.statusChanged(isPremium);
+      final status = await i._check(data);
+      i.configDelegate?.statusChanged(isPremiumWithoutAd);
       if (data != null) i.configDelegate?.restored(data);
-      i._log(isPremium, "restored");
+      i._log(status, "restored");
       if (!silent) {
-        if (isPremium) {
+        if (isPremiumWithoutAd) {
           restoringState.value = InAppPurchaseState.exist;
         } else {
           restoringState.value = InAppPurchaseState.empty;

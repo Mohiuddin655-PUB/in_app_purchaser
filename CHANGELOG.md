@@ -1,3 +1,7 @@
+## 2.2.6
+
+* Purchaser improve to purchase
+
 ## 2.2.5
 
 * Saved premium status bug fixed
