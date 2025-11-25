@@ -235,7 +235,7 @@ class InAppPurchaser extends ChangeNotifier {
       _log("profile initializing...");
       profileState.value = InAppPurchaseState.running;
       profile = await _delegate.profile(null);
-      if (profile != null) await _check(profile);
+      await _check(profile);
       configDelegate?.statusChanged(isPremium);
       _emitters["initProfile"] = 10;
       _log("profile initialized!");
@@ -389,16 +389,14 @@ class InAppPurchaser extends ChangeNotifier {
 
   Future<void> _check(InAppPurchaseProfile? data) async {
     try {
-      _log("checking...");
-      if (data == null) {
-        _log("nullable!", "checking error");
-        return;
-      }
-      premiumStatus.value = await check(data);
-      _log(isPremium, "checked");
+      _log("checking_premium...");
+      final status = data == null ? false : await check(data);
+      configDelegate?.saveStoreStatus(status);
+      premiumStatus.value = status;
+      _log(status, "hasPremium");
     } catch (e) {
-      if (logThrowEnabled) throw "checking error [$e]";
-      _log(e, "checking error");
+      if (logThrowEnabled) throw "checking_premium_error [$e]";
+      _log(e, "checking_premium_error");
     }
   }
 
@@ -849,7 +847,7 @@ class InAppPurchaser extends ChangeNotifier {
       i._log("restoring...");
       if (!silent) restoringState.value = InAppPurchaseState.running;
       final data = await i._delegate.restore();
-      if (data != null) await i._check(data);
+      await i._check(data);
       i.configDelegate?.statusChanged(isPremium);
       if (data != null) i.configDelegate?.restored(data);
       i._log(isPremium, "restored");

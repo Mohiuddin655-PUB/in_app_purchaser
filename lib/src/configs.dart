@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../src/purchase_result.dart';
 
 abstract class InAppPurchaseConfigDelegate {
-  bool get cachedStatus => false;
+  bool get cachedStatus;
 
   bool get offlineStatus => cachedStatus;
 
@@ -47,6 +47,8 @@ abstract class InAppPurchaseConfigDelegate {
   void purchased(InAppPurchaseResultSuccess result) {}
 
   void restored(InAppPurchaseProfile profile) {}
+
+  void saveStoreStatus(bool status);
 
   void sdkLoaded(String id) {}
 

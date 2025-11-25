@@ -1,3 +1,7 @@
+## 2.2.5
+
+* Saved premium status bug fixed
+
 ## 2.2.4+1
 
 ## 2.2.4
