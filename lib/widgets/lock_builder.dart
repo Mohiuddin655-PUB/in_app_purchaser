@@ -25,31 +25,42 @@ class PaywallLockBuilder extends StatefulWidget {
 }
 
 class _PaywallLockBuilderState extends State<PaywallLockBuilder> {
-  bool? lock;
+  late bool lock;
 
   void _check([bool notify = true]) {
-    bool status;
-    if (widget.feature == null || widget.feature!.isEmpty) {
-      status = !InAppPurchaser.isPremiumUser(
-        uid: widget.uid,
-        withAd: widget.withAd,
-      );
-    } else {
-      status = InAppPurchaser.isPremiumFeature(
-        widget.feature!,
-        widget.index,
-        widget.uid,
-        widget.withAd,
-      );
+    try {
+      bool status;
+      if (widget.feature == null || widget.feature!.isEmpty) {
+        status = !InAppPurchaser.isPremiumUser(
+          uid: widget.uid,
+          withAd: widget.withAd,
+        );
+      } else {
+        status = !InAppPurchaser.isPremiumFeature(
+          widget.feature!,
+          widget.index,
+          widget.uid,
+          widget.withAd,
+        );
+      }
+
+      if (status == lock) return;
+      lock = status;
+      if (notify && mounted) setState(() {});
+    } catch (e, stackTrace) {
+      debugPrint(
+          'PaywallLockBuilder: error checking lock status — $e\n$stackTrace');
+      final fallback = true;
+      if (fallback == lock) return;
+      lock = fallback;
+      if (notify && mounted) setState(() {});
     }
-    if (status == lock) return;
-    lock = status;
-    if (notify) setState(() {});
   }
 
   @override
   void initState() {
     super.initState();
+    lock = true;
     _check(false);
     InAppPurchaser.iOrNull?.addListener(_check);
   }
@@ -61,7 +72,7 @@ class _PaywallLockBuilderState extends State<PaywallLockBuilder> {
         widget.feature != oldWidget.feature ||
         widget.uid != oldWidget.uid ||
         widget.withAd != oldWidget.withAd) {
-      _check(false);
+      _check();
     }
   }
 
@@ -72,5 +83,5 @@ class _PaywallLockBuilderState extends State<PaywallLockBuilder> {
   }
 
   @override
-  Widget build(BuildContext context) => widget.builder(context, lock ?? false);
+  Widget build(BuildContext context) => widget.builder(context, lock);
 }

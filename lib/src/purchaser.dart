@@ -254,8 +254,9 @@ class InAppPurchaser extends ChangeNotifier {
       if (!i._connection) throw "No internet";
       _log("profile initializing...");
       profileState.value = InAppPurchaseState.running;
-      profile = await _delegate.profile(null);
-      await _check(profile);
+      final fetchedProfile = await _delegate.profile(null);
+      profile = fetchedProfile;
+      await _check(fetchedProfile);
       configDelegate?.statusChanged(isPremiumWithoutAd);
       _emitters["initProfile"] = 10;
       _log("profile initialized!");
@@ -407,10 +408,27 @@ class InAppPurchaser extends ChangeNotifier {
 
   InAppPurchaseProfile? profile;
 
+  /// Evaluates [data] to determine the current premium status.
+  ///
+  /// Three fixes applied here vs. the original:
+  ///
+  /// 1. When [data] is non-null the instance [profile] is updated so that
+  ///    every call site (purchase, restore, stream listener) keeps the
+  ///    stored profile in sync with the latest delegate data.
+  ///
+  /// 2. When [data] is null (e.g. the delegate did not include a profile in
+  ///    its purchase result) we fetch a fresh profile from the delegate
+  ///    instead of immediately returning `false`. This prevents a successful
+  ///    purchase from being reported as non-premium.
+  ///
+  /// 3. The actual active-entitlement check is delegated to [check], which now
+  ///    scans **all** access levels instead of only the first key's value.
   Future<bool> _check(InAppPurchaseProfile? data) async {
     try {
       _log("checking_premium...");
-      final status = data == null ? false : await check(data);
+      if (data != null) profile = data;
+      final effectiveData = data ?? await _fetchProfileSilently();
+      final status = effectiveData == null ? false : await check(effectiveData);
       configDelegate?.saveStoreStatus(status);
       premiumStatus.value = status;
       _log(status, "hasPremium");
@@ -419,6 +437,18 @@ class InAppPurchaser extends ChangeNotifier {
       if (logThrowEnabled) throw "checking_premium_error [$e]";
       _log(e, "checking_premium_error");
       return false;
+    }
+  }
+
+  /// Fetches a fresh profile from the delegate and caches it in [profile].
+  /// Returns `null` silently on any error so call sites can handle absence.
+  Future<InAppPurchaseProfile?> _fetchProfileSilently() async {
+    try {
+      final fetched = await _delegate.profile(null);
+      profile = fetched;
+      return fetched;
+    } catch (_) {
+      return null;
     }
   }
 
@@ -464,14 +494,17 @@ class InAppPurchaser extends ChangeNotifier {
     return true;
   }
 
+  /// Returns `true` when [data] contains at least one active access level.
+  ///
+  /// The original implementation only inspected the *first* key in the map
+  /// and returned `false` when the map was non-empty but that key had no
+  /// associated value. The new implementation iterates over all values so
+  /// that apps with multiple entitlement identifiers are handled correctly.
   static Future<bool> check([InAppPurchaseProfile? data]) async {
     if (iOrNull == null) return false;
     data ??= i.profile ??= await i._delegate.profile(null);
-    final id = data.accessLevels.keys.firstOrNull;
-    if (id == null || id.isEmpty) return false;
-    final info = data.accessLevels[id];
-    if (info == null) return false;
-    return info.isActive;
+    if (data.accessLevels.isEmpty) return false;
+    return data.accessLevels.values.any((level) => level.isActive);
   }
 
   static void enabled(bool value, {bool notifiable = true}) {
@@ -584,7 +617,8 @@ class InAppPurchaser extends ChangeNotifier {
       await i._delegate.login(uid);
       i._premiumDefault = isDefaultPremium;
       i.uid = uid;
-      premiumStatus.value = await check();
+      final freshProfile = await i._fetchProfileSilently();
+      premiumStatus.value = await check(freshProfile ?? i.profile);
       i.configDelegate?.statusChanged(isPremiumWithoutAd);
       i.configDelegate?.loggedIn();
       i._log("loggedIn");
@@ -812,7 +846,13 @@ class InAppPurchaser extends ChangeNotifier {
         purchasingState.value = InAppPurchaseState.done;
         i.notify();
         i.configDelegate?.statusChanged(isPremiumWithoutAd);
-        i.configDelegate?.purchased(data);
+        i.configDelegate?.purchased(
+          InAppPurchaseResultSuccess(
+            product: data.product,
+            profile: i.profile ?? data.profile,
+            jwsTransaction: data.jwsTransaction,
+          ),
+        );
       } else if (data is InAppPurchaseResultPending) {
         i._log("purchase_pending");
         purchasingState.value = InAppPurchaseState.pending;
@@ -871,7 +911,8 @@ class InAppPurchaser extends ChangeNotifier {
       final data = await i._delegate.restore();
       final status = await i._check(data);
       i.configDelegate?.statusChanged(isPremiumWithoutAd);
-      if (data != null) i.configDelegate?.restored(data);
+      final resolvedProfile = data ?? i.profile;
+      if (resolvedProfile != null) i.configDelegate?.restored(resolvedProfile);
       i._log(status, "restored");
       if (!silent) {
         if (isPremiumWithoutAd) {
@@ -881,7 +922,7 @@ class InAppPurchaser extends ChangeNotifier {
         }
       }
       i.notify();
-      return data;
+      return resolvedProfile;
     } catch (e) {
       if (!silent) restoringState.value = InAppPurchaseState.failed;
       if (i.logThrowEnabled) throw "restoring error [$e]";
