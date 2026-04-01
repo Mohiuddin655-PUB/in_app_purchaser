@@ -4,10 +4,10 @@ import 'package:collection/collection.dart';
 
 import '../src/purchaser.dart';
 
-const kDiscountPrice = "{DISCOUNT_PRICE}";
-const kPrice = "{PRICE}";
-const kFormatedPrice = "{FORMATED_PRICE}";
-const kLocalizedPrice = "{LOCALIZED_PRICE}";
+const kDiscountPrice = '{DISCOUNT_PRICE}';
+const kPrice = '{PRICE}';
+const kFormatedPrice = '{FORMATED_PRICE}';
+const kLocalizedPrice = '{LOCALIZED_PRICE}';
 
 const _equality = DeepCollectionEquality();
 
@@ -17,6 +17,8 @@ class PaywallLocalizedContent<T> {
   final T? value;
   final Map<String, T> values;
 
+  /// Optional global string localizer applied when a per-language value is not
+  /// found in [values].
   static PaywallLocalizeCallback? localizer;
 
   bool get isEmpty => value == null && values.isEmpty;
@@ -58,21 +60,20 @@ class PaywallLocalizedContent<T> {
   }
 
   PaywallLocalizedContent<T> localized(Locale locale) {
-    T? x = values[locale.languageCode];
-    if (x == null && InAppPurchaser.i.configDelegate != null) {
-      final l = locale;
-      final d = InAppPurchaser.i.configDelegate!;
-      Object? lt(Object? e) {
-        if (e is String) return d.localize(l, e);
-        if (e is Map) return e.map((k, v) => MapEntry(k, lt(v)));
-        if (e is List) return e.map(lt).toList();
+    T? resolved = values[locale.languageCode];
+    if (resolved == null && InAppPurchaser.iOrNull?.configDelegate != null) {
+      final delegate = InAppPurchaser.i.configDelegate!;
+      Object? translate(Object? e) {
+        if (e is String) return delegate.localize(locale, e);
+        if (e is Map) return e.map((k, v) => MapEntry(k, translate(v)));
+        if (e is List) return e.map(translate).toList();
         return e;
       }
 
-      final y = lt(value ?? values['en']);
-      if (y is T) x = y;
+      final translated = translate(value ?? values['en']);
+      if (translated is T) resolved = translated;
     }
-    return copyWith(value: x);
+    return copyWith(value: resolved);
   }
 
   PaywallLocalizedContent<T> resolveWith(T Function(T value) callback) {
@@ -93,26 +94,22 @@ class PaywallLocalizedContent<T> {
   }
 
   Object? toJson(Object? Function(T? value) callback) {
-    final value = callback(this.value);
+    final rootValue = callback(value);
     final entries = values.entries.map((e) {
-      final value = callback(e.value);
-      if (value == null) return null;
-      return MapEntry(e.key, value);
+      final mapped = callback(e.value);
+      if (mapped == null) return null;
+      return MapEntry(e.key, mapped);
     }).whereType<MapEntry<String, Object>>();
-    final x = Map.fromEntries(entries);
-    if (value != null) x['en'] = value;
-    if (x.length <= 1) return value;
-    return x;
+    final map = Map.fromEntries(entries);
+    if (rootValue != null) map['en'] = rootValue;
+    if (map.length <= 1) return rootValue;
+    return map;
   }
 
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (other.runtimeType != runtimeType) {
-      return false;
-    }
+    if (identical(this, other)) return true;
+    if (other.runtimeType != runtimeType) return false;
     return other is PaywallLocalizedContent<T> &&
         _equality.equals(value, other.value) &&
         _equality.equals(values, other.values);
@@ -124,7 +121,7 @@ class PaywallLocalizedContent<T> {
   }
 
   @override
-  String toString() => "$PaywallLocalizedContent#$hashCode($value, $values)";
+  String toString() => '$PaywallLocalizedContent#$hashCode($value, $values)';
 }
 
 extension PaywallLocalizedStringExtension on PaywallLocalizedContent<String?> {
@@ -149,52 +146,46 @@ extension PaywallLocalizedStringExtension on PaywallLocalizedContent<String?> {
     required String currencyCode,
   }) {
     if (isEmpty) return this;
-    final delegate = InAppPurchaser.i.configDelegate;
-    String formatPrice(double value, String currencyCode) {
+    final delegate = InAppPurchaser.iOrNull?.configDelegate;
+
+    String formatPrice(double value, String code) {
       if (delegate != null) {
         final formatted = delegate.formatPrice(
           InAppPurchaser.i.locale,
-          currencyCode,
+          code,
           value,
         );
-        if (formatted != null) {
-          return delegate.formatZeros(formatted);
-        }
+        if (formatted != null) return delegate.formatZeros(formatted);
       }
-      String str = value.toStringAsFixed(2);
-      str = str.replaceAll(RegExp(r'([.]*0+)$'), '');
-      return "$currencyCode $str";
+      final str = value.toStringAsFixed(2).replaceAll(RegExp(r'([.]*0+)$'), '');
+      return '$code $str';
     }
 
-    double? formatNumber(double? b, double? r, double? c) {
-      if (b == null || r == null || c == null) return null;
-      final x = (r / b) * c;
+    double prettyPrice(double x) {
       if (delegate != null) return delegate.prettyPrice(x);
       return (x.roundToDouble() + 0.99 - 1).abs();
     }
 
-    return replaceAll(
-      all: all,
-      kDiscountPrice,
-      formatPrice(discountPrice, currencyCode),
-    )
+    double? computePrice(double? base, double? ratio, double? target) {
+      if (base == null || ratio == null || target == null) return null;
+      return prettyPrice((ratio / base) * target);
+    }
+
+    return replaceAll(kDiscountPrice, formatPrice(discountPrice, currencyCode),
+            all: all)
         .replaceAll(
-          all: all,
           kFormatedPrice,
           formatPrice(discountPrice / unit, currencyCode),
+          all: all,
         )
         .replaceAll(
-          all: all,
           kPrice,
           formatPrice(
-            formatNumber(usdPrice, discountPrice, price) ?? discountPrice,
+            computePrice(usdPrice, discountPrice, price) ?? discountPrice,
             currencyCode,
           ),
-        )
-        .replaceAll(
           all: all,
-          kLocalizedPrice,
-          localizedPrice,
-        );
+        )
+        .replaceAll(kLocalizedPrice, localizedPrice, all: all);
   }
 }

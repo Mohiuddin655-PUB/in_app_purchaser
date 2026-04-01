@@ -135,7 +135,13 @@ class InAppPurchaser extends ChangeNotifier {
 
   static InAppPurchaser? iOrNull;
 
-  static InAppPurchaser get i => iOrNull!;
+  static InAppPurchaser get i {
+    assert(
+      iOrNull != null,
+      'InAppPurchaser has not been initialised. Call InAppPurchaser.init() before accessing InAppPurchaser.i.',
+    );
+    return iOrNull!;
+  }
 
   static Future<void> init({
     required InAppPurchaseDelegate delegate,
@@ -156,6 +162,7 @@ class InAppPurchaser extends ChangeNotifier {
     Map<String, List<int>>? ignorableIndexes,
     List<String>? ignorableUsers,
   }) async {
+    _resetStaticState();
     iOrNull = InAppPurchaser._(
       delegate: delegate,
       configDelegate: configDelegate,
@@ -176,6 +183,19 @@ class InAppPurchaser extends ChangeNotifier {
       ignorableUsers: ignorableUsers,
     );
     await i.configure();
+  }
+
+  static void _resetStaticState() {
+    initState.value = InAppPurchaseState.none;
+    profileState.value = InAppPurchaseState.none;
+    adjustSdkState.value = InAppPurchaseState.none;
+    facebookSdkState.value = InAppPurchaseState.none;
+    loginState.value = InAppPurchaseState.none;
+    logoutState.value = InAppPurchaseState.none;
+    loadingState.value = InAppPurchaseState.none;
+    purchasingState.value = InAppPurchaseState.none;
+    restoringState.value = InAppPurchaseState.none;
+    premiumStatus.value = false;
   }
 
   void _log(Object? msg, [String? method]) {

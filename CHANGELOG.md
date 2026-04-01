@@ -1,3 +1,7 @@
+## 2.3.0
+
+* Improve and code optimization
+
 ## 2.2.6
 
 * Purchaser improve to purchase

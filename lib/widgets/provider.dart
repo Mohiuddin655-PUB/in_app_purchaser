@@ -5,6 +5,11 @@ import '../src/purchaser.dart';
 
 typedef OnPurchaserCallback = Function(BuildContext context, bool status);
 
+/// An [InheritedWidget] that owns the lifecycle of [InAppPurchaser].
+///
+/// Place this near the root of your widget tree. When [enabled] is `true`
+/// (the default), [InAppPurchaser] is initialised on mount and disposed on
+/// unmount.
 class InAppPurchaseProvider extends InheritedWidget {
   InAppPurchaseProvider({
     super.key,
@@ -55,35 +60,42 @@ class _Support extends StatefulWidget {
 }
 
 class _SupportState extends State<_Support> {
-  void _listener() {
-    if (widget.onStatus == null) return;
-    widget.onStatus!(context, InAppPurchaser.isPremiumWithoutAd);
+  void _onPurchaserChanged() {
+    final callback = widget.onStatus;
+    if (callback == null) return;
+    callback(context, InAppPurchaser.isPremiumWithoutAd);
   }
 
-  void _init() async {
+  Future<void> _init() async {
     await InAppPurchaser.init(
       delegate: widget.delegate,
       logEnabled: widget.logEnabled,
     );
-    InAppPurchaser.i.addListener(_listener);
-    Future.delayed(widget.initialCheckDuration, () async {
-      if (widget.initialCheck) {
+    InAppPurchaser.i.addListener(_onPurchaserChanged);
+
+    if (widget.initialCheck) {
+      Future.delayed(widget.initialCheckDuration, () async {
+        if (!mounted) return;
         await InAppPurchaser.restore(true);
-        if (InAppPurchaser.isPremiumWithoutAd) InAppPurchaser.i.notify();
-      }
-    });
+        if (InAppPurchaser.isPremiumWithoutAd) {
+          InAppPurchaser.iOrNull?.notify();
+        }
+      });
+    }
   }
 
   @override
   void initState() {
-    if (widget.enabled) _init();
     super.initState();
+    if (widget.enabled) _init();
   }
 
   @override
   void dispose() {
-    if (widget.enabled) InAppPurchaser.i.removeListener(_listener);
-    if (widget.enabled) InAppPurchaser.i.dispose();
+    if (widget.enabled) {
+      InAppPurchaser.iOrNull?.removeListener(_onPurchaserChanged);
+      InAppPurchaser.iOrNull?.dispose();
+    }
     super.dispose();
   }
 
