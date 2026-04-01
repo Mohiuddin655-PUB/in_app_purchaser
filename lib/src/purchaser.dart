@@ -162,6 +162,7 @@ class InAppPurchaser extends ChangeNotifier {
     Map<String, List<int>>? ignorableIndexes,
     List<String>? ignorableUsers,
   }) async {
+    iOrNull?.dispose();
     _resetStaticState();
     iOrNull = InAppPurchaser._(
       delegate: delegate,
@@ -186,16 +187,35 @@ class InAppPurchaser extends ChangeNotifier {
   }
 
   static void _resetStaticState() {
-    initState.value = InAppPurchaseState.none;
-    profileState.value = InAppPurchaseState.none;
-    adjustSdkState.value = InAppPurchaseState.none;
-    facebookSdkState.value = InAppPurchaseState.none;
-    loginState.value = InAppPurchaseState.none;
-    logoutState.value = InAppPurchaseState.none;
-    loadingState.value = InAppPurchaseState.none;
-    purchasingState.value = InAppPurchaseState.none;
-    restoringState.value = InAppPurchaseState.none;
-    premiumStatus.value = false;
+    _safeDisposeNotifier(initState);
+    _safeDisposeNotifier(profileState);
+    _safeDisposeNotifier(adjustSdkState);
+    _safeDisposeNotifier(facebookSdkState);
+    _safeDisposeNotifier(loginState);
+    _safeDisposeNotifier(logoutState);
+    _safeDisposeNotifier(loadingState);
+    _safeDisposeNotifier(purchasingState);
+    _safeDisposeNotifier(restoringState);
+    _safeDisposeNotifier(premiumStatus);
+
+    initState = ValueNotifier(InAppPurchaseState.none);
+    profileState = ValueNotifier(InAppPurchaseState.none);
+    adjustSdkState = ValueNotifier(InAppPurchaseState.none);
+    facebookSdkState = ValueNotifier(InAppPurchaseState.none);
+    loginState = ValueNotifier(InAppPurchaseState.none);
+    logoutState = ValueNotifier(InAppPurchaseState.none);
+    loadingState = ValueNotifier(InAppPurchaseState.none);
+    purchasingState = ValueNotifier(InAppPurchaseState.none);
+    restoringState = ValueNotifier(InAppPurchaseState.none);
+    premiumStatus = ValueNotifier(false);
+  }
+
+  static void _safeDisposeNotifier(ValueNotifier notifier) {
+    try {
+      notifier.dispose();
+    } catch (_) {
+      // Already disposed or never used — safe to ignore.
+    }
   }
 
   void _log(Object? msg, [String? method]) {
@@ -205,7 +225,8 @@ class InAppPurchaser extends ChangeNotifier {
 
   void notify() => notifyListeners();
 
-  static final initState = ValueNotifier(InAppPurchaseState.none);
+  static ValueNotifier<InAppPurchaseState> initState =
+      ValueNotifier(InAppPurchaseState.none);
 
   StreamSubscription? _sub;
 
@@ -247,7 +268,8 @@ class InAppPurchaser extends ChangeNotifier {
     }
   }
 
-  static final profileState = ValueNotifier(InAppPurchaseState.none);
+  static ValueNotifier<InAppPurchaseState> profileState =
+      ValueNotifier(InAppPurchaseState.none);
 
   Future<void> initProfile() async {
     try {
@@ -257,7 +279,6 @@ class InAppPurchaser extends ChangeNotifier {
       final fetchedProfile = await _delegate.profile(null);
       profile = fetchedProfile;
       await _check(fetchedProfile);
-      configDelegate?.statusChanged(isPremiumWithoutAd);
       _emitters["initProfile"] = 10;
       _log("profile initialized!");
       profileState.value = InAppPurchaseState.done;
@@ -268,7 +289,8 @@ class InAppPurchaser extends ChangeNotifier {
     }
   }
 
-  static final adjustSdkState = ValueNotifier(InAppPurchaseState.none);
+  static ValueNotifier<InAppPurchaseState> adjustSdkState =
+      ValueNotifier(InAppPurchaseState.none);
 
   Future<void> initAdjust() async {
     try {
@@ -287,7 +309,8 @@ class InAppPurchaser extends ChangeNotifier {
     }
   }
 
-  static final facebookSdkState = ValueNotifier(InAppPurchaseState.none);
+  static ValueNotifier<InAppPurchaseState> facebookSdkState =
+      ValueNotifier(InAppPurchaseState.none);
 
   Future<void> initFacebookSdk() async {
     try {
@@ -327,8 +350,11 @@ class InAppPurchaser extends ChangeNotifier {
   Future<void> _emit(String name, Future<void> Function() callback) async {
     final count = _emitters[name] ?? 0;
     if (count > 5) return;
-    _emitters[name] = count + 1;
-    await callback();
+    try {
+      await callback();
+    } catch (e) {
+      _emitters[name] = count + 1;
+    }
     await Future.delayed(const Duration(seconds: 5));
   }
 
@@ -340,7 +366,7 @@ class InAppPurchaser extends ChangeNotifier {
   /// LOCALIZATION START
   /// --------------------------------------------------------------------------
 
-  Locale get locale => _locale ?? Locale("en", "US");
+  Locale get locale => _locale ?? const Locale("en", "US");
 
   static TextDirection get textDirection {
     if (iOrNull == null) return TextDirection.ltr;
@@ -404,31 +430,17 @@ class InAppPurchaser extends ChangeNotifier {
   /// PREMIUM CHECKER START
   /// --------------------------------------------------------------------------
 
-  static final premiumStatus = ValueNotifier(false);
+  static ValueNotifier<bool> premiumStatus = ValueNotifier(false);
 
   InAppPurchaseProfile? profile;
 
-  /// Evaluates [data] to determine the current premium status.
-  ///
-  /// Three fixes applied here vs. the original:
-  ///
-  /// 1. When [data] is non-null the instance [profile] is updated so that
-  ///    every call site (purchase, restore, stream listener) keeps the
-  ///    stored profile in sync with the latest delegate data.
-  ///
-  /// 2. When [data] is null (e.g. the delegate did not include a profile in
-  ///    its purchase result) we fetch a fresh profile from the delegate
-  ///    instead of immediately returning `false`. This prevents a successful
-  ///    purchase from being reported as non-premium.
-  ///
-  /// 3. The actual active-entitlement check is delegated to [check], which now
-  ///    scans **all** access levels instead of only the first key's value.
   Future<bool> _check(InAppPurchaseProfile? data) async {
     try {
       _log("checking_premium...");
       if (data != null) profile = data;
       final effectiveData = data ?? await _fetchProfileSilently();
-      final status = effectiveData == null ? false : await check(effectiveData);
+      final status =
+          effectiveData == null ? false : await _checkProfile(effectiveData);
       configDelegate?.saveStoreStatus(status);
       premiumStatus.value = status;
       _log(status, "hasPremium");
@@ -440,8 +452,6 @@ class InAppPurchaser extends ChangeNotifier {
     }
   }
 
-  /// Fetches a fresh profile from the delegate and caches it in [profile].
-  /// Returns `null` silently on any error so call sites can handle absence.
   Future<InAppPurchaseProfile?> _fetchProfileSilently() async {
     try {
       final fetched = await _delegate.profile(null);
@@ -494,17 +504,16 @@ class InAppPurchaser extends ChangeNotifier {
     return true;
   }
 
-  /// Returns `true` when [data] contains at least one active access level.
-  ///
-  /// The original implementation only inspected the *first* key in the map
-  /// and returned `false` when the map was non-empty but that key had no
-  /// associated value. The new implementation iterates over all values so
-  /// that apps with multiple entitlement identifiers are handled correctly.
-  static Future<bool> check([InAppPurchaseProfile? data]) async {
-    if (iOrNull == null) return false;
-    data ??= i.profile ??= await i._delegate.profile(null);
+  Future<bool> _checkProfile(InAppPurchaseProfile data) async {
     if (data.accessLevels.isEmpty) return false;
     return data.accessLevels.values.any((level) => level.isActive);
+  }
+
+  static Future<bool> check([InAppPurchaseProfile? data]) async {
+    if (iOrNull == null) return false;
+    final effectiveData = data ?? i.profile ?? await i._fetchProfileSilently();
+    if (effectiveData == null) return false;
+    return i._checkProfile(effectiveData);
   }
 
   static void enabled(bool value, {bool notifiable = true}) {
@@ -606,7 +615,8 @@ class InAppPurchaser extends ChangeNotifier {
     i.configDelegate!.openPaywall(context, onApproved);
   }
 
-  static final loginState = ValueNotifier(InAppPurchaseState.none);
+  static ValueNotifier<InAppPurchaseState> loginState =
+      ValueNotifier(InAppPurchaseState.none);
 
   static Future<void> login(String uid, {bool isDefaultPremium = false}) async {
     if (iOrNull == null || uid.isEmpty) return;
@@ -631,7 +641,8 @@ class InAppPurchaser extends ChangeNotifier {
     i.notify();
   }
 
-  static final logoutState = ValueNotifier(InAppPurchaseState.none);
+  static ValueNotifier<InAppPurchaseState> logoutState =
+      ValueNotifier(InAppPurchaseState.none);
 
   static Future<void> logout() async {
     if (iOrNull == null) return;
@@ -720,16 +731,16 @@ class InAppPurchaser extends ChangeNotifier {
     if (notifiable) i.notify();
   }
 
-  static final loadingState = ValueNotifier(InAppPurchaseState.none);
+  static ValueNotifier<InAppPurchaseState> loadingState =
+      ValueNotifier(InAppPurchaseState.none);
 
   static Future<void> fetchAll({bool notifiable = true}) async {
     if (iOrNull == null) return;
     if (!i._connection) return;
-    loadingState.value = InAppPurchaseState.running;
-    await Future.wait(i._delegate.placements.map((e) {
-      return fetch(e, notifiable: false);
-    }));
-    loadingState.value = InAppPurchaseState.done;
+    await Future.wait(
+      i._delegate.placements
+          .map((e) => fetch(e, notifiable: false, loader: true)),
+    );
     i.configDelegate?.paywallsLoaded(i._delegate.placements.toList());
     if (notifiable) i.notify();
   }
@@ -816,7 +827,8 @@ class InAppPurchaser extends ChangeNotifier {
   /// PURCHASE AND RESTORE START
   /// --------------------------------------------------------------------------
 
-  static final purchasingState = ValueNotifier(InAppPurchaseState.none);
+  static ValueNotifier<InAppPurchaseState> purchasingState =
+      ValueNotifier(InAppPurchaseState.none);
 
   static Future<InAppPurchaseResult> purchase(
     InAppPurchaseProduct product, {
@@ -902,7 +914,8 @@ class InAppPurchaser extends ChangeNotifier {
     );
   }
 
-  static final restoringState = ValueNotifier(InAppPurchaseState.none);
+  static ValueNotifier<InAppPurchaseState> restoringState =
+      ValueNotifier(InAppPurchaseState.none);
 
   static Future<InAppPurchaseProfile?> restore([bool silent = false]) async {
     try {
@@ -938,14 +951,6 @@ class InAppPurchaser extends ChangeNotifier {
 
   /// --------------------------------------------------------------------------
   /// PURCHASE AND RESTORE END
-  /// --------------------------------------------------------------------------
-
-  /// --------------------------------------------------------------------------
-  /// STRINGIFY START
-  /// --------------------------------------------------------------------------
-
-  /// --------------------------------------------------------------------------
-  /// STRINGIFY END
   /// --------------------------------------------------------------------------
 
   @override
